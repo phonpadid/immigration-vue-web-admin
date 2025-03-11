@@ -1,0 +1,21 @@
+@import "./assets/css/noto-serif-lao.css";
+@import "flowbite/src/themes/default";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-family: "noto serif lao", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer base {
+  *,
+  html,
+  .ant-input {
+    font-family: "noto serif lao", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
