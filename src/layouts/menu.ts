@@ -101,7 +101,7 @@ export const menuItems: ItemType[] = reactive([
       { type: "divider" },
       {
         key: "11",
-        label: "ຈັດການການເຂົ້າເຖິງ",
+        label: "ຈັດການຜູ້ໃຊ້",
         icon: () =>
           h("div", {}, [
             h(Icon, {
@@ -112,20 +112,15 @@ export const menuItems: ItemType[] = reactive([
         children: [
           {
             key: "user",
-            label: "ຈັດການຂໍ້ມູນຜູ້ໃຊ້ລະບົບ",
+            label: "ຜູ້ໃຊ້",
           },
           {
-            key: "customer-account",
-            label: "ຈັດການຂໍ້ມູນບັນຊີລູກຄ້າ",
+            key: "roles",
+            label: "ບົດບາດ",
           },
           {
-            key: "role",
-            label: "ຂໍ້ມູນ Role",
-            // role: ['super_admin', 'admin']
-          },
-          {
-            key: "permission",
-            label: "ຂໍ້ມູນ Permission",
+            key: "permissions",
+            label: "ການອານູຍາດ",
             // role: ['super_admin']
           },
         ],

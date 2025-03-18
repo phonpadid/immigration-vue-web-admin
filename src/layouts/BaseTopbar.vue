@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { Icon } from "@iconify/vue";
-import { ref, watchEffect } from "vue";
+import { onMounted, ref, watchEffect } from "vue";
 import { UserOutlined } from "@ant-design/icons-vue";
+import { useAuthStore } from "@/modules/Admin/authentication/store/auth.store";
 
 const emit = defineEmits<{ toggle: [] }>();
+
+const { getProfile } = useAuthStore();
 
 const isDarkMode = ref(false);
 
@@ -16,6 +19,10 @@ const toggleDarkMode = () => {
 // ติดตามการเปลี่ยนแปลงของธีมเพื่ออัปเดตค่าใน Local Storage (ถ้าต้องการจำค่า)
 watchEffect(() => {
   localStorage.setItem("theme", isDarkMode.value ? "dark" : "light");
+});
+
+onMounted(async () => {
+  await getProfile();
 });
 </script>
 

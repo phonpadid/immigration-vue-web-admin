@@ -1,11 +1,11 @@
 import type { RouteRecordRaw } from "vue-router";
 // import Middlewares from "@/lib/middlewares";
 
-export const authRoute: RouteRecordRaw[] = [
+export const permissionsRoute: RouteRecordRaw[] = [
   {
-    path: "/admin/login",
-    name: "login",
-    component: () => import("../views/Loginview.vue"),
+    path: "/permissions",
+    name: "permissions",
+    component: () => import("../views/ListPermission.vue"),
     // meta: {
     //   middleware: [Middlewares.guest],
     // },
