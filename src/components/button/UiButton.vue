@@ -6,12 +6,14 @@
     :disabled="disabled"
     :class="customClass"
   >
+    <Icon v-if="icon" :icon="icon" class="mr-2" />
     <slot></slot>
   </a-button>
 </template>
 
 <script setup>
 import { computed } from "vue";
+import { Icon } from "@iconify/vue";
 
 const props = defineProps({
   type: {
@@ -33,6 +35,10 @@ const props = defineProps({
   disabled: {
     type: Boolean,
     default: false,
+  },
+  icon: {
+    type: String,
+    default: "", // ใส่ชื่อไอคอนที่ต้องการ เช่น "ant-design:plus-outlined"
   },
 });
 

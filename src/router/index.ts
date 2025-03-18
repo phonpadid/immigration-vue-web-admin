@@ -3,15 +3,16 @@ import {
   createWebHistory,
   type RouteRecordRaw,
 } from "vue-router";
-import Test from "@/views/Test.vue";
 import { dashboardRoute } from "@/modules/Admin/Dashboard/router";
 import { authRoute } from "@/modules/Admin/authentication/router";
+import { permissionsRoute } from "@/modules/users/permission/router";
+import { roleRoute } from "@/modules/users/role/router";
 
 const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: () => import("../layouts/BaseLayout.vue"),
-    children: [...dashboardRoute],
+    children: [...dashboardRoute, ...permissionsRoute, ...roleRoute],
   },
   ...authRoute,
 ];

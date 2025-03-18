@@ -65,7 +65,6 @@ const submitHandler = async () => {
             </UiFormItem>
             <UiFormItem>
               <Button
-                class="text-pri"
                 type="primary"
                 size="large"
                 colorClass="!bg-primary-700 hover:!bg-primary-900 text-white w-full"
