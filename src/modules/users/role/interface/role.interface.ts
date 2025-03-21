@@ -21,6 +21,7 @@ export interface RoleResponse {
 }
 
 export interface RoleFrom {
+  id:number
   name: string;
   description: string;
   permission_ids: Array<number>;

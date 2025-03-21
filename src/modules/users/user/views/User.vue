@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { columns } from "../interface/columns";
-import { useRolesStore } from "../store/role.store";
+import { columns } from "../interface/column";
+import { useUserStore } from "../store/user.store";
 import { useRouter } from "vue-router";
+import { formatDateTime } from "@/utils/FormatDataTime";
 import Table from "@/components/table/Table.vue";
 import UiButton from "@/components/button/UiButton.vue";
 import Dropdown from "@/components/Dropdown/Dropdown.vue";
 import LoadingSpinner from "@/components/loading/LoadingSpinner.vue";
 
-const { getAllRoles, roles, isLoading, deleteRole } = useRolesStore();
+const { getAlluser, user, isLoading, deleteUser } = useUserStore();
 const { push } = useRouter();
 
 const menuOptions = ref([
@@ -17,31 +18,31 @@ const menuOptions = ref([
   { key: "3", label: "ລຶບ" },
 ]);
 
-const addRole = () => {
-  push({ name: "roles_add" });
+const addUser = () => {
+  push({ name: "users_add" });
 };
 
 const handleSelect = (key: string, record: any) => {
-  // console.log("Selected:", key, "for record:", record);
+  console.log("Selected:", key, "for record:", record);
   // Add logic to handle different actions based on key
   if (key === "1") {
     // View details
-    push({ name: "roles_deatils", params: { id: record.id } });
+    push({ name: "users_deatils", params: { id: record.id } });
   } else if (key === "2") {
     // Edit
-    push({ name: "roles_edit", params: { id: record.id } });
+    push({ name: "users_edit", params: { id: record.id } });
   } else if (key === "3") {
     // Delete - perhaps show confirmation dialog
     const confirmDelete = confirm("Are you sure you want to delete this role?");
     if (confirmDelete) {
-      deleteRole(record.id); // Call deleteRole with the id of the role to delete
+      deleteUser(record.id); // Call deleteRole with the id of the role to delete
     }
   }
 };
 
 onMounted(async () => {
   try {
-    await getAllRoles();
+    await getAlluser();
   } catch (error) {
     console.error("Failed to load roles:", error);
     // Add error handling here
@@ -59,24 +60,30 @@ onMounted(async () => {
     class="flex flex-col items-start justify-between p-4 sm:flex-row sm:items-center mt-4"
   >
     <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
-      ບົດບາດທັງຫມົດ
+      ຜູ້ໃຊ້ທັງຫມົດ
     </h2>
     <UiButton
       type="primary"
       size="large"
       colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
       icon="ant-design:plus-outlined"
-      @click="addRole"
-      >ເພີ່ມບົດບາດ</UiButton
+      @click="addUser"
+      >ເພີ່ມຜູ້ໃຊ້</UiButton
     >
   </div>
 
   <div class="relative">
     <Table
       :columns="columns"
-      :dataSource="roles.data || []"
+      :dataSource="user.data || []"
       class="dark:bg-gray-800 dark:text-white dark:border-gray-700"
     >
+      <template #profile="{ record }">
+        {{ record.profile.first_name }} {{ record.profile.last_name }}
+      </template>
+      <template #created_at="{ record }">
+        {{ formatDateTime(record.created_at) }}
+      </template>
       <template #action="{ record }">
         <Dropdown
           :options="menuOptions"

@@ -5,41 +5,97 @@ import type { RoleFrom } from "../interface/role.interface";
 
 export const useRolesStore = defineStore("roles", () => {
   const isLoading = ref(false);
-  const roles = reactive<any>({
+  const roles = reactive<{ data: RoleFrom[] }>({
     data: [],
   });
+  const currentRole = ref<RoleFrom | null>(null);
 
-  // ฟังก์ชันดึงข้อมูลจาก API
-  async function getAllRole() {
+  const getAllRoles = async () => {
     try {
       isLoading.value = true;
-      const res = await api.get(`/roles`);
+      const { data } = await api.get("/roles");
 
-      if (res?.data?.data && Array.isArray(res.data.data)) {
-        roles.data = res.data.data;
+      if (data?.data && Array.isArray(data.data)) {
+        roles.data = data.data;
       }
     } catch (error) {
-      console.error("❌ Error fetching roles:", error);
+      console.error("❌ Failed to fetch roles:", error);
     } finally {
       isLoading.value = false;
     }
-  }
+  };
 
-  async function createRole(role: RoleFrom) {
+  const getRoleById = async (id: number) => {
     try {
       isLoading.value = true;
-      const res = await api.post("/roles", role);
+      const { data } = await api.get(`/roles/${id}`);
 
-      if (res?.data) {
-        await getAllRole();
-        return res.data;
+      if (data) {
+        currentRole.value = data;
+        return data;
       }
     } catch (error) {
-      console.error("❌ Error creating role:", error);
+      console.error("❌ Failed to fetch role by ID:", error);
+      throw error;
     } finally {
       isLoading.value = false;
     }
-  }
+  };
 
-  return { isLoading, roles, getAllRole, createRole };
+  const createRole = async (role: RoleFrom) => {
+    try {
+      isLoading.value = true;
+      const { data } = await api.post("/roles", role);
+
+      if (data) {
+        await getAllRoles();
+        return data;
+      }
+    } catch (error) {
+      console.error("❌ Failed to create role:", error);
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const updateRole = async (id: number, updatedData: Partial<RoleFrom>) => {
+    try {
+      isLoading.value = true;
+      const { data } = await api.put(`/roles/${id}`, updatedData);
+
+      if (data) {
+        await getAllRoles();
+        return data;
+      }
+    } catch (error) {
+      console.error("❌ Failed to update role:", error);
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const deleteRole = async (id: string) => {
+    try {
+      isLoading.value = true; 
+      const res = await api.delete(`/roles/${id}`);
+      if (res) {
+        await getAllRoles();
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      isLoading.value = false; // เพิ่มการตั้งค่า isLoading เป็น false เมื่อเสร็จสิ้น
+    }
+  };
+
+  return {
+    isLoading,
+    roles,
+    currentRole,
+    getAllRoles,
+    getRoleById,
+    createRole,
+    updateRole,
+    deleteRole,
+  };
 });

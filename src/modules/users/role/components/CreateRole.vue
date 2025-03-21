@@ -16,39 +16,48 @@ import LoadingSpinner from "@/components/loading/LoadingSpinner.vue";
 // Access store for permissions
 const permissionStore = usePermissionStore();
 const roleStore = useRolesStore();
+const isLoading = ref(true);
+const formRef = ref();
 const { push } = useRouter();
 
-const isLoading = ref(true);
-
 const formState = reactive<RoleFrom>({
+  id: 0,
   name: "",
   description: "",
   permission_ids: [] as number[],
 });
 
 const handleSubmit = async () => {
-  isLoading.value = true;
-  console.log("✅ Final Selected Permissions:", formState.permission_ids);
+  if (formRef.value) {
+    try {
+      const validationResult = await formRef.value.submitForm();
 
-  if (!Array.isArray(formState.permission_ids)) {
-    console.error("permissions_ids is not an array", formState.permission_ids);
-  }
+      if (!validationResult) {
+        console.log("Validation failed, please check your inputs");
+        return;
+      }
+      isLoading.value = true;
 
-  // แปลงจาก string[] เป็น number[] ก่อนส่ง
-  const permissionIds = formState.permission_ids.map((id) => Number(id));
+      if (!Array.isArray(formState.permission_ids)) {
+        console.error(
+          "permissions_ids is not an array",
+          formState.permission_ids
+        );
+        return;
+      }
 
-  try {
-    await roleStore.createRole({
-      ...formState,
-      permission_ids: permissionIds, // ส่งไปเป็น number[]
-    });
-    push({ name: "roles" });
+      const permissionIds = formState.permission_ids.map((id) => Number(id));
 
-    console.log("Role successfully created:", formState);
-  } catch (error) {
-    console.error("Error creating role:", error);
-  } finally {
-    isLoading.value = false;
+      await roleStore.createRole({
+        ...formState,
+        permission_ids: permissionIds,
+      });
+      push({ name: "roles" });
+    } catch (error) {
+      console.error("Error creating role:", error);
+    } finally {
+      isLoading.value = false;
+    }
   }
 };
 
@@ -103,15 +112,6 @@ const groupedPermissions = computed(() => {
 
   return groups;
 });
-
-// For debugging
-const hasPermissions = computed(() => {
-  return permissionStore.permissions && permissionStore.permissions.length > 0;
-});
-
-const handleRefresh = () => {
-  loadPermissions();
-};
 </script>
 
 <template>
@@ -120,7 +120,12 @@ const handleRefresh = () => {
   </h2>
 
   <div class="grid gap-4 mb-4">
-    <UiForm :rules="rules" :model="formState" @submit="handleSubmit">
+    <UiForm
+      ref="formRef"
+      :rules="rules"
+      :model="formState"
+      @submit="handleSubmit"
+    >
       <UiFormItem label="ຊື່" name="name">
         <UiInput
           v-model="formState.name"
@@ -137,33 +142,23 @@ const handleRefresh = () => {
       </UiFormItem>
       <UiFormItem label="ການອະນຸຍາດ" name="permission_ids">
         <LoadingSpinner v-if="isLoading" class="h-[50vh]" />
-        <CheckboxGroup
-          :options="
-            Object.entries(groupedPermissions).flatMap(
-              ([groupName, permissions]) =>
-                permissions.map((p) => ({
-                  label: p.name,
-                  value: p.id,
-                  group: groupName,
-                }))
-            )
-          "
-          groupBy="group"
-          v-model="formState.permission_ids"
-        />
+        <a-form-item-rest>
+          <CheckboxGroup
+            :options="
+              Object.entries(groupedPermissions).flatMap(
+                ([groupName, permissions]) =>
+                  permissions.map((p) => ({
+                    label: p.name,
+                    value: p.id,
+                    group: groupName,
+                  }))
+              )
+            "
+            groupBy="group"
+            v-model="formState.permission_ids"
+          />
+        </a-form-item-rest>
       </UiFormItem>
-
-      <!-- Debug info -->
-      <div v-if="!hasPermissions" class="text-red-500 mb-4">
-        ບໍ່ພົບຂໍ້ມູນ
-        <button
-          @click="handleRefresh"
-          class="ml-2 px-2 py-1 bg-blue-500 text-white rounded"
-        >
-          ກຳລັງໂຫຼດຂໍ້ມູນ
-        </button>
-      </div>
-
       <div class="mt-4">
         <button
           type="submit"
