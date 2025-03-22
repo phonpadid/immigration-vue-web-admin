@@ -7,12 +7,24 @@ import { dashboardRoute } from "@/modules/Admin/Dashboard/router";
 import { authRoute } from "@/modules/Admin/authentication/router";
 import { permissionsRoute } from "@/modules/users/permission/router";
 import { roleRoute } from "@/modules/users/role/router";
+import { usersRoute } from "@/modules/users/user/router";
+import { feedbacksRoute } from "@/modules/feedbacks/router";
+import { contactsRoute } from "@/modules/contacts/router";
+import { lawsRoute } from "@/modules/laws/router";
 
 const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: () => import("../layouts/BaseLayout.vue"),
-    children: [...dashboardRoute, ...permissionsRoute, ...roleRoute],
+    children: [
+      ...dashboardRoute,
+      ...permissionsRoute,
+      ...roleRoute,
+      ...usersRoute,
+      ...feedbacksRoute,
+      ...contactsRoute,
+      ...lawsRoute,
+    ],
   },
   ...authRoute,
 ];

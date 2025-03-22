@@ -21,19 +21,7 @@ export const menuItems: ItemType[] = reactive([
         key: "dashboard",
         label: "ໜ້າຫຼັກ",
         icon: () => h(HomeOutlined),
-        // role: ['super_admin', 'admin']
-      },
-      {
-        key: "2",
-        label: "ເຮັດທຸລະກຳ",
-        icon: () =>
-          h("div", {}, [
-            h(Icon, {
-              icon: "ic-baseline-sync-alt",
-              class: "text-base",
-            }),
-          ]),
-        role: ["super_admin", "admin"],
+        // role: ['deve', 'admin']
       },
     ],
     type: "group",
@@ -64,7 +52,7 @@ export const menuItems: ItemType[] = reactive([
           {
             key: "registrations_number",
             label: "ຈຳນວນການລົງທະບຽນ",
-            // role: ['super_admin', 'admin']
+            // role: ["super_admin", "admin"],
           },
         ],
         // role: ['super_admin', 'admin']
@@ -75,7 +63,7 @@ export const menuItems: ItemType[] = reactive([
 
   {
     key: "service",
-    label: "ປະເພດບໍລິການ",
+    label: "ບໍລິການ",
     icon: () =>
       h("div", {}, [
         h(Icon, {
@@ -96,6 +84,39 @@ export const menuItems: ItemType[] = reactive([
       ]),
   },
   {
+    key: "feedbacks",
+    label: "ຄຳຕິຊົມ",
+    icon: () =>
+      h("div", {}, [
+        h(Icon, {
+          icon: "mdi:message-text",
+          class: "text-base",
+        }),
+      ]),
+  },
+  {
+    key: "contacts",
+    label: "ຂໍ້ມູນຕິດຕໍ່",
+    icon: () =>
+      h("div", {}, [
+        h(Icon, {
+          icon: "ic:outline-phone",
+          class: "text-base",
+        }),
+      ]),
+  },
+  {
+    key: "laws",
+    label: "ກົດໝາຍ",
+    icon: () =>
+      h("div", {}, [
+        h(Icon, {
+          icon: "material-symbols:balance",
+          class: "text-base",
+        }),
+      ]),
+  },
+  {
     label: "",
     children: [
       { type: "divider" },
@@ -105,13 +126,13 @@ export const menuItems: ItemType[] = reactive([
         icon: () =>
           h("div", {}, [
             h(Icon, {
-              icon: "material-symbols:manage-accounts-outline",
+              icon: "mdi:user",
               class: "text-base",
             }),
           ]),
         children: [
           {
-            key: "user",
+            key: "users",
             label: "ຜູ້ໃຊ້",
           },
           {

@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { ref, defineProps, defineEmits, watch, computed } from "vue";
+import { defineProps, defineEmits, watch, computed } from "vue";
 
 type OptionType = { label: string; value: string | number; group?: string };
 
-// ปรับปรุง props ให้รองรับการจัดกลุ่ม
 const props = defineProps<{
   options: OptionType[];
-  groupBy?: string; // ชื่อ property ที่ใช้ในการจัดกลุ่ม
+  groupBy?: string;
   modelValue?: (string | number)[];
 }>();
 
@@ -14,19 +13,26 @@ const emit = defineEmits<{
   (event: "update:modelValue", value: (string | number)[]): void;
 }>();
 
-// ใช้ selectedValues เก็บค่าที่ถูกเลือก
-const selectedValues = ref<(string | number)[]>(props.modelValue || []);
+// ใช้ computed สำหรับ two-way binding
+const selectedValues = computed({
+  get: () => props.modelValue || [],
+  set: (value) => emit("update:modelValue", value),
+});
 
-// คอยสังเกตค่า modelValue ที่เปลี่ยนแปลงจากภายนอก
+// Log ค่าเมื่อมีการเปลี่ยนแปลง modelValue
 watch(
   () => props.modelValue,
   (newValue) => {
-    console.log("🔹 Model value changed:", newValue);
-    selectedValues.value = newValue || [];
-  }
+    // console.log("CheckboxGroup received modelValue:", newValue);
+  },
+  { immediate: true, deep: true }
 );
 
-// จัดกลุ่มตัวเลือก
+// Log ค่าเมื่อ component mount
+// onMounted(() => {
+//   console.log("CheckboxGroup mounted with values:", props.modelValue);
+// });
+
 const groupedOptions = computed(() => {
   if (!props.groupBy) return { "": props.options };
 
@@ -41,37 +47,40 @@ const groupedOptions = computed(() => {
   return groups;
 });
 
-// ฟังก์ชันจัดการเลือก/ยกเลิกเลือก
-const toggleOption = (value: string | number) => {
-  const index = selectedValues.value.indexOf(value);
-  if (index === -1) {
-    // เพิ่มค่าใหม่
-    selectedValues.value = [...selectedValues.value, value];
-  } else {
-    // ลบค่าที่เลือกออก
-    selectedValues.value = selectedValues.value.filter((v) => v !== value);
-  }
-  emit("update:modelValue", selectedValues.value);
-  console.log("🔹 Selected after toggle:", selectedValues.value);
+// ฟังก์ชันที่ปรับปรุงเพื่อให้การเปรียบเทียบค่าถูกต้องมากขึ้น
+const isSelected = (value: string | number): boolean => {
+  return (props.modelValue || []).some((v) => {
+    // แปลงค่าเป็น string เพื่อเปรียบเทียบ
+    return String(v) === String(value);
+  });
 };
 
-// ตรวจสอบว่าค่าถูกเลือกหรือไม่
-const isSelected = (value: string | number): boolean => {
-  return selectedValues.value.includes(value);
+const toggleOption = (value: string | number) => {
+  const currentValues = [...(props.modelValue || [])];
+
+  // ใช้ String เพื่อเปรียบเทียบค่า
+  const index = currentValues.findIndex((v) => String(v) === String(value));
+
+  if (index === -1) {
+    // เพิ่มค่า
+    currentValues.push(value);
+  } else {
+    // ลบค่า
+    currentValues.splice(index, 1);
+  }
+
+  console.log("After toggle, values:", currentValues);
+  emit("update:modelValue", currentValues);
 };
 </script>
 
 <template>
-  <!-- กรณีไม่ต้องการจัดกลุ่ม -->
+  <!-- For non-grouped options -->
   <div v-if="!props.groupBy">
-    <a-checkbox-group
-      :options="props.options"
-      :value="selectedValues"
-      @change="(values:any) => emit('update:modelValue', values)"
-    />
+    <a-checkbox-group :options="props.options" v-model="selectedValues" />
   </div>
 
-  <!-- กรณีต้องการจัดกลุ่ม -->
+  <!-- For grouped options -->
   <div v-else class="flex flex-wrap gap-3">
     <div
       v-for="(options, groupName) in groupedOptions"
