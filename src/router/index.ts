@@ -11,6 +11,8 @@ import { usersRoute } from "@/modules/users/user/router";
 import { feedbacksRoute } from "@/modules/feedbacks/router";
 import { contactsRoute } from "@/modules/contacts/router";
 import { lawsRoute } from "@/modules/laws/router";
+import { newsCategoriessRoute } from "@/modules/news_categories/news_categories/router";
+import { newsRoute } from "@/modules/news_categories/news/router";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -24,6 +26,8 @@ const routes: RouteRecordRaw[] = [
       ...feedbacksRoute,
       ...contactsRoute,
       ...lawsRoute,
+      ...newsCategoriessRoute,
+      ...newsRoute,
     ],
   },
   ...authRoute,

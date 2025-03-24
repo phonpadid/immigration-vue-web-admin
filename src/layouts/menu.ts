@@ -122,6 +122,28 @@ export const menuItems: ItemType[] = reactive([
       { type: "divider" },
       {
         key: "11",
+        label: "ຂ່າວສານ",
+        icon: () =>
+          h("div", {}, [
+            h(Icon, {
+              icon: "mdi:newspaper-variant-multiple",
+              class: "text-base",
+            }),
+          ]),
+        children: [
+          {
+            key: "newsCategoriess",
+            label: "ປະເພດຂ່າວ",
+          },
+          {
+            key: "news",
+            label: "ຂ່າວ",
+          },
+        ],
+        // role: ['super_admin', 'admin']
+      },
+      {
+        key: "12",
         label: "ຈັດການຜູ້ໃຊ້",
         icon: () =>
           h("div", {}, [
@@ -147,18 +169,18 @@ export const menuItems: ItemType[] = reactive([
         ],
         // role: ['super_admin', 'admin']
       },
-      {
-        key: "logout",
-        label: "ອອກຈາກລະບົບ",
-        icon: () =>
-          h("div", {}, [
-            h(Icon, {
-              icon: "streamline:interface-logout-circle-arrow-enter-right-logout-point-circle",
-              class: "text-base",
-            }),
-          ]),
-        onClick: logout,
-      },
+      // {
+      //   key: "logout",
+      //   label: "ອອກຈາກລະບົບ",
+      //   icon: () =>
+      //     h("div", {}, [
+      //       h(Icon, {
+      //         icon: "streamline:interface-logout-circle-arrow-enter-right-logout-point-circle",
+      //         class: "text-base",
+      //       }),
+      //     ]),
+      //   onClick: logout,
+      // },
     ],
     type: "group",
   },

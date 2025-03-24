@@ -6,6 +6,7 @@ import { useUserStore } from "../store/user.store";
 import { useRolesStore } from "../../role/store/role.store";
 import { useRoute, useRouter } from "vue-router";
 import { message } from "ant-design-vue";
+import { useNotification } from "@/utils/notificationService";
 import UploadFile from "@/components/Upload/UploadFile.vue";
 import UiInput from "@/components/Input/UiInput.vue";
 import UiForm from "@/components/Form/UiForm.vue";
@@ -14,32 +15,17 @@ import InputSelect from "@/components/Input/InputSelect.vue";
 import UiInputPassword from "@/components/Input/UiInputPassword.vue";
 import LoadingSpinner from "@/components/loading/LoadingSpinner.vue";
 
+//***************************************************************** */
 // Initialize stores
+const { openNotification } = useNotification();
 const userStore = useUserStore();
 const roleStore = useRolesStore();
 const route = useRoute();
 const router = useRouter();
-
-// Form reference for validation
 const formRef = ref();
-
-// Get user ID from route params
 const userId = computed(() => route.params.id as string);
-
-// Reactive state for form inputs
-const formUser = reactive<UserForm>({
-  first_name: "",
-  last_name: "",
-  email: "",
-  role_ids: "",
-  image: null as File | null,
-  password: "",
-  confirmPassword: "",
-});
-
 // Track if image has been changed
 const imageChanged = ref(false);
-
 // Track if password should be updated
 const updatePassword = ref(false);
 
@@ -56,6 +42,19 @@ const errors = ref({
   role_ids: null as string | null,
   password: null as string | null,
 });
+//***************************************************************** */
+
+// Reactive state for form inputs
+const formUser = reactive<UserForm>({
+  first_name: "",
+  last_name: "",
+  email: "",
+  role_ids: "",
+  image: null as File | null,
+  password: "",
+  confirmPassword: "",
+});
+//***************************************************************** */
 
 // Handle file selection
 const handleFileSelect = (selectedFile: File) => {
@@ -69,16 +68,7 @@ const handleRoleChange = (value: string) => {
   formUser.role_ids = value;
   errors.value.role_ids = null;
 };
-
-// Toggle password update
-const togglePasswordUpdate = () => {
-  updatePassword.value = !updatePassword.value;
-  if (!updatePassword.value) {
-    formUser.password = "";
-    formUser.confirmPassword = "";
-    errors.value.password = null;
-  }
-};
+//***************************************************************** */
 
 // Custom validation before submission
 const validateForm = async () => {
@@ -114,6 +104,7 @@ const validateForm = async () => {
     return false;
   }
 };
+//***************************************************************** */
 
 // Function to handle form submission
 const submitData = async () => {
@@ -147,8 +138,8 @@ const submitData = async () => {
     const result = await userStore.updateUser(parseInt(userId.value), userData);
 
     if (result) {
-      message.success("ອັບເດດຂໍ້ມູນຜູ້ໃຊ້ສຳເລັດ");
-      // Navigate back to user list
+      openNotification("success", "ອັບເດດຜູ້ໃຊ້", "ອັບເດດສຳເລັດ");
+
       router.push("/users");
     }
   } catch (error) {
@@ -158,6 +149,7 @@ const submitData = async () => {
     isSubmitting.value = false;
   }
 };
+//***************************************************************** */
 
 // Prepare roles data for select component
 const rolesOptions = computed(() => {
@@ -170,6 +162,7 @@ const rolesOptions = computed(() => {
     label: role.name,
   }));
 });
+//***************************************************************** */
 
 // Load user data
 const loadUserData = async () => {
@@ -211,6 +204,26 @@ const loadUserData = async () => {
     isLoading.value = false;
   }
 };
+//***************************************************************** */
+
+const getFullImageUrl = (imagePath: string) => {
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    // console.log("Image URL is already a full URL:", imagePath);
+    return imagePath;
+  }
+
+  // ถ้าเป็น path แบบเริ่มต้นด้วย / จะทำการตัด / ออก
+  const cleanPath = imagePath.startsWith("/")
+    ? imagePath.substring(1)
+    : imagePath;
+  const fullUrl = `${import.meta.env.VITE_IMG_URL}/${cleanPath}`;
+  // console.log("Original image path:", imagePath);
+  // console.log("Full image URL created:", fullUrl);
+
+  return fullUrl;
+};
+
+//***************************************************************** */
 
 onMounted(() => {
   loadUserData();
@@ -234,7 +247,7 @@ onMounted(() => {
       <UiFormItem label="ຮູບພາບປັດຈຸບັນ / ອັບໂຫລດຮູບພາບໃໝ່" name="image">
         <div class="mb-4" v-if="currentImageUrl">
           <img
-            :src="currentImageUrl"
+            :src="getFullImageUrl(currentImageUrl)"
             alt="User profile"
             class="w-32 h-32 object-cover rounded-lg border"
           />
