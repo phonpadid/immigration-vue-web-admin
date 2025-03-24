@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { columns } from "../interface/column";
-import { useLawStore } from "../store/laws.store";
+import { useNewscategoriesStore } from "../store/new.categories.store";
 import { useRouter } from "vue-router";
 import { formatDateTime } from "@/utils/FormatDataTime";
 import { Modal } from "ant-design-vue";
@@ -11,29 +11,49 @@ import Dropdown from "@/components/Dropdown/Dropdown.vue";
 import LoadingSpinner from "@/components/loading/LoadingSpinner.vue";
 
 /********************************************************************************* */
-const { getAlllaws, laws, isLoading, deleteLaws } = useLawStore();
+const { getAllNewsCategories, newsCategories, isLoading, deleteCategories } =
+  useNewscategoriesStore();
 const { push } = useRouter();
 const menuOptions = ref([
-  { key: "1", label: "ຂໍ້ມູນເອກະສານ" },
-  { key: "2", label: "ແກ້ໄຂ" },
-  { key: "3", label: "ລຶບ" },
+  { key: "1", label: "ແກ້ໄຂ" },
+  { key: "2", label: "ລຶບ" },
 ]);
 const Loading = ref(false);
-const addUser = () => {
-  push({ name: "laws_add" });
+const addNewsCategoires = () => {
+  push({ name: "newsCategoriess_add" });
 };
 /********************************************************************************* */
+const getCategoryNameByLang = (record: any, lang: string) => {
+  if (!record.translates || !Array.isArray(record.translates)) {
+    return "";
+  }
+
+  const translate = record.translates.find((t: any) => t.lang === lang);
+  return translate ? translate.name : "";
+};
+/********************************************************************************** */
+// lo
+const getLaoName = (record: any) => {
+  return getCategoryNameByLang(record, "lo");
+};
+
+// en
+const getEnglishName = (record: any) => {
+  return getCategoryNameByLang(record, "en");
+};
+
+// zh_cn
+const getChineseName = (record: any) => {
+  return getCategoryNameByLang(record, "zh_cn");
+};
+/********************************************************************************** */
 
 const handleSelect = (key: string, record: any) => {
-  console.log("Selected:", key, "for record:", record);
-  // Add logic to handle different actions based on key
+  //   console.log("Selected:", key, "for record:", record);
   if (key === "1") {
     // View details
-    push({ name: "laws_details", params: { id: record.id } });
+    push({ name: "newsCategoriess_edit", params: { id: record.id } });
   } else if (key === "2") {
-    // Edit
-    push({ name: "laws_edit", params: { id: record.id } });
-  } else if (key === "3") {
     Modal.confirm({
       title: "ຢືນຢັນການລົບ",
       content: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້??",
@@ -43,7 +63,7 @@ const handleSelect = (key: string, record: any) => {
       onOk: async () => {
         try {
           Loading.value = true;
-          await deleteLaws(record.id);
+          await deleteCategories(record.id);
           alert("ລົບຂໍ້ມູນສຳເລັດ");
         } catch (err) {
           console.error("Error:", err);
@@ -54,14 +74,14 @@ const handleSelect = (key: string, record: any) => {
     });
   }
 };
+
 /********************************************************************************* */
 
 onMounted(async () => {
   try {
-    await getAlllaws();
+    await getAllNewsCategories();
   } catch (error) {
     console.error("Failed to load laws:", error);
-    // Add error handling here
   }
 });
 </script>
@@ -76,14 +96,14 @@ onMounted(async () => {
     class="flex flex-col items-start justify-between p-4 sm:flex-row sm:items-center mt-4"
   >
     <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
-      ຕາຕະລາງກ່ຽວກັບກົດໝາຍແລະເອກະສານທາງດ້ານກົດໝາຍ
+      ຕາຕະລາງປະເພດຂ່າວ
     </h2>
     <UiButton
       type="primary"
       size="large"
       colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
       icon="ant-design:plus-outlined"
-      @click="addUser"
+      @click="addNewsCategoires"
       >ເພີ່ມຂໍ້ມູນ</UiButton
     >
   </div>
@@ -91,9 +111,19 @@ onMounted(async () => {
   <div class="relative">
     <Table
       :columns="columns"
-      :dataSource="laws.data || []"
+      :dataSource="newsCategories.data || []"
       class="dark:bg-gray-800 dark:text-white dark:border-gray-700"
     >
+      <!-- เพิ่ม template สำหรับแสดงชื่อในแต่ละภาษา -->
+      <template #name_lo="{ record }">
+        {{ getLaoName(record) }}
+      </template>
+      <template #name_en="{ record }">
+        {{ getEnglishName(record) }}
+      </template>
+      <template #name_zh_cn="{ record }">
+        {{ getChineseName(record) }}
+      </template>
       <template #created_at="{ record }">
         {{ formatDateTime(record.created_at) }}
       </template>

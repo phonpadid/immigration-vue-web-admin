@@ -14,13 +14,16 @@ import UiForm from "@/components/Form/UiForm.vue";
 import UiFormItem from "@/components/Form/UiFormItem.vue";
 import InputSelect from "@/components/Input/InputSelect.vue";
 
+//***************************************************************** */
+const { openNotification } = useNotification();
+
 // Initialize user store
 const userStore = useUserStore();
 const roleStore = useRolesStore();
 const router = useRouter();
-const { openNotification } = useNotification();
-// Form reference for validation
 const formRef = ref();
+const isSubmitting = ref(false);
+//***************************************************************** */
 
 // Reactive state for form inputs
 const formUser = reactive<UserForm>({
@@ -32,16 +35,14 @@ const formUser = reactive<UserForm>({
   role_ids: "",
   image: null as File | null,
 });
-
-// Loading state
-const isSubmitting = ref(false);
-
+//***************************************************************** */
 // Reactive state for errors
 const errors = ref({
   file: null as string | null,
   confirmPassword: null as string | null,
   role_ids: null as string | null,
 });
+//***************************************************************** */
 
 // Check if passwords match
 const passwordsMatch = computed(() => {
@@ -49,6 +50,7 @@ const passwordsMatch = computed(() => {
     !formUser.confirmPassword || formUser.password === formUser.confirmPassword
   );
 });
+//***************************************************************** */
 
 // Watch for confirm password changes
 watch(
@@ -61,6 +63,7 @@ watch(
     }
   }
 );
+//***************************************************************** */
 
 // Watch for password changes (to validate confirm password again)
 watch(
@@ -75,23 +78,26 @@ watch(
     }
   }
 );
+//***************************************************************** */
 
 // Handle file selection
 const handleFileSelect = (selectedFile: File) => {
   formUser.image = selectedFile;
-  console.log("Selected file:", selectedFile.name);
+  // console.log("Selected file:", selectedFile.name);
 
   // Clear file error when a file is selected
   errors.value.file = null;
 };
+//***************************************************************** */
 
 // Handle role selection
 const handleRoleChange = (value: string) => {
   formUser.role_ids = value;
-  console.log("Selected role:", value);
+  // console.log("Selected role:", value);
   // Clear role error when a role is selected
   errors.value.role_ids = null;
 };
+//***************************************************************** */
 
 // Custom validation before submission
 const validateForm = async () => {
@@ -126,6 +132,7 @@ const validateForm = async () => {
     return false;
   }
 };
+//***************************************************************** */
 
 // Function to handle form submission
 const submitData = async () => {
@@ -161,7 +168,7 @@ const submitData = async () => {
 
     if (result) {
       // Show success message
-      openNotification("ບັນທຶກຂໍ້ມູນຜູ້ໃຊ້", "ບັນທຶກສຳເລັດ");
+      openNotification("success", "ບັນທຶກຂໍ້ມູນຜູ້ໃຊ້", "ບັນທຶກສຳເລັດ");
       formUser.image = null;
       errors.value = { file: null, confirmPassword: null, role_ids: null };
       router.push({ name: "users" });
@@ -176,6 +183,7 @@ const submitData = async () => {
     isSubmitting.value = false;
   }
 };
+//***************************************************************** */
 
 // Watch for image changes
 watch(
@@ -186,11 +194,7 @@ watch(
     }
   }
 );
-
-// Debug log for role store data
-const logRoleStoreData = () => {
-  console.log("Role store data:", roleStore.roles.data);
-};
+//***************************************************************** */
 
 // Prepare roles data for select component
 const rolesOptions = computed(() => {
@@ -212,23 +216,23 @@ const rolesOptions = computed(() => {
     };
   });
 });
+//***************************************************************** */
 
 // Fetch roles data
 const getRoleUser = async () => {
   try {
-    console.log("Fetching roles data...");
+    // console.log("Fetching roles data...");
     await roleStore.getAllRoles();
-    console.log("Roles data fetched successfully");
-    logRoleStoreData();
+    // console.log("Roles data fetched successfully");
   } catch (error) {
     console.error("Failed to fetch roles:", error);
     message.error("ບໍ່ສາມາດດຶງຂໍ້ມູນບົດບາດຜູ້ໃຊ້ໄດ້");
   }
 };
+//***************************************************************** */
 
 // Component lifecycle hook
 onMounted(async () => {
-  console.log("Component mounted");
   await getRoleUser();
 });
 </script>

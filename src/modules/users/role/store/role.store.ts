@@ -5,15 +5,16 @@ import type { RoleFrom } from "../interface/role.interface";
 
 export const useRolesStore = defineStore("roles", () => {
   const isLoading = ref(false);
-  const roles = reactive<{ data: RoleFrom[] }>({
+  const roles = reactive<{ data: RoleFrom[]; total: number }>({
     data: [],
+    total: 0,
   });
   const currentRole = ref<RoleFrom | null>(null);
 
-  const getAllRoles = async () => {
+  const getAllRoles = async (offset = 0, limit = 10) => {
     try {
       isLoading.value = true;
-      const { data } = await api.get("/roles");
+      const { data } = await api.get(`/roles?offset=${offset}&limit=${limit}`);
 
       if (data?.data && Array.isArray(data.data)) {
         roles.data = data.data;
@@ -76,7 +77,7 @@ export const useRolesStore = defineStore("roles", () => {
 
   const deleteRole = async (id: string) => {
     try {
-      isLoading.value = true; 
+      isLoading.value = true;
       const res = await api.delete(`/roles/${id}`);
       if (res) {
         await getAllRoles();
@@ -84,7 +85,7 @@ export const useRolesStore = defineStore("roles", () => {
     } catch (error) {
       console.log(error);
     } finally {
-      isLoading.value = false; // เพิ่มการตั้งค่า isLoading เป็น false เมื่อเสร็จสิ้น
+      isLoading.value = false;
     }
   };
 

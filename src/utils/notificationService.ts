@@ -2,8 +2,12 @@
 import { notification } from "ant-design-vue";
 
 export const useNotification = () => {
-  const openNotification = (message: string, description: string) => {
-    notification.open({
+  const openNotification = (
+    type: "success" | "error" | "warning" | "info",
+    message: string,
+    description: string
+  ) => {
+    notification[type]({
       message,
       description,
       onClick: () => {

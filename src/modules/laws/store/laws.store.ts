@@ -45,7 +45,7 @@ export const useLawStore = defineStore("laws", () => {
     }
   };
 
-  const createLaws = async (form: { name: string; file: File }) => {
+  const createLaws = async (form: { name: string; file: File | string |null }) => {
     try {
       isLoading.value = true;
       const formData = buildFormData({

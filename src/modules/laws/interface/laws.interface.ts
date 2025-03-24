@@ -13,6 +13,11 @@ export type LawResponse = {
   updated_at: string;
 };
 
+export type LawForm = {
+  name: string;
+  file: string | null | File;
+};
+
 export interface LawsResponse extends IPaginated {
   laws: LawResponse[];
 }
