@@ -4,6 +4,8 @@ import { columns } from "../interface/column";
 import { useUserStore } from "../store/user.store";
 import { useRouter } from "vue-router";
 import { formatDateTime } from "@/utils/FormatDataTime";
+import { getImageUrl } from "@/utils/ConfigPathImage";
+import { Icon } from "@iconify/vue";
 import Table from "@/components/table/Table.vue";
 import UiButton from "@/components/button/UiButton.vue";
 import Dropdown from "@/components/Dropdown/Dropdown.vue";
@@ -79,8 +81,22 @@ onMounted(async () => {
       class="dark:bg-gray-800 dark:text-white dark:border-gray-700"
     >
       <template #profile="{ record }">
-        {{ record.profile.first_name }} {{ record.profile.last_name }}
+        <div class="flex items-center space-x-3">
+          <a-avatar
+            v-if="record.profile.image"
+            :src="getImageUrl(record.profile.image)"
+            alt="Avatar"
+          />
+          <a-avatar v-else class="bg-gray-300">
+            <Icon icon="ic:baseline-person" class="text-gray-500 text-4xl" />
+          </a-avatar>
+          <span
+            >{{ record.profile.first_name }}
+            {{ record.profile.last_name }}</span
+          >
+        </div>
       </template>
+
       <template #created_at="{ record }">
         {{ formatDateTime(record.created_at) }}
       </template>

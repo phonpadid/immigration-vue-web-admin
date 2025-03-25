@@ -84,6 +84,33 @@ export const menuItems: ItemType[] = reactive([
       ]),
   },
   {
+    key: "101",
+    label: "ຈັດການດ່ານ",
+    icon: () =>
+      h("div", {}, [
+        h(Icon, {
+          icon: "ic:sharp-fact-check",
+          class: "text-base",
+        }),
+      ]),
+    children: [
+      {
+        key: "checkpointCategories",
+        label: "ປະເພດດ່ານ",
+      },
+      {
+        key: "checkpoint",
+        label: "ຂໍ້ມູນດ່ານ",
+      },
+      {
+        key: "province",
+        label: "ຈັດການແຂວງ",
+      },
+    ],
+    // role: ['super_admin', 'admin']
+  },
+
+  {
     key: "feedbacks",
     label: "ຄຳຕິຊົມ",
     icon: () =>
