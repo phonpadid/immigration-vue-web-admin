@@ -103,7 +103,7 @@ export const menuItems: ItemType[] = reactive([
         label: "ຂໍ້ມູນດ່ານ",
       },
       {
-        key: "province",
+        key: "provinces",
         label: "ຈັດການແຂວງ",
       },
     ],
