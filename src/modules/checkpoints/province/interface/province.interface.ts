@@ -24,7 +24,7 @@ interface LanguageData {
 }
 
 export type ProvinceForm = {
-  country_ids: number[];
+  countries: string[];
   lo: LanguageData;
   en: LanguageData;
   zh_cn: LanguageData;

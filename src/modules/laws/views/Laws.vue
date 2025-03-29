@@ -78,6 +78,7 @@ onMounted(async () => {
     <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
       ຕາຕະລາງກ່ຽວກັບກົດໝາຍແລະເອກະສານທາງດ້ານກົດໝາຍ
     </h2>
+
     <UiButton
       type="primary"
       size="large"

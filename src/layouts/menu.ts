@@ -144,6 +144,17 @@ export const menuItems: ItemType[] = reactive([
       ]),
   },
   {
+    key: "countries",
+    label: "ປະເທດ",
+    icon: () =>
+      h("div", {}, [
+        h(Icon, {
+          icon: "material-symbols-light:mode-cool",
+          class: "text-base",
+        }),
+      ]),
+  },
+  {
     label: "",
     children: [
       { type: "divider" },
