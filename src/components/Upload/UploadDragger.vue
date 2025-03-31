@@ -1,12 +1,51 @@
 <script setup>
-import { ref, defineEmits } from "vue";
+import { ref, defineEmits, defineProps, onMounted, watch } from "vue";
 import { message } from "ant-design-vue";
 import { Icon } from "@iconify/vue";
+
+// เพิ่ม props เพื่อรับ URL รูปภาพที่มีอยู่
+const props = defineProps({
+  existingImageUrl: {
+    type: String,
+    default: "",
+  },
+});
 
 const fileList = ref([]);
 const previewImage = ref("");
 const previewVisible = ref(false);
 const emit = defineEmits(["onFileSelect"]);
+
+// เพิ่มฟังก์ชันเพื่อโหลดรูปภาพที่มีอยู่
+const loadExistingImage = () => {
+  if (props.existingImageUrl && props.existingImageUrl.trim() !== "") {
+    // สร้าง object คล้าย File object เพื่อแสดงในรายการ
+    fileList.value = [
+      {
+        uid: "-1",
+        name: "existing-image",
+        status: "done",
+        url: props.existingImageUrl,
+        thumbUrl: props.existingImageUrl,
+      },
+    ];
+  }
+};
+
+// เรียกใช้ฟังก์ชันเมื่อ component ถูกโหลด
+onMounted(() => {
+  loadExistingImage();
+});
+
+// watch existingImageUrl เพื่อโหลดรูปภาพใหม่เมื่อมีการเปลี่ยนแปลง URL
+watch(
+  () => props.existingImageUrl,
+  (newValue) => {
+    if (newValue && newValue.trim() !== "") {
+      loadExistingImage();
+    }
+  }
+);
 
 const beforeUpload = (file) => {
   const isValidType = [
@@ -46,9 +85,9 @@ const handlePreview = (file) => {
 </script>
 
 <template>
-  <div class="flex justify-center  px-4">
+  <div class="flex justify-center px-4">
     <div
-      class="border-2 border-dashed border-gray-300 p-6 w-full max-w-4xl h-60 flex justify-center items-center bg-gray-50"
+      class="border-2 border-dashed border-gray-300 p-6 w-full max-w-16xl h-60 flex justify-center items-center bg-gray-50"
     >
       <a-upload
         v-model:file-list="fileList"
@@ -81,14 +120,13 @@ const handlePreview = (file) => {
     </div>
   </div>
 </template>
-
 <style scoped>
 ::v-deep(.ant-upload) {
-  width: 840px !important;
+  width: 1200px !important;
   height: 180px !important;
 }
 ::v-deep(.ant-upload-list-item) {
-  min-width: 840px !important;
+  min-width: 1200px !important;
   height: 200px !important;
   transform: translateY(-45px);
 }

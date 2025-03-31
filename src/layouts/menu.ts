@@ -103,7 +103,7 @@ export const menuItems: ItemType[] = reactive([
         label: "ຂໍ້ມູນດ່ານ",
       },
       {
-        key: "province",
+        key: "provinces",
         label: "ຈັດການແຂວງ",
       },
     ],
@@ -139,6 +139,17 @@ export const menuItems: ItemType[] = reactive([
       h("div", {}, [
         h(Icon, {
           icon: "material-symbols:balance",
+          class: "text-base",
+        }),
+      ]),
+  },
+  {
+    key: "countries",
+    label: "ປະເທດ",
+    icon: () =>
+      h("div", {}, [
+        h(Icon, {
+          icon: "material-symbols-light:mode-cool",
           class: "text-base",
         }),
       ]),

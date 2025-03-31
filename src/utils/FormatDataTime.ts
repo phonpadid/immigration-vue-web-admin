@@ -4,7 +4,7 @@ export function formatDate(dateString: string): string {
   return dayjs(dateString).format("DD/MM/YYYY");
 }
 
-export function formatDateTime(dateString: string): string {
+export function formatDateTime(dateString: string | undefined): string {
   if (!dateString) {
     return "";
   }

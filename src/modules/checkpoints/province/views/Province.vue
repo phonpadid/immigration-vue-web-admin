@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { columns } from "../interface/column";
-import { useLawStore } from "../store/laws.store";
+import { useCheckpointProvinceStore } from "../store/province.store";
 import { useRouter } from "vue-router";
 import { formatDateTime } from "@/utils/FormatDataTime";
 import { Modal } from "ant-design-vue";
@@ -11,28 +11,65 @@ import Dropdown from "@/components/Dropdown/Dropdown.vue";
 import LoadingSpinner from "@/components/loading/LoadingSpinner.vue";
 
 /********************************************************************************* */
-const { getAlllaws, laws, isLoading, deleteLaws } = useLawStore();
+const {
+  getAllCheckpointProvine,
+  checkpointProvince,
+  isLoading,
+  deleteCheckpointProvinces,
+} = useCheckpointProvinceStore();
 const { push } = useRouter();
 const menuOptions = ref([
-  { key: "1", label: "ຂໍ້ມູນເອກະສານ" },
+  { key: "1", label: "ລາຍລະອຽດ" },
   { key: "2", label: "ແກ້ໄຂ" },
   { key: "3", label: "ລຶບ" },
 ]);
 const Loading = ref(false);
-const addUser = () => {
-  push({ name: "laws_add" });
+const addCheckpointProvince = () => {
+  push({ name: "provinces_add" });
 };
+
+const pagination = ref({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+  showSizeChanger: true,
+});
+
 /********************************************************************************* */
+const getCategoryNameByLang = (record: any, lang: string) => {
+  if (!record.translates || !Array.isArray(record.translates)) {
+    return "";
+  }
+
+  const translate = record.translates.find((t: any) => t.lang === lang);
+  return translate ? translate.name : "";
+};
+/********************************************************************************** */
+// lo
+const getLaoName = (record: any) => {
+  return getCategoryNameByLang(record, "lo");
+};
+
+// en
+const getEnglishName = (record: any) => {
+  return getCategoryNameByLang(record, "en");
+};
+
+// zh_cn
+const getChineseName = (record: any) => {
+  return getCategoryNameByLang(record, "zh_cn");
+};
+/********************************************************************************** */
 
 const handleSelect = (key: string, record: any) => {
-  console.log("Selected:", key, "for record:", record);
-  // Add logic to handle different actions based on key
+  //   console.log("Selected:", key, "for record:", record);
   if (key === "1") {
     // View details
-    push({ name: "laws_details", params: { id: record.id } });
-  } else if (key === "2") {
-    // Edit
-    push({ name: "laws_edit", params: { id: record.id } });
+    push({ name: "provinces_details", params: { id: record.id } });
+  }
+  if (key === "2") {
+    // View details
+    push({ name: "provinces_edit", params: { id: record.id } });
   } else if (key === "3") {
     Modal.confirm({
       title: "ຢືນຢັນການລົບ",
@@ -43,7 +80,7 @@ const handleSelect = (key: string, record: any) => {
       onOk: async () => {
         try {
           Loading.value = true;
-          await deleteLaws(record.id);
+          await deleteCheckpointProvinces(record.id);
           alert("ລົບຂໍ້ມູນສຳເລັດ");
         } catch (err) {
           console.error("Error:", err);
@@ -54,15 +91,29 @@ const handleSelect = (key: string, record: any) => {
     });
   }
 };
+
 /********************************************************************************* */
 
-onMounted(async () => {
+const loadCheckpointProvinces = async () => {
   try {
-    await getAlllaws();
+    await getAllCheckpointProvine(
+      pagination.value.current,
+      pagination.value.pageSize
+    );
+    pagination.value.total = checkpointProvince.total;
   } catch (error) {
-    console.error("Failed to load laws:", error);
-    // Add error handling here
+    console.error("Failed to load:", error);
   }
+};
+
+const handleTableChange = (newPagination: any) => {
+  pagination.value = { ...pagination.value, ...newPagination };
+  loadCheckpointProvinces();
+};
+/********************************************************************************* */
+
+onMounted(() => {
+  loadCheckpointProvinces();
 });
 </script>
 
@@ -76,15 +127,14 @@ onMounted(async () => {
     class="flex flex-col items-start justify-between p-4 sm:flex-row sm:items-center mt-4"
   >
     <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
-      ຕາຕະລາງກ່ຽວກັບກົດໝາຍແລະເອກະສານທາງດ້ານກົດໝາຍ
+      ຕາຕະລາງແຂວງ
     </h2>
-
     <UiButton
       type="primary"
       size="large"
       colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
       icon="ant-design:plus-outlined"
-      @click="addUser"
+      @click="addCheckpointProvince"
       >ເພີ່ມຂໍ້ມູນ</UiButton
     >
   </div>
@@ -92,9 +142,20 @@ onMounted(async () => {
   <div class="relative">
     <Table
       :columns="columns"
-      :dataSource="laws.data || []"
+      :dataSource="checkpointProvince.data || []"
       class="dark:bg-gray-800 dark:text-white dark:border-gray-700"
+      v-model:pagination="pagination"
+      @update:pagination="handleTableChange"
     >
+      <template #name_lo="{ record }">
+        {{ getLaoName(record) }}
+      </template>
+      <template #name_en="{ record }">
+        {{ getEnglishName(record) }}
+      </template>
+      <template #name_zh_cn="{ record }">
+        {{ getChineseName(record) }}
+      </template>
       <template #created_at="{ record }">
         {{ formatDateTime(record.created_at) }}
       </template>

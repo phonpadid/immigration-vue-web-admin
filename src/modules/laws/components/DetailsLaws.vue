@@ -4,17 +4,14 @@ import { useLawStore } from "../store/laws.store";
 import { useRoute } from "vue-router";
 import type { LawResponse } from "../interface/laws.interface";
 import { formatDateTime } from "@/utils/FormatDataTime";
+import { getFileUrl } from "@/utils/ConfigPathImage";
+
+/*********************************************** */
 
 const { getDetailsLaw } = useLawStore();
 const lawData = ref<LawResponse | null>(null);
 const route = useRoute();
 const lawsId = Number(route.params.id);
-
-const imgBaseUrl = import.meta.env.VITE_IMG_URL;
-const getFileUrl = (filePath: string | undefined) => {
-  if (!filePath) return "";
-  return `${imgBaseUrl}/${filePath}`;
-};
 
 const getFileName = (filePath: string | undefined) => {
   if (!filePath) return "";
@@ -54,7 +51,7 @@ onMounted(async () => {
             >
               {{ getFileName(lawData.file) }}
             </a>
-            <span v-else>ไม่มีไฟล์</span>
+            <span v-else>ບໍ່ມີຟາຍ</span>
           </dd>
           <dt class="text-gray-900 dark:text-white leading-4 font-normal mb-2">
             ຊື
@@ -79,7 +76,7 @@ onMounted(async () => {
       </dl>
     </div>
     <div v-else class="p-4 flex items-center justify-center">
-      กำลังโหลดข้อมูล...
+      ກຳລັງໂຫລດຂໍ້ມູນ...
     </div>
   </div>
 </template>

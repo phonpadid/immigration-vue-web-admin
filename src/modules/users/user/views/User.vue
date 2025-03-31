@@ -29,7 +29,7 @@ const handleSelect = (key: string, record: any) => {
   // Add logic to handle different actions based on key
   if (key === "1") {
     // View details
-    push({ name: "users_deatils", params: { id: record.id } });
+    push({ name: "users_details", params: { id: record.id } });
   } else if (key === "2") {
     // Edit
     push({ name: "users_edit", params: { id: record.id } });
