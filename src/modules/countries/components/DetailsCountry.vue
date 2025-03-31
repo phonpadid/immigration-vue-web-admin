@@ -9,6 +9,8 @@ import type {
 } from "../interface/country.interface";
 import { formatDateTime } from "@/utils/FormatDataTime";
 import { imgBaseUrl } from "@/utils/ConfigPathImage";
+import { Modal } from "ant-design-vue";
+import { useNotification } from "@/utils/notificationService";
 import Tab from "@/components/Tab/Tab.vue";
 import UiButton from "@/components/button/UiButton.vue";
 
@@ -23,12 +25,14 @@ const laoTranslation = ref<Translation | null>(null);
 const englishTranslation = ref<Translation | null>(null);
 const chineseTranslation = ref<Translation | null>(null);
 /************************************************************* */
-const { getCountryById } = useCountryStore();
+const { getCountryById, deleteCountry } = useCountryStore();
 const countryData = ref<CountryDetailsResponse | null>(null);
 const route = useRoute();
 const { push } = useRouter();
 const countryId = ref<number | null>(null);
 const isLoading = ref(false);
+const { openNotification } = useNotification();
+/******************************************************************* */
 // Helper function to get translation by language
 const getTranslation = (lang: string): Translation | null => {
   if (!countryData.value || !countryData.value.translates) return null;
@@ -39,6 +43,29 @@ const getTranslation = (lang: string): Translation | null => {
 
 const editCountry = () => {
   push({ name: "countries_edit" });
+};
+
+const removeCountry = (id: number) => {
+  Modal.confirm({
+    title: "ຢືນຢັນການລົບ",
+    content: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້??",
+    okText: "ແມ່ນແລ້ວ,ຂ້ອຍແນ່ໃຈ",
+    cancelText: "ບໍ່,ຍົກເລີກ",
+    okType: "danger",
+    onOk: async () => {
+      try {
+        isLoading.value = true;
+        await deleteCountry(id);
+        push({ name: "countries" });
+        openNotification("success", "ລຶບຂໍ້ມູນ", "ລົບຂໍ້ມູນສຳເລັດ");
+      } catch (err) {
+        console.error("Error:", err);
+        openNotification("error", "ລຶບຂໍ້ມູນ", "ເກີດຂໍ້ຜິດພາດໃນການລຶບ");
+      } finally {
+        isLoading.value = false;
+      }
+    },
+  });
 };
 
 const fetchCountryData = async (id: number): Promise<void> => {
@@ -324,6 +351,7 @@ onMounted(() => {
       </UiButton>
 
       <UiButton
+        @click="countryId !== null && removeCountry(countryId)"
         type="button"
         size="large"
         icon="material-symbols:delete-outline-sharp"

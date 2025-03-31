@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { columns } from "../interface/column";
 import { useCountryStore } from "../store/country.store";
 import { useRouter } from "vue-router";
@@ -7,7 +7,6 @@ import { formatDateTime } from "@/utils/FormatDataTime";
 import { Modal } from "ant-design-vue";
 import { getImageUrl } from "@/utils/ConfigPathImage";
 import InputSelect from "@/components/Input/InputSelect.vue";
-
 import Table from "@/components/table/Table.vue";
 import UiButton from "@/components/button/UiButton.vue";
 import Dropdown from "@/components/Dropdown/Dropdown.vue";
@@ -32,48 +31,40 @@ const pagination = ref({
   total: 0,
   showSizeChanger: true,
 });
-/********************************************************************* */
 
+/********************************************************************* */
 const selectedValue = ref("");
 const options = [
   { value: "", label: "ເລືອກປະເທດທີຍົກເວັ້ນວິຊາ" },
   { value: "0", label: "ຕ້ອງການວິຊາ" },
   { value: "1", label: "ຍົກເວັ້ນວິຊາ" },
 ];
-/********************************************************************* */
 
 /********************************************************************************* */
 const getCountryNameByLang = (record: any, lang: string) => {
   if (!record.translates || !Array.isArray(record.translates)) {
     return "";
   }
-
   const translate = record.translates.find((t: any) => t.lang === lang);
   return translate ? translate.name : "";
 };
-/********************************************************************************** */
+
 // lo
-const getLaoName = (record: any) => {
-  return getCountryNameByLang(record, "lo");
-};
+const getLaoName = (record: any) => getCountryNameByLang(record, "lo");
 
-/********************************************************************************** */
-
+/********************************************************************************* */
 const handleSelect = (key: string, record: any) => {
-  //   console.log("Selected:", key, "for record:", record);
   if (key === "1") {
-    // View details
     push({ name: "countries_details", params: { id: record.id } });
   }
   if (key === "2") {
-    // View details
     push({ name: "countries_edit", params: { id: record.id } });
   } else if (key === "3") {
     Modal.confirm({
       title: "ຢືນຢັນການລົບ",
-      content: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້??",
-      okText: "ແມ່ນແລ້ວ,ຂ້ອຍແນ່ໃຈ",
-      cancelText: "ບໍ່,ຍົກເລີກ",
+      content: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້?",
+      okText: "ແມ່ນແລ້ວ, ຂ້ອຍແນ່ໃຈ",
+      cancelText: "ບໍ່, ຍົກເລີກ",
       okType: "danger",
       onOk: async () => {
         try {
@@ -91,22 +82,31 @@ const handleSelect = (key: string, record: any) => {
 };
 
 /********************************************************************************* */
-
 const loadCountry = async () => {
   try {
-    await getAllCountry(pagination.value.current, pagination.value.pageSize);
+    await getAllCountry(
+      (pagination.value.current - 1) * pagination.value.pageSize,
+      pagination.value.pageSize,
+      selectedValue.value
+    );
     pagination.value.total = country.total;
   } catch (error) {
     console.error("Failed to load:", error);
   }
 };
 
+watch(selectedValue, async () => {
+  pagination.value.current = 1;
+  await loadCountry();
+});
+
+/********************************************************************************* */
 const handleTableChange = (newPagination: any) => {
   pagination.value = { ...pagination.value, ...newPagination };
   loadCountry();
 };
-/********************************************************************************* */
 
+/********************************************************************************* */
 onMounted(() => {
   loadCountry();
 });
@@ -123,7 +123,6 @@ onMounted(() => {
     <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
       ຕາຕະລາງເກັບຮັກສາຂໍ້ມູນປະເທດ
     </h2>
-
     <div
       class="flex items-center justify-end flex-col sm:flex-row gap-2 w-full sm:w-fit"
     >
@@ -132,7 +131,7 @@ onMounted(() => {
         :options="options"
         placeholder="ເລືອກສະຖານະ"
         size="large"
-        width="130px"
+        width="200px"
       />
       <UiButton
         type="primary"
@@ -159,7 +158,7 @@ onMounted(() => {
         <img
           :src="getImageUrl(record.image)"
           alt="Country"
-          class="w-32 h-full object-cover rounded-full"
+          class="w-32 h-full object-cover"
         />
       </template>
       <template #is_except_visa="{ record }">
@@ -171,7 +170,6 @@ onMounted(() => {
           {{ record.is_except_visa ? "ຍົກເວັ້ນວິຊາ" : "ຕ້ອງການວິຊາ" }}
         </span>
       </template>
-
       <template #created_at="{ record }">
         {{ formatDateTime(record.created_at) }}
       </template>
@@ -191,4 +189,3 @@ onMounted(() => {
     </Table>
   </div>
 </template>
-<style></style>

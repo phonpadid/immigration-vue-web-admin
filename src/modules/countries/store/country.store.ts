@@ -18,12 +18,20 @@ export const useCountryStore = defineStore("country", () => {
 
   /****************************************************************** */
 
-  const getAllCountry = async (offset = 0, limit = 10) => {
+  const getAllCountry = async (
+    offset = 0,
+    limit = 10,
+    is_except_visa?: string
+  ) => {
     try {
       isLoading.value = true;
-      const { data } = await api.get(
-        `/country?offset=${offset}&limit=${limit}`
-      );
+      let url = `/country?offset=${offset}&limit=${limit}`;
+
+      // เพิ่ม filter สำหรับ is_except_visa ถ้ามีค่า
+      if (is_except_visa !== undefined && is_except_visa !== "") {
+        url += `&is_except_visa=${is_except_visa}`;
+      }
+      const { data } = await api.get(url);
 
       if (data?.data && Array.isArray(data.data)) {
         country.data = data.data;
@@ -132,7 +140,7 @@ export const useCountryStore = defineStore("country", () => {
   const deleteCountry = async (id: number) => {
     try {
       isLoading.value = true;
-      const res = await api.delete(`/provinces/${id}`);
+      const res = await api.delete(`/country/${id}`);
       if (res) {
         await getAllCountry();
       }

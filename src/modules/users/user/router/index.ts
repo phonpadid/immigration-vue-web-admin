@@ -28,7 +28,7 @@ export const usersRoute: RouteRecordRaw[] = [
   },
   {
     path: "/users/details/:id",
-    name: "users_deatils",
+    name: "users_details",
     component: () => import("../components/DetailsUser.vue"),
     // meta: {
     //   middleware: [Middlewares.guest],

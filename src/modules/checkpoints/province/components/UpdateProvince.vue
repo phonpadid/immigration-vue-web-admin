@@ -211,7 +211,7 @@ const handleSubmit = async () => {
         :loading="isLoading"
         colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
       >
-        ອັບເດດແຂວງ
+        ແກ້ໄຂ
       </UiButton>
     </UiForm>
   </div>

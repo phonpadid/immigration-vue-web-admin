@@ -4,7 +4,6 @@ import { useRouter, useRoute } from "vue-router";
 import { useNewscategoriesStore } from "../store/new.categories.store";
 import { useNotification } from "@/utils/notificationService";
 import { Modal } from "ant-design-vue";
-
 import UiForm from "@/components/Form/UiForm.vue";
 import UiFormItem from "@/components/Form/UiFormItem.vue";
 import UiInput from "@/components/Input/UiInput.vue";
@@ -63,7 +62,7 @@ const updateName = (lang: LanguageKeys, value: string) => {
 /********************************************************************************* */
 // Remove
 
-const removeLaw = async (id: number) => {
+const removeNewCategories = async (id: number) => {
   Modal.confirm({
     title: "ຢືນຢັນການລົບ",
     content: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້??",
@@ -242,7 +241,7 @@ onMounted(() => {
         :loading="isLoading"
         colorClass="!bg-red-700 hover:!bg-red-900 text-white flex items-center"
         icon="material-symbols:delete-outline-rounded"
-        @click="removeLaw(categoryId)"
+        @click="removeNewCategories(categoryId)"
       >
         ລຶບ
       </UiButton>

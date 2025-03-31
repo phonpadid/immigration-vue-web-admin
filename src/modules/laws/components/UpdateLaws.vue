@@ -5,6 +5,7 @@ import type { LawForm } from "../interface/laws.interface";
 import { useLawStore } from "../store/laws.store";
 import { useNotification } from "@/utils/notificationService";
 import { rulesLaws } from "../validation/law.validation";
+import { Modal } from "ant-design-vue";
 import UploadFIlePDF from "@/components/Upload/UploadFIlePDF.vue";
 import UiForm from "@/components/Form/UiForm.vue";
 import UiFormItem from "@/components/Form/UiFormItem.vue";
@@ -61,10 +62,28 @@ const handleUpdate = async () => {
     isSubmitting.value = false;
   }
 };
-
-// กลับไปหน้ารายการกฎหมาย
-const handleRemoveLaws = () => {
-  router.push("/laws");
+/********************************************************************* */
+const handleRemoveLaws = (id: number) => {
+  Modal.confirm({
+    title: "ຢືນຢັນການລົບ",
+    content: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້??",
+    okText: "ແມ່ນແລ້ວ,ຂ້ອຍແນ່ໃຈ",
+    cancelText: "ບໍ່,ຍົກເລີກ",
+    okType: "danger",
+    onOk: async () => {
+      try {
+        isLoading.value = true;
+        await lawStore.deleteLaws(id);
+        router.push({ name: "laws" });
+        openNotification("success", "ລຶບຂໍ້ມູນ", "ລົບຂໍ້ມູນສຳເລັດ");
+      } catch (err) {
+        console.error("Error:", err);
+        openNotification("error", "ລຶບຂໍ້ມູນ", "ເກີດຂໍ້ຜິດພາດໃນການລຶບ");
+      } finally {
+        isLoading.value = false;
+      }
+    },
+  });
 };
 /***************************************************************** */
 onMounted(async () => {

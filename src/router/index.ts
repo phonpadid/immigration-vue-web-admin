@@ -19,7 +19,7 @@ import { countryRoute } from "@/modules/countries/router";
 
 const routes: RouteRecordRaw[] = [
   {
-    path: "/",
+    path: "/admin",
     component: () => import("../layouts/BaseLayout.vue"),
     children: [
       ...dashboardRoute,
@@ -33,7 +33,7 @@ const routes: RouteRecordRaw[] = [
       ...newsRoute,
       ...checkpointCategoriesRoute,
       ...provinceRoute,
-      ...countryRoute
+      ...countryRoute,
     ],
   },
   ...authRoute,

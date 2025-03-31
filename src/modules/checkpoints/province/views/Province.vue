@@ -19,8 +19,9 @@ const {
 } = useCheckpointProvinceStore();
 const { push } = useRouter();
 const menuOptions = ref([
-  { key: "1", label: "ແກ້ໄຂ" },
-  { key: "2", label: "ລຶບ" },
+  { key: "1", label: "ລາຍລະອຽດ" },
+  { key: "2", label: "ແກ້ໄຂ" },
+  { key: "3", label: "ລຶບ" },
 ]);
 const Loading = ref(false);
 const addCheckpointProvince = () => {
@@ -64,8 +65,12 @@ const handleSelect = (key: string, record: any) => {
   //   console.log("Selected:", key, "for record:", record);
   if (key === "1") {
     // View details
+    push({ name: "provinces_details", params: { id: record.id } });
+  }
+  if (key === "2") {
+    // View details
     push({ name: "provinces_edit", params: { id: record.id } });
-  } else if (key === "2") {
+  } else if (key === "3") {
     Modal.confirm({
       title: "ຢືນຢັນການລົບ",
       content: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້??",

@@ -4,8 +4,6 @@ import { useRoute, useRouter } from "vue-router";
 import { useCountryStore } from "../store/country.store";
 import { useNotification } from "@/utils/notificationService";
 import * as Yup from "yup";
-
-// Component imports
 import UiForm from "@/components/Form/UiForm.vue";
 import UiFormItem from "@/components/Form/UiFormItem.vue";
 import UiInput from "@/components/Input/UiInput.vue";
@@ -14,6 +12,7 @@ import UiButton from "@/components/button/UiButton.vue";
 import Textarea from "@/components/Input/Textarea.vue";
 import UploadDragger from "@/components/Upload/UploadDragger.vue";
 import Switch from "@/components/Switch/Switch.vue";
+import { Modal } from "ant-design-vue";
 
 // Type definitions
 type LanguageKey = "lo" | "en" | "zh_cn";
@@ -41,8 +40,8 @@ const currentCountryId = ref<number | null>(null);
 // Tabs configuration
 const tabsConfig = [
   { key: "1", label: "ພາສາລາວ", slotName: "tab1" },
-  { key: "2", label: "English", slotName: "tab2" },
-  { key: "3", label: "中文", slotName: "tab3" },
+  { key: "2", label: "ພາສາອັງກິດ", slotName: "tab2" },
+  { key: "3", label: "ພາສາຈີນ", slotName: "tab3" },
 ];
 
 // Form validation schema with more detailed validation
@@ -234,6 +233,29 @@ const handleSubmit = async () => {
     isLoading.value = false;
   }
 };
+/***********************Delete**************************** */
+const removeCountry = (id: number) => {
+  Modal.confirm({
+    title: "ຢືນຢັນການລົບ",
+    content: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້??",
+    okText: "ແມ່ນແລ້ວ,ຂ້ອຍແນ່ໃຈ",
+    cancelText: "ບໍ່,ຍົກເລີກ",
+    okType: "danger",
+    onOk: async () => {
+      try {
+        isLoading.value = true;
+        await countryStore.deleteCountry(id);
+        router.push({ name: "countries" });
+        openNotification("success", "ລຶບຂໍ້ມູນ", "ລົບຂໍ້ມູນສຳເລັດ");
+      } catch (err) {
+        console.error("Error:", err);
+        openNotification("error", "ລຶບຂໍ້ມູນ", "ເກີດຂໍ້ຜິດພາດໃນການລຶບ");
+      } finally {
+        isLoading.value = false;
+      }
+    },
+  });
+};
 
 // Fetch country details when component mounts
 onMounted(fetchCountryDetails);
@@ -248,10 +270,10 @@ onMounted(fetchCountryDetails);
     <Tab v-model="activeTab" :tabs="tabsConfig">
       <!-- Lao Language Tab -->
       <template #tab1>
-        <UiFormItem label="ຊື່ປະເທດ" name="lo.name">
+        <UiFormItem label="ຊື່" name="lo.name">
           <UiInput
             v-model="formData.lo.name"
-            placeholder="ປ້ອນຊື່ປະເທດ"
+            placeholder="ປ້ອນຊື່"
             allowClear
             size="large"
           />
@@ -267,18 +289,18 @@ onMounted(fetchCountryDetails);
 
       <!-- English Language Tab -->
       <template #tab2>
-        <UiFormItem label="Country Name" name="en.name">
+        <UiFormItem label="ຊື່" name="en.name">
           <UiInput
             v-model="formData.en.name"
-            placeholder="Enter country name"
+            placeholder="ປ້ອນຊື່"
             allowClear
             size="large"
           />
         </UiFormItem>
-        <UiFormItem label="Description" name="en.description">
+        <UiFormItem label="ຄຳອະທິບາຍ" name="en.description">
           <Textarea
             v-model="formData.en.description"
-            placeholder="Enter description"
+            placeholder="ປ້ອນຄຳອະທິບາຍ"
             name="en.description"
           />
         </UiFormItem>
@@ -286,43 +308,23 @@ onMounted(fetchCountryDetails);
 
       <!-- Chinese Language Tab -->
       <template #tab3>
-        <UiFormItem label="国家名称" name="zh_cn.name">
+        <UiFormItem label="ຊື່" name="zh_cn.name">
           <UiInput
             v-model="formData.zh_cn.name"
-            placeholder="输入国家名称"
+            placeholder="ປ້ອນຊື່"
             allowClear
             size="large"
           />
         </UiFormItem>
-        <UiFormItem label="描述" name="zh_cn.description">
+        <UiFormItem label="ຄຳອະທິບາຍ" name="zh_cn.description">
           <Textarea
             v-model="formData.zh_cn.description"
-            placeholder="输入描述"
+            placeholder="ປ້ອນຄຳອະທິບາຍ"
             name="zh_cn.description"
           />
         </UiFormItem>
       </template>
     </Tab>
-
-    <!-- Existing Image Display -->
-    <!-- <div v-if="fullImageUrl" class="mb-4">
-      <p class="mb-2 text-gray-600">ຮູບປະຈຸບັນ (Current Image):</p>
-      <img
-        :src="fullImageUrl"
-        alt="Current Country Image"
-        class="max-w-full h-auto rounded-lg"
-      />
-    </div> -->
-
-    <!-- <UploadDragger
-        v-model:fileList="formData.image"
-        @onFileSelect="handleFileSelect"
-        label="ອັບໂຫຼດຮູບປະເທດໃໝ່ (Upload New Image)"
-      /> -->
-    <!-- <UploadDragger
-      :existing-image-url="formData.existingImage"
-      @onFileSelect="handleFileSelect"
-    /> -->
     <UploadDragger
       :existing-image-url="fullImageUrl"
       @onFileSelect="handleFileSelect"
@@ -334,15 +336,25 @@ onMounted(fetchCountryDetails);
         name="is_except_visa"
       />
     </div>
-
-    <UiButton
-      @click="handleSubmit"
-      type="submit"
-      size="large"
-      :loading="isLoading"
-      colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
-    >
-      ອັບເດດປະເທດ
-    </UiButton>
+    <div class="p-4 flex items-center gap-4">
+      <UiButton
+        @click="handleSubmit"
+        type="submit"
+        size="large"
+        :loading="isLoading"
+        colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
+      >
+        ອັບເດດປະເທດ
+      </UiButton>
+      <UiButton
+        @click="currentCountryId !== null && removeCountry(currentCountryId)"
+        type="button"
+        size="large"
+        icon="material-symbols:delete-outline-sharp"
+        colorClass="!bg-red-500 hover:!bg-red-700 text-white flex items-center"
+      >
+        ລຶບ
+      </UiButton>
+    </div>
   </UiForm>
 </template>
