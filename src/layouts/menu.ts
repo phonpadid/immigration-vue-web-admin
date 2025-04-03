@@ -84,6 +84,28 @@ export const menuItems: ItemType[] = reactive([
       ]),
   },
   {
+    key: "110",
+    label: "ຈັດການໂຄສະນາ",
+    icon: () =>
+      h("div", {}, [
+        h(Icon, {
+          icon: "material-symbols:brand-awareness",
+          class: "text-base",
+        }),
+      ]),
+    children: [
+      {
+        key: "banners",
+        label: "ຈັດການປ້າຍ",
+      },
+      {
+        key: "popups",
+        label: "ຈັດການ popup",
+      },
+    ],
+    // role: ['super_admin', 'admin']
+  },
+  {
     key: "101",
     label: "ຈັດການດ່ານ",
     icon: () =>

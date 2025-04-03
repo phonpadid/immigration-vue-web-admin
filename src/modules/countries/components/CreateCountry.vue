@@ -4,7 +4,6 @@ import { useRouter } from "vue-router";
 import { useCountryStore } from "../store/country.store";
 import { useNotification } from "@/utils/notificationService";
 import * as Yup from "yup";
-
 import UiForm from "@/components/Form/UiForm.vue";
 import UiFormItem from "@/components/Form/UiFormItem.vue";
 import UiInput from "@/components/Input/UiInput.vue";
@@ -138,18 +137,18 @@ const handleSubmit = async () => {
 
         <!-- English Language Tab -->
         <template #tab2>
-          <UiFormItem label="Country Name" name="en.name">
+          <UiFormItem label="ຊື່" name="en.name">
             <UiInput
               v-model="formData.en.name"
-              placeholder="Enter country name"
+              placeholder="ປ້ອນຊື່ປະເທດ"
               allowClear
               size="large"
             />
           </UiFormItem>
-          <UiFormItem label="Description" name="en.description">
+          <UiFormItem label="ຄຳອະທິບາຍ" name="en.description">
             <Textarea
               v-model="formData.en.description"
-              placeholder="Enter description"
+              placeholder="ປ້ອນຄຳອະທິບາຍ"
               name="en.description"
             />
           </UiFormItem>
@@ -157,18 +156,18 @@ const handleSubmit = async () => {
 
         <!-- Chinese Language Tab -->
         <template #tab3>
-          <UiFormItem label="国家名称" name="zh_cn.name">
+          <UiFormItem label="ຊື່" name="zh_cn.name">
             <UiInput
               v-model="formData.zh_cn.name"
-              placeholder="输入国家名称"
+              placeholder="ປ້ອນຊື່ປະເທດ"
               allowClear
               size="large"
             />
           </UiFormItem>
-          <UiFormItem label="描述" name="zh_cn.description">
+          <UiFormItem label="ຄຳອະທິບາຍ" name="zh_cn.description">
             <Textarea
               v-model="formData.zh_cn.description"
-              placeholder="输入描述"
+              placeholder="ປ້ອນຄຳອະທິບາຍ"
               name="zh_cn.description"
             />
           </UiFormItem>

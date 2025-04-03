@@ -18,7 +18,7 @@ import { Modal } from "ant-design-vue";
 type LanguageKey = "lo" | "en" | "zh_cn";
 
 // Constants
-const IMAGE_MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const IMAGE_MAX_SIZE = 100 * 1024 * 1024; // 100MB
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif"];
 
 // Store and router hooks
@@ -104,7 +104,11 @@ const handleFileSelect = (file: File) => {
 
   // Validate file size
   if (file.size > IMAGE_MAX_SIZE) {
-    openNotification("error", "File Too Large", "Image must be less than 5MB");
+    openNotification(
+      "error",
+      "File Too Large",
+      "Image must be less than 100MB"
+    );
     return;
   }
 

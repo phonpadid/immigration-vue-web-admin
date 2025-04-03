@@ -16,6 +16,8 @@ import { newsRoute } from "@/modules/news_categories/news/router";
 import { checkpointCategoriesRoute } from "@/modules/checkpoints/category/router";
 import { provinceRoute } from "@/modules/checkpoints/province/router";
 import { countryRoute } from "@/modules/countries/router";
+import { bannerRoute } from "@/modules/banner-hero/banners/router";
+import { popupsRoute } from "@/modules/banner-hero/popups/router";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -34,6 +36,8 @@ const routes: RouteRecordRaw[] = [
       ...checkpointCategoriesRoute,
       ...provinceRoute,
       ...countryRoute,
+      ...bannerRoute,
+      ...popupsRoute,
     ],
   },
   ...authRoute,
