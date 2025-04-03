@@ -1,6 +1,9 @@
 import dayjs from "dayjs";
 
-export function formatDate(dateString: string): string {
+export function formatDatePicker(dateString: string | undefined): string {
+  if (!dateString) {
+    return "";
+  }
   return dayjs(dateString).format("DD/MM/YYYY");
 }
 

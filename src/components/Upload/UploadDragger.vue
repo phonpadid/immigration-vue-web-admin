@@ -83,11 +83,10 @@ const handlePreview = (file) => {
   previewVisible.value = true;
 };
 </script>
-
 <template>
   <div class="flex justify-center px-4">
     <div
-      class="border-2 border-dashed border-gray-300 p-6 w-full max-w-16xl h-60 flex justify-center items-center bg-gray-50"
+      class="border-2 border-dashed border-gray-300 p-6 w-full max-w-16xl h-60 flex justify-center items-center bg-gray-50 overflow-hidden"
     >
       <a-upload
         v-model:file-list="fileList"
@@ -120,14 +119,46 @@ const handlePreview = (file) => {
     </div>
   </div>
 </template>
+
 <style scoped>
 ::v-deep(.ant-upload) {
-  width: 1200px !important;
+  width: 100% !important;
   height: 180px !important;
 }
+
 ::v-deep(.ant-upload-list-item) {
-  min-width: 1200px !important;
+  min-width: 100% !important;
   height: 200px !important;
   transform: translateY(-45px);
+}
+
+@media (min-width: 767px) {
+  ::v-deep(.ant-upload) {
+    width: 700px !important;
+  }
+
+  ::v-deep(.ant-upload-list-item) {
+    min-width: 650px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  ::v-deep(.ant-upload) {
+    width: 900px !important;
+  }
+
+  ::v-deep(.ant-upload-list-item) {
+    min-width: 850px !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  ::v-deep(.ant-upload) {
+    width: 1200px !important;
+  }
+
+  ::v-deep(.ant-upload-list-item) {
+    min-width: 1150px !important;
+  }
 }
 </style>
