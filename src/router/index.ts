@@ -18,6 +18,8 @@ import { provinceRoute } from "@/modules/checkpoints/province/router";
 import { countryRoute } from "@/modules/countries/router";
 import { bannerRoute } from "@/modules/banner-hero/banners/router";
 import { popupsRoute } from "@/modules/banner-hero/popups/router";
+import { visaRoute } from "@/modules/visa-category/router";
+import { numberRoute } from "@/modules/registration/registration_number/router";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -38,6 +40,8 @@ const routes: RouteRecordRaw[] = [
       ...countryRoute,
       ...bannerRoute,
       ...popupsRoute,
+      ...visaRoute,
+      ...numberRoute,
     ],
   },
   ...authRoute,

@@ -2,6 +2,7 @@ import { h, reactive } from "vue";
 import type { ItemType } from "./interfaces/menu.interface";
 import { Icon } from "@iconify/vue";
 import { HomeOutlined } from "@ant-design/icons-vue";
+import VisaIcon from "@/components/Icon/VisaIcon.vue";
 import router from "@/router";
 
 function logout() {
@@ -50,7 +51,7 @@ export const menuItems: ItemType[] = reactive([
             label: "ລົງທະບຽນອອກເມືອງ",
           },
           {
-            key: "registrations_number",
+            key: "registration_number",
             label: "ຈຳນວນການລົງທະບຽນ",
             // role: ["super_admin", "admin"],
           },
@@ -73,15 +74,9 @@ export const menuItems: ItemType[] = reactive([
       ]),
   },
   {
-    key: "visa-category",
+    key: "visa_category",
     label: "ປະເພດວິຊາ",
-    icon: () =>
-      h("div", {}, [
-        h(Icon, {
-          icon: "material-symbols-light:payments-outline-rounded",
-          class: "text-base",
-        }),
-      ]),
+    icon: () => h(VisaIcon),
   },
   {
     key: "110",
@@ -171,7 +166,7 @@ export const menuItems: ItemType[] = reactive([
     icon: () =>
       h("div", {}, [
         h(Icon, {
-          icon: "material-symbols-light:mode-cool",
+          icon: "material-symbols:globe",
           class: "text-base",
         }),
       ]),

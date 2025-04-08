@@ -114,14 +114,15 @@ export const usebannerStore = defineStore("banner", () => {
     try {
       isLoading.value = true;
       const { data } = await api.put(`/banner-hero/${id}/public`);
-
       if (data) {
-        // อัปเดตข้อมูลใน local state ด้วย เพื่อไม่ต้อง reload ทั้งหมด
         const index = banner.data.findIndex((item) => item.id === id);
         if (index !== -1) {
-          banner.data[index].is_private = data.is_private;
+          banner.data = [
+            ...banner.data.slice(0, index),
+            { ...banner.data[index], is_private: false },
+            ...banner.data.slice(index + 1),
+          ];
         }
-        currentBanners.value = data;
         return data;
       }
     } catch (error) {
@@ -140,9 +141,12 @@ export const usebannerStore = defineStore("banner", () => {
       if (data) {
         const index = banner.data.findIndex((item) => item.id === id);
         if (index !== -1) {
-          banner.data[index].is_private = data.is_private;
+          banner.data = [
+            ...banner.data.slice(0, index),
+            { ...banner.data[index], is_private: true },
+            ...banner.data.slice(index + 1),
+          ];
         }
-        currentBanners.value = data;
         return data;
       }
     } catch (error) {
@@ -152,17 +156,11 @@ export const usebannerStore = defineStore("banner", () => {
       isLoading.value = false;
     }
   };
-
-  // สร้าง FormData จากข้อมูลที่ได้รับ
   const prepareFormData = (formData: any) => {
     const bannerFormData = new FormData();
-
-    // ตรวจสอบและเพิ่มรูปภาพ (ถ้ามี)
     if (formData.image) {
       bannerFormData.append("image", formData.image);
     }
-
-    // เพิ่มข้อมูลอื่นๆ
     bannerFormData.append("link", formData.link || "");
     bannerFormData.append("is_private", formData.is_private ? "1" : "0");
     bannerFormData.append("start_time", formData.start_time || "");

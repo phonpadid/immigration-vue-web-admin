@@ -3,6 +3,7 @@ import { reactive, ref, onMounted, computed } from "vue";
 import { usebannerStore } from "../store/banner.store";
 import { useRoute, useRouter } from "vue-router";
 import { useNotification } from "@/utils/notificationService";
+import { Modal } from "ant-design-vue";
 import UiButton from "@/components/button/UiButton.vue";
 import UiForm from "@/components/Form/UiForm.vue";
 import UiFormItem from "@/components/Form/UiFormItem.vue";
@@ -149,6 +150,26 @@ const handleSubmit = async () => {
   }
 };
 
+const removeBanner = (id: number) => {
+  Modal.confirm({
+    title: "ຢືນຢັນການລົບ",
+    content: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້??",
+    okText: "ແມ່ນແລ້ວ,ຂ້ອຍແນ່ໃຈ",
+    cancelText: "ບໍ່,ຍົກເລີກ",
+    okType: "danger",
+    onOk: async () => {
+      try {
+        isLoading.value = true;
+        await bannerStore.deleteBanner(id);
+        alert("ລົບຂໍ້ມູນສຳເລັດ");
+      } catch (err) {
+        console.error("Error:", err);
+      } finally {
+        isLoading.value = false;
+      }
+    },
+  });
+};
 // And make sure onMounted correctly captures IDs from translation data:
 onMounted(async () => {
   try {
@@ -320,16 +341,26 @@ onMounted(async () => {
           </div>
         </div>
       </div>
-
-      <UiButton
-        @click="handleSubmit"
-        type="submit"
-        size="large"
-        :loading="isLoading"
-        colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
-      >
-        ອັບເດດ
-      </UiButton>
+      <div class="p-4 flex items-center gap-4">
+        <UiButton
+          @click="handleSubmit"
+          type="submit"
+          size="large"
+          :loading="isLoading"
+          colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
+        >
+          ອັບເດດ
+        </UiButton>
+        <UiButton
+          @click="removeBanner"
+          type="submit"
+          size="large"
+          :loading="isLoading"
+          colorClass="!bg-red-700 hover:!bg-red-900 text-white flex items-center"
+        >
+          ອັບເດດ
+        </UiButton>
+      </div>
     </UiForm>
   </div>
 </template>

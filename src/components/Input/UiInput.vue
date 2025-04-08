@@ -14,14 +14,16 @@ interface UiInputProps {
 }
 
 const props = defineProps<UiInputProps>();
-const emit = defineEmits(["update:modelValue"]);
-
-const updateValue = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  emit("update:modelValue", target.value);
-};
+const emit = defineEmits<{
+  "update:modelValue": [value: string | number];
+}>();
 
 const computedClass = computed(() => `w-full ${props.className || ""}`);
+
+const handleChange = (e: any) => {
+  const value = typeof e === "object" && e.target ? e.target.value : e;
+  emit("update:modelValue", value);
+};
 </script>
 
 <template>
@@ -32,7 +34,7 @@ const computedClass = computed(() => `w-full ${props.className || ""}`);
     :size="size"
     :disabled="disabled"
     :allow-clear="allowClear"
-    @input="updateValue"
+    @update:value="handleChange"
     :class="computedClass"
   >
     <template v-if="prefixIcon" #prefix>
