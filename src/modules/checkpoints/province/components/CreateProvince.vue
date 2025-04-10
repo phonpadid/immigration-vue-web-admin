@@ -68,10 +68,11 @@ const generateSlug = (title: string): string => {
 };
 
 // Update name and slug
-const updateName = (lang: LanguageKeys, value: string) => {
-  formData[lang].name = value;
-  slugs[lang] = generateSlug(value);
+const updateName = (lang: LanguageKeys, value: string | number) => {
+  formData[lang].name = String(value);
+  slugs[lang] = generateSlug(String(value));
 };
+/***************************************************************************** */
 const handleSubmit = async () => {
   try {
     // Validate form using Yup
@@ -125,51 +126,6 @@ const handleSubmit = async () => {
     isLoading.value = false;
   }
 };
-// Handle form submission
-// const handleSubmit = async () => {
-//   try {
-//     // Validate form
-//     const isValid = await formRef.value?.submitForm();
-//     if (!isValid) return;
-
-//     // Check if countries are selected
-//     if (selectedCountries.value.length === 0) {
-//       openNotification("error", "ກະລຸນາປ້ອນຂໍ້ມູນ", "ປ້ອນຂໍ້ມູນໃຫ້ຄົບກ່ອນ");
-//       return;
-//     }
-
-//     // Prepare submission data
-//     const submissionData = {
-//       countries: selectedCountries.value,
-//       lo: formData.lo,
-//       en: formData.en,
-//       zh_cn: formData.zh_cn,
-//     };
-
-//     // Start loading
-//     isLoading.value = true;
-
-//     // Save data through store
-//     await createCheckpointProvince(submissionData);
-
-//     // Show success notification
-//     openNotification("success", "ເພີ່ມແຂວງ", "ເພີ່ມສຳເລັດ");
-
-//     // Navigate back to checkpoint categories
-//     push({ name: "provinces" });
-//   } catch (error) {
-//     // Handle and log errors
-//     console.error("ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກຂໍ້ມູນ:", error);
-//     openNotification(
-//       "error",
-//       "ເກີດຂໍ້ຜິດພາດ",
-//       "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກຂໍ້ມູນ ກະລຸນາລອງອີກຄັ້ງ"
-//     );
-//   } finally {
-//     // End loading
-//     isLoading.value = false;
-//   }
-// };
 </script>
 
 <template>
@@ -202,7 +158,6 @@ const handleSubmit = async () => {
               allowClear
               size="large"
             />
-            
           </UiFormItem>
         </template>
 

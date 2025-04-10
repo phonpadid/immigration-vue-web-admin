@@ -58,10 +58,9 @@ const generateSlug = (title: string): string => {
 
 /********************************************************************************* */
 
-// อัปเดตชื่อและสร้าง slug โดยอัตโนมัติ
-const updateName = (lang: LanguageKeys, value: string) => {
-  formData[lang].title = value;
-  slugs[lang] = generateSlug(value);
+const updateName = (lang: LanguageKeys, value: string | number) => {
+  formData[lang].title = String(value); 
+  slugs[lang] = generateSlug(String(value)); // Convert value to string before generating slug
 };
 
 /********************************************************************************* */

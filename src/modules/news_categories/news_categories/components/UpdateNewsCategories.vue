@@ -55,9 +55,13 @@ const generateSlug = (name: string): string => {
 /********************************************************************************* */
 
 // Update name and automatically generate slug
-const updateName = (lang: LanguageKeys, value: string) => {
-  formData[lang].name = value;
-  slugs[lang] = generateSlug(value);
+// const updateName = (lang: LanguageKeys, value: string) => {
+//   formData[lang].name = value;
+//   slugs[lang] = generateSlug(value);
+// };
+const updateName = (lang: LanguageKeys, value: string | number) => {
+  formData[lang].name = String(value);
+  slugs[lang] = generateSlug(String(value));
 };
 /********************************************************************************* */
 // Remove

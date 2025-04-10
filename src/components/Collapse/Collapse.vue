@@ -88,8 +88,8 @@ interface TableColumn {
   [key: string]: any;
 }
 
-interface Panel {
-  key: string | number;
+export interface Panel {
+  key: string;
   header: string;
   content?: string;
   type?: "default" | "form" | "table" | "image";
@@ -98,7 +98,10 @@ interface Panel {
   tableData?: any[];
   tableColumns?: TableColumn[];
   tablePagination?: boolean | object;
-  images?: any[];
+  images?: Array<{ url: string; alt: string }>;
+  text?: string[];
+  visaId?: number;
+  lang?: string;
   [key: string]: any;
 }
 

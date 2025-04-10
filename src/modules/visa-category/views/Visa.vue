@@ -3,6 +3,7 @@ import { onMounted, ref, watch, computed } from "vue";
 import { message } from "ant-design-vue";
 import { useVisaStore } from "../store/visa.store";
 import { useRouter } from "vue-router";
+import type { Panel } from "@/components/Collapse/Collapse.vue";
 import Tab from "@/components/Tab/Tab.vue";
 import Collapse from "@/components/Collapse/Collapse.vue";
 import UiButton from "@/components/button/UiButton.vue";
@@ -29,11 +30,6 @@ interface ContentItem {
   text: Array<string>;
 }
 
-/**
- * Transforms the raw content data into structured format
- * @param data Raw content data from API
- * @returns Structured content with images and text
- */
 const transformContent = (data: any): ContentItem => {
   try {
     if (!data?.content?.content) {
@@ -74,10 +70,6 @@ const transformContent = (data: any): ContentItem => {
   }
 };
 
-/**
- * Loads visa data for specified language
- * @param lang Language code to load data for
- */
 const loadLanguageData = async (lang: string) => {
   try {
     isLoading.value = true;
@@ -90,10 +82,6 @@ const loadLanguageData = async (lang: string) => {
   }
 };
 
-/**
- * Handles panel expansion and loads details if needed
- * @param keys Array of panel keys that are being expanded
- */
 const handlePanelExpand = async (keys: string[]) => {
   const currentLang =
     tabsConfig.find((tab) => tab.key === activeTab.value)?.lang || "lo";
@@ -116,11 +104,6 @@ const handlePanelExpand = async (keys: string[]) => {
     }
   }
 };
-
-/**
- * Handles tab change and loads data if needed
- * @param key New tab key
- */
 const handleTabChange = async (key: string) => {
   activeTab.value = key;
   activeCollapseKeys.value = [];
@@ -137,15 +120,32 @@ const addVisa = () => {
 };
 
 const handleEdit = (panel: any) => {
-  message.info(`ກຳລັງແກ້ໄຂແຜງ ${panel.key}`);
+  const id = parseInt(panel.key);
+  if (isNaN(id)) {
+    message.error("Invalid ID");
+    return;
+  }
+
+  push({ name: "visa_category_edit", params: { id } });
 };
 
-const handleDelete = (panel: any) => {
-  message.warning(`ກຳລັງລຶບແຜງ ${panel.key}`);
-};
+const handleDelete = async (panel: any) => {
+  const id = parseInt(panel.key);
+  if (isNaN(id)) {
+    message.error("Invalid ID");
+    return;
+  }
 
-// Computed property for current panels data
-const currentPanels = computed(() => {
+  try {
+    await store.deleteVisa(id);
+    message.success("ລົບຂໍ້ມູນສຳເລັດ");
+    await loadLanguageData(panel.lang);
+  } catch (error) {
+    console.error("Error deleting visa:", error);
+    message.error("ບໍ່ສາມາດລົບຂໍ້ມູນໄດ້");
+  }
+};
+const currentPanels = computed<Panel[]>(() => {
   const currentLang =
     tabsConfig.find((tab) => tab.key === activeTab.value)?.lang || "lo";
   const visaData = store.visaByLang[currentLang].data;
@@ -159,10 +159,12 @@ const currentPanels = computed(() => {
     return {
       key: item.id.toString(),
       header: item.name,
+      type: "default", // เพิ่ม type
       images: content.images,
       text: content.text,
       visaId: item.id,
       lang: currentLang,
+      content: "", // เพิ่ม default content
     };
   });
 });
@@ -218,15 +220,18 @@ onMounted(async () => {
           >
             <!-- Panel Content Template -->
             <template
-              v-for="panel in currentPanels"
-              :key="panel.key"
-              #[`content-${panel.key}`]="{ panel }"
+              v-for="panelItem in currentPanels"
+              :key="panelItem.key"
+              #[`content-${panelItem.key}`]="{ panel: slotPanel }"
             >
               <div class="visa-content">
                 <!-- Images Section -->
-                <div v-if="panel.images?.length > 0" class="visa-images">
+                <div
+                  v-if="slotPanel?.images && slotPanel.images.length > 0"
+                  class="visa-images"
+                >
                   <img
-                    v-for="(image, index) in panel.images"
+                    v-for="(image, index) in slotPanel.images"
                     :key="index"
                     :src="image.url"
                     :alt="image.alt"
@@ -235,9 +240,12 @@ onMounted(async () => {
                 </div>
 
                 <!-- Text Section -->
-                <div v-if="panel.text?.length > 0" class="visa-text">
+                <div
+                  v-if="slotPanel?.text && slotPanel.text.length > 0"
+                  class="visa-text"
+                >
                   <p
-                    v-for="(text, index) in panel.text"
+                    v-for="(text, index) in slotPanel.text"
                     :key="index"
                     class="text-paragraph"
                   >
@@ -247,7 +255,7 @@ onMounted(async () => {
 
                 <!-- Empty State -->
                 <div
-                  v-if="!panel.images?.length && !panel.text?.length"
+                  v-if="!slotPanel?.images?.length && !slotPanel?.text?.length"
                   class="empty-content"
                 >
                   <a-spin v-if="isLoading" />

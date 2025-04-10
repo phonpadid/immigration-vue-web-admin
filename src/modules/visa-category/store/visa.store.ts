@@ -105,7 +105,6 @@ export const useVisaStore = defineStore("visa", () => {
     }
   };
 
-  // ฟังก์ชันดึงข้อมูลวีซ่าตาม ID
   const getVisaById = async (id: number, lang: string = "lo") => {
     try {
       isLoading.value = true;
@@ -122,6 +121,7 @@ export const useVisaStore = defineStore("visa", () => {
       isLoading.value = false;
     }
   };
+
   const createVisa = async (data: Record<string, any>) => {
     try {
       isLoading.value = true;
@@ -145,36 +145,22 @@ export const useVisaStore = defineStore("visa", () => {
     }
   };
 
-  const updateVisa = async (id: number) => {
+  const updateVisa = async (id: number, data: any) => {
     try {
       isLoading.value = true;
-      const form = new FormData();
 
-      Object.entries(formData).forEach(([lang, data]) => {
-        if (data.name || data.content) {
-          form.append(
-            lang,
-            JSON.stringify({
-              name: data.name,
-              content: JSON.stringify({
-                type: "doc",
-                content: [
-                  {
-                    type: "paragraph",
-                    content: [{ type: "text", text: data.content }],
-                  },
-                ],
-              }),
-            })
-          );
+      // ตรวจสอบว่า content เป็น string ทั้งหมด
+      Object.keys(data).forEach((lang) => {
+        if (typeof data[lang].content !== "string") {
+          data[lang].content = JSON.stringify(data[lang].content);
         }
       });
 
-      const { data } = await api.put(`/visa-category/${id}`, form, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const response = await api.put(`/visa-category/${id}`, data, {
+        headers: { "Content-Type": "application/json" },
       });
 
-      return data;
+      return response.data;
     } catch (error) {
       console.error("Failed to update visa:", error);
       throw error;
@@ -187,14 +173,6 @@ export const useVisaStore = defineStore("visa", () => {
     try {
       isLoading.value = true;
       const res = await api.delete(`/visa-category/${id}`);
-      if (res) {
-        // อัพเดทข้อมูลทุกภาษา
-        await Promise.all([
-          getAllVisa("lo"),
-          getAllVisa("en"),
-          getAllVisa("zh_cn"),
-        ]);
-      }
       return res;
     } catch (error) {
       console.error("Failed to delete visa:", error);

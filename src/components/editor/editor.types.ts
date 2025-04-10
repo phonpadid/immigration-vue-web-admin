@@ -29,9 +29,24 @@ export interface QuillContent {
   type: string;
   content: Array<{
     type: string;
+    attrs?: {
+      textAlign?: string;
+      src?: string;
+      alt?: string;
+      title?: null;
+    };
     content?: Array<{
       type: string;
       text?: string;
     }>;
+  }>;
+}
+export interface QuillDelta {
+  ops?: Array<{
+    insert: string | { image: string };
+    attributes?: {
+      align?: string;
+      [key: string]: any;
+    };
   }>;
 }

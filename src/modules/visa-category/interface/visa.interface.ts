@@ -58,7 +58,9 @@ export interface VisaContentData {
 
 export interface VisaFormData {
   name: string;
-  content: string | VisaContentData;
+  content: string;
+  date?: string;
+  userLogin?: string;
 }
 
 export interface TextContent {
@@ -69,7 +71,7 @@ export interface TextContent {
 export interface HardBreak {
   type: "hardBreak";
 }
-export type LanguageKey = 'lo' | 'en' | 'zh_cn';
+export type LanguageKey = "lo" | "en" | "zh_cn";
 
 export interface TabConfig {
   key: string;
@@ -99,10 +101,34 @@ export interface DocumentContent {
   type: "doc";
   content: Array<ParagraphContent | ImageContent>;
 }
+export interface VisaTranslate {
+  id: number;
+  visa_category_id: number;
+  name: string;
+  content: {
+    type: string;
+    content: Array<{
+      type: string;
+      attrs?: {
+        textAlign?: string;
+        alt?: string;
+        src?: string;
+        title?: null;
+      };
+      content?: Array<{
+        text: string;
+        type: string;
+      }>;
+    }>;
+  };
+  lang: string;
+}
 
 export interface VisaLanguageContent {
   name: string;
   content: string;
+  date?: string;
+  userLogin?: string;
 }
 
 export interface VisaFormState {

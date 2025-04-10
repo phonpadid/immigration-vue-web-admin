@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, nextTick, onBeforeUnmount } from "vue";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import { message } from "ant-design-vue";
@@ -71,6 +71,7 @@ const toolbarOptions = {
     [{ list: "ordered" }, { list: "bullet" }],
     [{ align: [] }],
     ["link", "image"],
+    ["clean"],
   ],
   handlers: {
     image: () => {
@@ -80,92 +81,113 @@ const toolbarOptions = {
   },
 };
 
-// Event Handlers
-// const onEditorReady = (quill: any) => {
-//   quillInstance = quill;
-//   if (props.modelValue) {
-//     try {
-//       const content =
-//         typeof props.modelValue === "string"
-//           ? JSON.parse(props.modelValue)
-//           : props.modelValue;
-//       quillInstance.setContents(content);
-//     } catch (e) {
-//       console.error("Error setting initial content:", e);
-//     }
+const quillConfig = {
+  theme: "snow",
+  modules: {
+    toolbar: toolbarOptions,
+    keyboard: {
+      bindings: {
+        enter: {
+          key: 13,
+          handler: function () {
+            // ให้ Quill จัดการ Enter ตามปกติ
+            return true;
+          },
+        },
+      },
+    },
+  },
+};
+// const onTextChange = () => {
+//   if (!quillInstance) return;
+
+//   // เก็บตำแหน่ง cursor ปัจจุบัน
+//   const currentSelection = quillInstance.getSelection();
+
+//   // สร้าง content ในรูปแบบที่ต้องการ
+//   const content = quillInstance.getContents();
+//   const formattedContent: DocumentContent = {
+//     type: "doc",
+//     content: [],
+//   };
+
+//   if (content.ops) {
+//     content.ops.forEach((op: any) => {
+//       if (typeof op.insert === "string") {
+//         const text = op.insert.trim();
+//         if (text) {
+//           formattedContent.content.push({
+//             type: "paragraph",
+//             attrs: {
+//               textAlign: "left",
+//             },
+//             content: [
+//               {
+//                 type: "text",
+//                 text: text,
+//               },
+//             ],
+//           });
+//         }
+//       } else if (op.insert?.image) {
+//         formattedContent.content.push({
+//           type: "image",
+//           attrs: {
+//             src: op.insert.image,
+//             alt: op.insert.image,
+//             title: null,
+//           },
+//         });
+//       }
+//     });
+//   }
+
+//   emit("update:modelValue", JSON.stringify(formattedContent));
+
+//   // คืนค่าตำแหน่ง cursor
+//   if (currentSelection) {
+//     nextTick(() => {
+//       quillInstance.setSelection(
+//         currentSelection.index,
+//         currentSelection.length
+//       );
+//     });
 //   }
 // };
-const onEditorReady = (quill: any) => {
-  quillInstance = quill;
-  if (props.modelValue) {
-    try {
-      const parsedContent =
-        typeof props.modelValue === "string"
-          ? JSON.parse(props.modelValue)
-          : props.modelValue;
 
-      if (
-        parsedContent.type === "doc" &&
-        Array.isArray(parsedContent.content)
-      ) {
-        const delta = { ops: [] as any[] };
-
-        parsedContent.content.forEach((node: any) => {
-          if (node.type === "paragraph" && node.content) {
-            node.content.forEach((contentNode: any) => {
-              if (contentNode.type === "text") {
-                delta.ops.push({
-                  insert: contentNode.text,
-                  attributes: {
-                    align: node.attrs?.textAlign || "left",
-                  },
-                });
-              }
-            });
-            delta.ops.push({ insert: "\n" });
-          } else if (node.type === "image" && node.attrs?.src) {
-            delta.ops.push({
-              insert: {
-                image: node.attrs.src,
-              },
-            });
-            delta.ops.push({ insert: "\n" });
-          }
-        });
-
-        quillInstance.setContents(delta);
-      }
-    } catch (e) {
-      console.error("Error setting initial content:", e);
-    }
-  }
-};
+// ปรับปรุงฟังก์ชัน onEditorReady
+let isUpdating = false; // เพิ่มตัวแปรเพื่อป้องกันการทำงานซ้ำ
 const onTextChange = () => {
-  if (!quillInstance) return;
-  const delta = quillInstance.getContents();
+  if (!quillInstance || isUpdating) return;
+
+  isUpdating = true;
+  const currentSelection = quillInstance.getSelection();
+  const content = quillInstance.getContents();
   const formattedContent: DocumentContent = {
     type: "doc",
     content: [],
   };
 
-  if (delta.ops) {
-    delta.ops.forEach((op: any) => {
+  if (content.ops) {
+    content.ops.forEach((op: any) => {
       if (typeof op.insert === "string") {
-        const text = op.insert.trim();
-        if (text) {
+        // แยกข้อความตาม new lines และสร้าง paragraph สำหรับแต่ละบรรทัด
+        const lines = op.insert.split("\n");
+        lines.forEach((line: string) => {
+          // สร้าง paragraph สำหรับทุกบรรทัด รวมถึงบรรทัดว่าง
           formattedContent.content.push({
             type: "paragraph",
             attrs: {
-              textAlign: op.attributes?.align || "left",
+              textAlign: "left",
             },
             content: [
               {
                 type: "text",
-                text: text,
+                text: line || " ", // ใช้ space สำหรับบรรทัดว่าง
               },
             ],
           });
-        }
+        });
       } else if (op.insert?.image) {
         formattedContent.content.push({
           type: "image",
@@ -180,12 +202,160 @@ const onTextChange = () => {
   }
 
   emit("update:modelValue", JSON.stringify(formattedContent));
+
+  nextTick(() => {
+    if (currentSelection) {
+      quillInstance.setSelection(
+        currentSelection.index,
+        currentSelection.length
+      );
+    }
+    isUpdating = false;
+  });
 };
 
+const onEditorReady = (quill: any) => {
+  quillInstance = quill;
+
+  // กำหนดค่า default selection
+  quillInstance.setSelection(0, 0);
+
+  if (props.modelValue) {
+    try {
+      const content =
+        typeof props.modelValue === "string"
+          ? JSON.parse(props.modelValue)
+          : props.modelValue;
+
+      const delta = {
+        ops: [] as any[],
+      };
+
+      if (content.type === "doc" && Array.isArray(content.content)) {
+        content.content.forEach((node: any) => {
+          if (node.type === "paragraph" && node.content) {
+            node.content.forEach((textNode: any) => {
+              if (textNode.type === "text" && textNode.text) {
+                delta.ops.push({
+                  insert: textNode.text,
+                });
+              }
+            });
+            delta.ops.push({ insert: "\n" });
+          } else if (node.type === "image" && node.attrs?.src) {
+            delta.ops.push(
+              {
+                insert: {
+                  image: node.attrs.src,
+                },
+              },
+              { insert: "\n" }
+            );
+          }
+        });
+      }
+
+      // เก็บตำแหน่ง cursor ก่อน set contents
+      const selection = quillInstance.getSelection();
+
+      quillInstance.setContents(delta);
+
+      // คืนค่าตำแหน่ง cursor หลังจาก set contents
+      nextTick(() => {
+        if (selection) {
+          quillInstance.setSelection(selection);
+        }
+      });
+    } catch (e) {
+      console.error("Error setting initial content:", e);
+    }
+  }
+};
+// const onEditorReady = (quill: any) => {
+//   quillInstance = quill;
+//   if (props.modelValue) {
+//     try {
+//       const parsedContent =
+//         typeof props.modelValue === "string"
+//           ? JSON.parse(props.modelValue)
+//           : props.modelValue;
+
+//       if (
+//         parsedContent.type === "doc" &&
+//         Array.isArray(parsedContent.content)
+//       ) {
+//         const delta = { ops: [] as any[] };
+
+//         parsedContent.content.forEach((node: any) => {
+//           if (node.type === "paragraph" && node.content) {
+//             node.content.forEach((contentNode: any) => {
+//               if (contentNode.type === "text") {
+//                 delta.ops.push({
+//                   insert: contentNode.text,
+//                   attributes: {
+//                     align: node.attrs?.textAlign || "left",
+//                   },
+//                 });
+//               }
+//             });
+//             delta.ops.push({ insert: "\n" });
+//           } else if (node.type === "image" && node.attrs?.src) {
+//             delta.ops.push({
+//               insert: {
+//                 image: node.attrs.src,
+//               },
+//             });
+//             delta.ops.push({ insert: "\n" });
+//           }
+//         });
+
+//         quillInstance.setContents(delta);
+//       }
+//     } catch (e) {
+//       console.error("Error setting initial content:", e);
+//     }
+//   }
+// };
 // const onTextChange = () => {
 //   if (!quillInstance) return;
-//   const content = quillInstance.getContents();
-//   emit("update:modelValue", JSON.stringify(content));
+//   const delta = quillInstance.getContents();
+//   const formattedContent: DocumentContent = {
+//     type: "doc",
+//     content: [],
+//   };
+
+//   if (delta.ops) {
+//     delta.ops.forEach((op: any) => {
+//       if (typeof op.insert === "string") {
+//         const text = op.insert.trim();
+//         if (text) {
+//           formattedContent.content.push({
+//             type: "paragraph",
+//             attrs: {
+//               textAlign: op.attributes?.align || "left",
+//             },
+//             content: [
+//               {
+//                 type: "text",
+//                 text: text,
+//               },
+//             ],
+//           });
+//         }
+//       } else if (op.insert?.image) {
+//         formattedContent.content.push({
+//           type: "image",
+//           attrs: {
+//             src: op.insert.image,
+//             alt: op.insert.image,
+//             title: null,
+//           },
+//         });
+//       }
+//     });
+//   }
+
+//   emit("update:modelValue", JSON.stringify(formattedContent));
 // };
 const lastClickTime = ref(0);
 const DOUBLE_CLICK_DELAY = 300; // 300ms
@@ -226,71 +396,67 @@ const handleUpload = async ({ file, onSuccess, onError }: any) => {
     message.error(error.message || "ເກີດຂໍ້ຜິດພາດໃນການອັບໂຫລດ");
   }
 };
-// const handleInsertImage = () => {
-//   if (!selectedFile.value || !quillInstance) return;
 
-//   const fileUrl = getFileUrl(selectedFile.value.name);
-//   const range = quillInstance.getSelection(true);
-
-//   // Add newline before image if not at start
-//   if (range.index > 0) {
-//     const previousChar = quillInstance.getText(range.index - 1, 1);
-//     if (previousChar !== "\n") {
-//       quillInstance.insertText(range.index, "\n");
-//       range.index += 1;
-//     }
-//   }
-
-//   // Insert image with better formatting
-//   quillInstance.insertEmbed(range.index, "image", fileUrl);
-
-//   // Add newline after image
-//   quillInstance.insertText(range.index + 1, "\n");
-//   quillInstance.setSelection(range.index + 2);
-
-//   // แสดง message success
-//   message.success("ເພີ່ມຮູບພາບສຳເລັດ");
-
-//   handleCloseModal();
-// };
 const handleInsertImage = () => {
-  if (!selectedFile.value || !quillInstance) return;
+  if (!selectedFile.value || !quillInstance || isUpdating) return;
 
+  isUpdating = true;
   const fileUrl = getFileUrl(selectedFile.value.name);
   const range = quillInstance.getSelection(true);
+  const currentPosition = range ? range.index : 0;
 
-  // เพิ่มการขึ้นบรรทัดใหม่ก่อนรูปภาพ
-  if (range.index > 0) {
-    quillInstance.insertText(range.index, "\n");
-    range.index += 1;
-  }
+  // แทรกรูปภาพที่ตำแหน่งปัจจุบัน
+  quillInstance.insertEmbed(currentPosition, "image", fileUrl);
+  quillInstance.insertText(currentPosition + 1, "\n");
 
-  // ใส่รูปภาพ
-  quillInstance.insertEmbed(range.index, "image", fileUrl);
-
-  // เพิ่มการขึ้นบรรทัดใหม่หลังรูปภาพ
-  quillInstance.insertText(range.index + 1, "\n");
-  quillInstance.setSelection(range.index + 2);
-
-  // สร้าง content ในรูปแบบที่ต้องการ
+  // อัพเดท content
+  const content = quillInstance.getContents();
   const formattedContent: DocumentContent = {
     type: "doc",
-    content: [
-      {
-        type: "image",
-        attrs: {
-          src: fileUrl,
-          alt: fileUrl,
-          title: null,
-        },
-      },
-    ],
+    content: [],
   };
 
+  if (content.ops) {
+    content.ops.forEach((op: any) => {
+      if (typeof op.insert === "string") {
+        const lines = op.insert.split("\n");
+        lines.forEach((line: string) => {
+          formattedContent.content.push({
+            type: "paragraph",
+            attrs: {
+              textAlign: "left",
+            },
+            content: [
+              {
+                type: "text",
+                text: line || " ",
+              },
+            ],
+          });
+        });
+      } else if (op.insert?.image) {
+        formattedContent.content.push({
+          type: "image",
+          attrs: {
+            src: op.insert.image,
+            alt: op.insert.image,
+            title: null,
+          },
+        });
+      }
+    });
+  }
+
   emit("update:modelValue", JSON.stringify(formattedContent));
-  message.success("ເພີ່ມຮູບພາບສຳເລັດ");
-  handleCloseModal();
+
+  nextTick(() => {
+    quillInstance.setSelection(currentPosition + 2, 0);
+    isUpdating = false;
+    handleCloseModal();
+    message.success("ເພີ່ມຮູບພາບສຳເລັດ");
+  });
 };
+
 const handleDeleteFile = async (file: FileItem) => {
   try {
     // แสดง confirm dialog
@@ -328,47 +494,118 @@ const handleCloseModal = () => {
 };
 
 // Watchers
+// watch(
+//   () => props.modelValue,
+//   (newVal) => {
+//     if (!newVal || !quillInstance || isUpdating) return;
+
+//     try {
+//       isUpdating = true;
+//       const parsedContent = JSON.parse(newVal);
+
+//       if (parsedContent.type === "doc") {
+//         const delta = { ops: [] as any[] };
+
+//         parsedContent.content.forEach((node: any) => {
+//           if (node.type === "paragraph" && node.content) {
+//             node.content.forEach((contentNode: any) => {
+//               if (contentNode.type === "text") {
+//                 delta.ops.push({
+//                   insert: contentNode.text,
+//                 });
+//               }
+//             });
+//             delta.ops.push({ insert: "\n" });
+//           } else if (node.type === "image" && node.attrs?.src) {
+//             delta.ops.push(
+//               { insert: { image: node.attrs.src } },
+//               { insert: "\n" }
+//             );
+//           }
+//         });
+
+//         const currentSelection = quillInstance.getSelection();
+//         quillInstance.setContents(delta);
+
+//         nextTick(() => {
+//           if (currentSelection) {
+//             quillInstance.setSelection(
+//               currentSelection.index,
+//               currentSelection.length
+//             );
+//           }
+//           isUpdating = false;
+//         });
+//       }
+//     } catch (e) {
+//       console.error("Error parsing content:", e);
+//       isUpdating = false;
+//     }
+//   },
+//   { immediate: true }
+// );
+// ปรับปรุง watch
 watch(
   () => props.modelValue,
   (newVal) => {
-    if (newVal && quillInstance) {
-      try {
-        const parsedContent = JSON.parse(newVal);
-        if (parsedContent.type === "doc") {
-          const delta = { ops: [] as any[] };
+    if (!newVal || !quillInstance || isUpdating) return;
 
-          parsedContent.content.forEach((node: any) => {
-            if (node.type === "paragraph" && node.content) {
-              node.content.forEach((contentNode: any) => {
-                if (contentNode.type === "text") {
-                  delta.ops.push({
-                    insert: contentNode.text,
-                    attributes: {
-                      align: node.attrs?.textAlign || "left",
-                    },
-                  });
-                }
-              });
-              delta.ops.push({ insert: "\n" });
-            } else if (node.type === "image" && node.attrs?.src) {
-              delta.ops.push({
+    try {
+      isUpdating = true;
+      const parsedContent = JSON.parse(newVal);
+
+      if (parsedContent.type === "doc") {
+        const delta = { ops: [] as any[] };
+
+        parsedContent.content.forEach((node: any) => {
+          if (node.type === "paragraph" && node.content) {
+            // รวมข้อความจากทุก text node ในย่อหน้า
+            const text = node.content
+              .filter((content: any) => content.type === "text")
+              .map((content: any) => content.text)
+              .join("");
+
+            // เพิ่มข้อความและ new line
+            delta.ops.push(
+              { insert: text || " " }, // ใช้ space สำหรับย่อหน้าว่าง
+              { insert: "\n" }
+            );
+          } else if (node.type === "image" && node.attrs?.src) {
+            delta.ops.push(
+              {
                 insert: {
                   image: node.attrs.src,
                 },
-              });
-              delta.ops.push({ insert: "\n" });
-            }
-          });
+              },
+              { insert: "\n" }
+            );
+          }
+        });
 
-          quillInstance.setContents(delta);
-        }
-      } catch (e) {
-        console.error("Error parsing content:", e);
+        const currentSelection = quillInstance.getSelection();
+        quillInstance.setContents(delta);
+
+        nextTick(() => {
+          if (currentSelection) {
+            quillInstance.setSelection(
+              currentSelection.index,
+              currentSelection.length
+            );
+          }
+          isUpdating = false;
+        });
       }
+    } catch (e) {
+      console.error("Error parsing content:", e);
+      isUpdating = false;
     }
   },
   { immediate: true }
 );
+// เพิ่ม cleanup
+onBeforeUnmount(() => {
+  isUpdating = false;
+});
 onMounted(async () => {
   // console.log("A. Component mounting...");
 
@@ -393,7 +630,7 @@ onMounted(async () => {
   <div class="editor-container" :class="{ 'has-error': props.error }">
     <!-- Editor -->
     <QuillEditor
-      :content="editorContent"
+      :content="quillInstance?.getContents()"
       :theme="props.theme"
       :placeholder="props.placeholder"
       :readonly="props.readonly"
