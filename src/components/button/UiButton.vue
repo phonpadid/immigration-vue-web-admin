@@ -8,6 +8,7 @@
   >
     <Icon v-if="icon" :icon="icon" class="mr-2" />
     <slot></slot>
+    <Icon v-if="iconRight" :icon="iconRight" class="ml-2" />
   </a-button>
 </template>
 
@@ -39,6 +40,10 @@ const props = defineProps({
   icon: {
     type: String,
     default: "", // ใส่ชื่อไอคอนที่ต้องการ เช่น "ant-design:plus-outlined"
+  },
+  iconRight: {
+    type: String,
+    default: "", // Icon that will appear at the right side of the button
   },
 });
 

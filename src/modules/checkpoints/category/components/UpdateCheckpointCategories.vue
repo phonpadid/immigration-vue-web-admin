@@ -60,11 +60,9 @@ const generateSlug = (title: string): string => {
     .replace(/[^\w\-]+/g, "");
 };
 /********************************************************************************* */
-
-// Update name and automatically generate slug
-const updateName = (lang: LanguageKeys, value: string) => {
-  formData[lang].title = value;
-  slugs[lang] = generateSlug(value);
+const updateName = (lang: LanguageKeys, value: string | number) => {
+  formData[lang].title = String(value);
+  slugs[lang] = generateSlug(String(value));
 };
 /********************************************************************************* */
 // Remove
