@@ -129,23 +129,19 @@ const handleSubmit = async () => {
 };
 // Debug helper with better type safety
 const debugEditorContent = (lang: string, content: any) => {
-  console.group(`Editor Content Change - ${lang}`);
+  // console.group(`Editor Content Change - ${lang}`);
   try {
     const parsedContent =
       typeof content === "string" ? JSON.parse(content) : content;
-    console.log("Raw Content:", content);
-    console.log("Parsed Content:", parsedContent);
+    // console.log("Raw Content:", content);
+    // console.log("Parsed Content:", parsedContent);
     if (parsedContent.ops) {
-      console.log("Delta Operations:", parsedContent.ops);
+      // console.log("Delta Operations:", parsedContent.ops);
     }
   } catch (e) {
-    console.warn("Failed to parse content:", e);
+    // console.warn("Failed to parse content:", e);
   }
   console.groupEnd();
-};
-
-const handleCancel = () => {
-  router.back();
 };
 
 // Load data on mount
@@ -221,13 +217,11 @@ watch(error, (newError) => {
           </UiFormItem>
         </template>
       </Tab>
-
-      <div class="flex justify-end gap-4 mt-4">
-        <UiButton type="default" :disabled="submitting" @click="handleCancel">
-          {{ "ຍົກເລີກ" }}
-        </UiButton>
+      <div class="flex justify-start gap-4 mt-4">
         <UiButton
           type="primary"
+          size="large"
+          colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
           :loading="submitting"
           :disabled="submitting"
           @click="handleSubmit"

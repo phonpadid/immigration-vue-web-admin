@@ -2,13 +2,8 @@
 import { ref, reactive, watch } from "vue";
 import { message } from "ant-design-vue";
 import { useRouter } from "vue-router";
-import { useVisaStore } from "../store/visa.store";
-import type {
-  VisaLanguageContent,
-  VisaFormState,
-  TabConfig,
-  LanguageKey,
-} from "../interface/visa.interface";
+import { useServiceStore } from "../store/service.store";
+import type { LanguageKey } from "../interface/service.interface";
 import { storeToRefs } from "pinia";
 import Tab from "@/components/Tab/Tab.vue";
 import type {
@@ -20,42 +15,62 @@ import UiButton from "@/components/button/UiButton.vue";
 import UiFormItem from "@/components/Form/UiFormItem.vue";
 import UiForm from "@/components/Form/UiForm.vue";
 import QuillEditorComponent from "@/components/editor/QuillEditorComponent.vue";
+import Textarea from "@/components/Input/Textarea.vue";
 
+// Define explicit type for tab language
+type TabLanguage = "lo" | "en" | "zh_cn";
+// Define tab configuration with proper typing
+interface TabConfig {
+  key: string;
+  label: string;
+  slotName: string;
+  lang: TabLanguage;
+}
 // Store and Router
-const store = useVisaStore();
+const store = useServiceStore();
 const { isLoading, error } = storeToRefs(store);
 const router = useRouter();
 
-// Form state
+// Form state with explicit typing
 const activeTab = ref("1");
 const formRef = ref<InstanceType<typeof UiForm>>();
 const submitting = ref(false);
-const formState = reactive<VisaFormState>({
-  lo: { name: "", content: "" },
-  en: { name: "", content: "" },
-  zh_cn: { name: "", content: "" },
+const formState = reactive<
+  Record<TabLanguage, { title: string; content: string; description: string }>
+>({
+  lo: { title: "", content: "", description: "" },
+  en: { title: "", content: "", description: "" },
+  zh_cn: { title: "", content: "", description: "" },
 });
 
 // Validation rules
 const rules = {
-  "lo.name": [
-    { required: true, message: "ກະລຸນາປ້ອນຊື່ພາສາລາວ", trigger: "blur" },
+  "lo.title": [
+    { required: true, message: "ກະລຸນາປ້ອນຊື່ບໍລິການພາສາລາວ", trigger: "blur" },
   ],
-  "en.name": [
-    { required: true, message: "ກະລຸນາປ້ອນຊື່ພາສາລາວ", trigger: "blur" },
+  "en.title": [
+    {
+      required: true,
+      message: "ກະລຸນາປ້ອນຊື່ບໍລິການພາສາອັງກິດ",
+      trigger: "blur",
+    },
   ],
-  "zh_cn.name": [
-    { required: true, message: "ກະລຸນາປ້ອນຊື່ພາສາລາວ", trigger: "blur" },
+  "zh_cn.title": [
+    { required: true, message: "ກະລຸນາປ້ອນຊື່ບໍລິການພາສາຈີນ", trigger: "blur" },
+  ],
+  "lo.description": [
+    { required: true, message: "ກະລຸນາປ້ອນຄຳອະທິບາຍພາສາລາວ", trigger: "blur" },
   ],
 };
 
-// Tab configuration
+// Tab configuration with proper typing
 const tabsConfig: TabConfig[] = [
   { key: "1", label: "ພາສາລາວ", slotName: "tab1", lang: "lo" },
   { key: "2", label: "ພາສາອັງກິດ", slotName: "tab2", lang: "en" },
   { key: "3", label: "ພາສາຈີນ", slotName: "tab3", lang: "zh_cn" },
 ];
-// ปรับปรุงฟังก์ชัน handleSubmit
+
+// ฟังก์ชันสำหรับแปลงข้อมูล Editor ให้อยู่ในรูปแบบที่ต้องการ
 const formatContentForSubmit = (
   content: string | QuillDelta | QuillContent
 ): string => {
@@ -117,6 +132,7 @@ const formatContentForSubmit = (
   }
 };
 
+// ฟังก์ชันสำหรับส่งข้อมูลฟอร์ม
 const handleSubmit = async () => {
   if (submitting.value) return;
 
@@ -124,25 +140,19 @@ const handleSubmit = async () => {
     submitting.value = true;
     await formRef.value?.submitForm();
 
-    const currentDate = new Date().toISOString().slice(0, 19).replace("T", " ");
-    const userLogin = "phonpadid";
-
     const submitData = Object.entries(formState).reduce((acc, [lang, data]) => {
-      acc[lang as LanguageKey] = {
-        name: data.name || "",
+      acc[lang as TabLanguage] = {
+        title: data.title || "",
+        description: data.description || "",
         content: formatContentForSubmit(data.content),
-        date: currentDate,
-        userLogin: userLogin,
       };
 
       return acc;
-    }, {} as Record<LanguageKey, VisaLanguageContent>);
+    }, {} as Record<TabLanguage, any>);
 
-    // console.log("Final Submit Data:", JSON.stringify(submitData, null, 2));
-
-    await store.createVisa(submitData);
+    await store.createService(submitData);
     message.success("ບັນທຶກຂໍ້ມູນສຳເລັດ");
-    router.push("/visa-category");
+    router.push("/services");
   } catch (err: any) {
     console.error("Submit error:", err);
     message.error(
@@ -152,21 +162,7 @@ const handleSubmit = async () => {
     submitting.value = false;
   }
 };
-const debugEditorContent = (lang: string, content: any) => {
-  // console.group(`Editor Content Change - ${lang}`);
-  try {
-    const parsedContent =
-      typeof content === "string" ? JSON.parse(content) : content;
-    // console.log("Raw Content nome:", content);
-    // console.log("Parsed Content:", parsedContent);
-    if (parsedContent.ops) {
-      // console.log("Delta Operations:", parsedContent.ops);
-    }
-  } catch (e) {
-    console.warn("Failed to parse content:", e);
-  }
-  console.groupEnd();
-};
+
 // Watchers
 watch(error, (newError) => {
   if (newError) {
@@ -174,55 +170,45 @@ watch(error, (newError) => {
   }
 });
 </script>
+
 <template>
   <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white mt-12">
-    ເພີ່ມຂໍ້ມູນປະເພດວີຊາ
+    ເພີ່ມຂໍ້ມູນບໍລິການ
   </h2>
+
   <UiForm ref="formRef" :model="formState" :rules="rules">
     <Tab v-model:activeKey="activeTab" :tabs="tabsConfig">
       <template v-for="tab in tabsConfig" :key="tab.key" #[tab.slotName]>
+        <!-- ชื่อบริการ -->
         <UiFormItem
-          :name="[tab.lang, 'name']"
-          :label="
-            tab.lang === 'lo'
-              ? 'ຊື່ປະເພດວີຊາ'
-              : tab.lang === 'en'
-              ? 'ຊື່ປະເພດວີຊາ'
-              : 'ຊື່ປະເພດວີຊາ'
-          "
+          :name="[tab.lang, 'title']"
+          label="ຊື່ບໍລິການ"
           :required="tab.lang === 'lo'"
         >
           <UiInput
-            v-model="formState[tab.lang].name"
-            :placeholder="
-              tab.lang === 'lo'
-                ? 'ປ້ອນຊື່ປະເພດວີຊາ'
-                : tab.lang === 'en'
-                ? 'ປ້ອນຊື່ປະເພດວີຊາ'
-                : 'ປ້ອນຊື່ປະເພດວີຊາ'
-            "
+            v-model="formState[tab.lang as TabLanguage].title"
+            placeholder="ປ້ອນຊື່ບໍລິການ"
           />
         </UiFormItem>
+
+        <!-- คำอธิบาย -->
         <UiFormItem
-          :name="[tab.lang, 'content']"
-          :label="
-            tab.lang === 'lo'
-              ? 'ເນື້ອຫາ'
-              : tab.lang === 'en'
-              ? 'ເນື້ອຫາ'
-              : 'ເນື້ອຫາ'
-          "
+          :name="[tab.lang, 'description']"
+          label="ຄຳອະທິບາຍ"
+          :required="tab.lang === 'lo'"
         >
+          <Textarea
+            v-model="formState[tab.lang as TabLanguage].description"
+            placeholder="ປ້ອນຄຳອະທິບາຍ"
+            :rows="3"
+          />
+        </UiFormItem>
+
+        <!-- เนื้อหา -->
+        <UiFormItem :name="[tab.lang, 'content']" label="ເນື້ອຫາ">
           <QuillEditorComponent
-            v-model="formState[tab.lang].content"
-            :placeholder="
-              tab.lang === 'lo'
-                ? 'ປ້ອນເນື້ອຫາ...'
-                : tab.lang === 'en'
-                ? 'ປ້ອນເນື້ອຫາ...'
-                : 'ປ້ອນເນື້ອຫາ...'
-            "
-            @update:modelValue="(val) => debugEditorContent(tab.lang, val)"
+            v-model="formState[tab.lang as TabLanguage].content"
+            placeholder="ປ້ອນເນື້ອຫາ..."
           />
         </UiFormItem>
       </template>

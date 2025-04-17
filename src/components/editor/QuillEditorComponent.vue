@@ -52,6 +52,7 @@ const {
   uploadFile,
   isImageFile,
   formatFileSize,
+  handleDeleteFile,
 } = useFileManager();
 
 // Emits
@@ -456,94 +457,11 @@ const handleInsertImage = () => {
     message.success("ເພີ່ມຮູບພາບສຳເລັດ");
   });
 };
-
-const handleDeleteFile = async (file: FileItem) => {
-  try {
-    // แสดง confirm dialog
-    const confirmed = await new Promise((resolve) => {
-      const modal = Modal.confirm({
-        title: "ຢືນຢັນການລົບ",
-        content: `ທ່ານຕ້ອງການລົບໄຟລ໌ "${file.name}" ແທ້ບໍ່?`,
-        okText: "ລົບ",
-        okType: "danger",
-        cancelText: "ຍົກເລີກ",
-        onOk: () => resolve(true),
-        onCancel: () => resolve(false),
-      });
-    });
-
-    if (!confirmed) return;
-
-    // TODO: เพิ่มการเรียก API สำหรับลบไฟล์
-    message.loading("ກຳລັງລົບໄຟລ໌...");
-    // const response = await api.delete(`/file-and-directory/file/${file.id}`);
-
-    // Refresh files list
-    await fetchFiles();
-    message.success("ລົບໄຟລ໌ສຳເລັດ");
-  } catch (error) {
-    console.error("Error deleting file:", error);
-    message.error("ເກີດຂໍ້ຜິດພາດໃນການລົບໄຟລ໌");
-  }
-};
-
 const handleCloseModal = () => {
   fileManagerVisible.value = false;
   selectedFile.value = null;
   searchQuery.value = "";
 };
-
-// Watchers
-// watch(
-//   () => props.modelValue,
-//   (newVal) => {
-//     if (!newVal || !quillInstance || isUpdating) return;
-
-//     try {
-//       isUpdating = true;
-//       const parsedContent = JSON.parse(newVal);
-
-//       if (parsedContent.type === "doc") {
-//         const delta = { ops: [] as any[] };
-
-//         parsedContent.content.forEach((node: any) => {
-//           if (node.type === "paragraph" && node.content) {
-//             node.content.forEach((contentNode: any) => {
-//               if (contentNode.type === "text") {
-//                 delta.ops.push({
-//                   insert: contentNode.text,
-//                 });
-//               }
-//             });
-//             delta.ops.push({ insert: "\n" });
-//           } else if (node.type === "image" && node.attrs?.src) {
-//             delta.ops.push(
-//               { insert: { image: node.attrs.src } },
-//               { insert: "\n" }
-//             );
-//           }
-//         });
-
-//         const currentSelection = quillInstance.getSelection();
-//         quillInstance.setContents(delta);
-
-//         nextTick(() => {
-//           if (currentSelection) {
-//             quillInstance.setSelection(
-//               currentSelection.index,
-//               currentSelection.length
-//             );
-//           }
-//           isUpdating = false;
-//         });
-//       }
-//     } catch (e) {
-//       console.error("Error parsing content:", e);
-//       isUpdating = false;
-//     }
-//   },
-//   { immediate: true }
-// );
 // ปรับปรุง watch
 watch(
   () => props.modelValue,
@@ -731,7 +649,7 @@ onMounted(async () => {
         </a-spin>
 
         <!-- Footer Actions -->
-        <div class="modal-footer">
+        <!-- <div class="modal-footer">
           <a-button @click="handleCloseModal"> ຍົກເລີກ </a-button>
           <a-button
             type="primary"
@@ -740,7 +658,7 @@ onMounted(async () => {
           >
             ເພີ່ມຮູບພາບ
           </a-button>
-        </div>
+        </div> -->
       </div>
     </a-modal>
   </div>

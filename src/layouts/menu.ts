@@ -63,7 +63,7 @@ export const menuItems: ItemType[] = reactive([
   },
 
   {
-    key: "service",
+    key: "services",
     label: "ບໍລິການ",
     icon: () =>
       h("div", {}, [
