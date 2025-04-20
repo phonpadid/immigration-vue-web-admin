@@ -76,6 +76,15 @@ export interface SevicesFormState {
 
 export type LanguageKey = "1" | "2" | "3";
 export type ApiLangKey = "lo" | "en" | "zh_cn";
+// Define explicit type for tab language
+export type TabLanguage = "lo" | "en" | "zh_cn";
+// Define tab configuration with proper typing
+export interface TabConfig {
+  key: string;
+  label: string;
+  slotName: string;
+  lang: TabLanguage;
+}
 
 /*************************To Table ************************* */
 

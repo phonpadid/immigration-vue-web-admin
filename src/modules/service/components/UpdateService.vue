@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted } from "vue";
-import { message, Spin } from "ant-design-vue";
+import { message } from "ant-design-vue";
 import { useRouter, useRoute } from "vue-router";
 import { useServiceStore } from "../store/service.store";
 import { storeToRefs } from "pinia";
@@ -24,14 +24,6 @@ interface ServiceTranslate {
   content: string | any;
   lang: string;
 }
-
-interface ServiceResponse {
-  id: number;
-  created_at: string;
-  updated_at: string;
-  translates: ServiceTranslate[];
-}
-
 // Define tab configuration with proper typing
 interface TabConfig {
   key: string;
@@ -42,7 +34,7 @@ interface TabConfig {
 
 // Store and Router
 const store = useServiceStore();
-const { isLoading, error } = storeToRefs(store);
+const { isLoading, error,  } = storeToRefs(store);
 const router = useRouter();
 const route = useRoute();
 

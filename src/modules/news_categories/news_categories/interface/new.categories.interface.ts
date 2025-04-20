@@ -23,9 +23,17 @@ interface LanguageData {
 }
 
 export interface NewsCategoryForm {
+  id: number;
   lo: LanguageData;
   en: LanguageData;
   zh_cn: LanguageData;
+  translates: {
+    id: number;
+    category_id: number;
+    name: string;
+    slug: string;
+    lang: string;
+  }[];
 }
 
 export interface NewsCategoriessResponse extends IPaginated {

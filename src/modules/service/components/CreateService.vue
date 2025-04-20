@@ -3,13 +3,13 @@ import { ref, reactive, watch } from "vue";
 import { message } from "ant-design-vue";
 import { useRouter } from "vue-router";
 import { useServiceStore } from "../store/service.store";
-import type { LanguageKey } from "../interface/service.interface";
+import type { TabLanguage, TabConfig } from "../interface/service.interface";
 import { storeToRefs } from "pinia";
-import Tab from "@/components/Tab/Tab.vue";
 import type {
   QuillDelta,
   QuillContent,
 } from "@/components/editor/editor.types";
+import Tab from "@/components/Tab/Tab.vue";
 import UiInput from "@/components/Input/UiInput.vue";
 import UiButton from "@/components/button/UiButton.vue";
 import UiFormItem from "@/components/Form/UiFormItem.vue";
@@ -17,18 +17,9 @@ import UiForm from "@/components/Form/UiForm.vue";
 import QuillEditorComponent from "@/components/editor/QuillEditorComponent.vue";
 import Textarea from "@/components/Input/Textarea.vue";
 
-// Define explicit type for tab language
-type TabLanguage = "lo" | "en" | "zh_cn";
-// Define tab configuration with proper typing
-interface TabConfig {
-  key: string;
-  label: string;
-  slotName: string;
-  lang: TabLanguage;
-}
 // Store and Router
 const store = useServiceStore();
-const { isLoading, error } = storeToRefs(store);
+const { error } = storeToRefs(store);
 const router = useRouter();
 
 // Form state with explicit typing

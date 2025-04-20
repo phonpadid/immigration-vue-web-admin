@@ -34,7 +34,8 @@ const handleChange = (e: any) => {
     :size="size"
     :disabled="disabled"
     :allow-clear="allowClear"
-    @update:value="handleChange"
+    @input="handleChange"
+    @change="handleChange"
     :class="computedClass"
   >
     <template v-if="prefixIcon" #prefix>
