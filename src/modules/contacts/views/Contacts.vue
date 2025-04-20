@@ -1,18 +1,20 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref } from "vue";
 import { columns } from "../interface/column";
 import { usecontactStore } from "../store/contacts.store";
 import { useRouter } from "vue-router";
 import { Modal } from "ant-design-vue";
+import { storeToRefs } from "pinia";
 import Table from "@/components/table/Table.vue";
 import UiButton from "@/components/button/UiButton.vue";
 import Dropdown from "@/components/Dropdown/Dropdown.vue";
 import LoadingSpinner from "@/components/loading/LoadingSpinner.vue";
 
 /********************************************************************* */
+const store = usecontactStore();
+const { getAllContacts, deleteContacts } = store;
+const { isLoading, contacts } = storeToRefs(store);
 
-const { getAllContacts, deleteContacts, isLoading, contacts } =
-  usecontactStore();
 /********************************************************************* */
 const { push } = useRouter();
 const menuOptions = ref([
@@ -59,41 +61,50 @@ onMounted(async () => {
 });
 /********************************************************************* */
 </script>
-
 <template>
-  <LoadingSpinner
-    v-if="isLoading"
-    class="absolute inset-0 flex items-center justify-center z-10"
-  />
-
-  <div
-    class="flex flex-col items-start justify-between p-4 sm:flex-row sm:items-center mt-4"
-  >
-    <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
-      ຕາຕະລາງຂໍ້ມູນຕິດຕໍ່
-    </h2>
+  <div v-if="isLoading" class="relative h-[80vh]">
+    <LoadingSpinner class="absolute inset-0" />
   </div>
-
-  <div class="relative">
-    <Table
-      :columns="columns"
-      :dataSource="contacts.data || []"
-      class="dark:bg-gray-800 dark:text-white dark:border-gray-700"
+  <div v-else>
+    <div
+      class="flex flex-col items-start justify-between p-4 sm:flex-row sm:items-center mt-4"
     >
-      <template #action="{ record }">
-        <Dropdown
-          :options="menuOptions"
-          @select="(key) => handleSelect(key, record)"
-        >
-          <UiButton
-            type="primary"
-            size="small"
-            colorClass="!bg-white text-gray-900 flex items-center hover:!bg-gray-200 hover:!text-gray-900 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white"
-            icon="ic:baseline-more-horiz"
-          ></UiButton>
-        </Dropdown>
-      </template>
-    </Table>
+      <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
+        ຕາຕະລາງຂໍ້ມູນຕິດຕໍ່
+      </h2>
+    </div>
+
+    <div class="relative">
+      <div
+        v-if="!contacts.data || contacts.data.length === 0"
+        class="p-4 text-center"
+      >
+        ບໍ່ມີຂໍ້ມູນ
+      </div>
+
+      <Table
+        v-else
+        :columns="columns"
+        :dataSource="contacts.data"
+        class="dark:bg-gray-800 dark:text-white dark:border-gray-700"
+        :pagination="{ pageSize: 10 }"
+        rowKey="id"
+      >
+        <template #action="{ record }">
+          <Dropdown
+            :options="menuOptions"
+            @select="(key) => handleSelect(key, record)"
+          >
+            <UiButton
+              type="primary"
+              size="small"
+              colorClass="!bg-white text-gray-900 flex items-center hover:!bg-gray-200 hover:!text-gray-900 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white"
+              icon="ic:baseline-more-horiz"
+            ></UiButton>
+          </Dropdown>
+        </template>
+      </Table>
+    </div>
   </div>
 </template>
 <style></style>

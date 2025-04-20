@@ -2,7 +2,10 @@
 import { ref, computed } from "vue";
 import { message } from "ant-design-vue";
 import { api } from "@/lib/axios";
+import { Icon } from "@iconify/vue";
+import { h } from "vue";
 import type { FileItem, FileUploadResponse } from "../editor/editor.types";
+import { Modal } from "ant-design-vue";
 
 export const useFileManager = () => {
   const files = ref<FileItem[]>([]);
@@ -130,6 +133,59 @@ export const useFileManager = () => {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
 
+  const deleteFile = async (fileId: number): Promise<void> => {
+    const currentDate = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+    try {
+      await api.delete(`/file-and-directory/${fileId}/file`, {
+        headers: {
+          Date: currentDate,
+          "User-Login": "phonpadid",
+        },
+      });
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      throw error;
+    }
+  };
+
+  const handleDeleteFile = async (file: FileItem) => {
+    try {
+      // Show confirmation dialog
+      const confirmed = await new Promise((resolve) => {
+        Modal.confirm({
+          title: "ຢືນຢັນການລຶບ",
+          content: `ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້?`,
+          okText: "ແມ່ນແລ້ວ,ຂ້ອຍແນ່ໃຈ",
+          okType: "danger",
+          cancelText: "ບໍ່,ຍົກເລີກ",
+          onOk: () => resolve(true),
+          onCancel: () => resolve(false),
+        });
+      });
+
+      if (!confirmed) return;
+
+      message.loading({ content: "ກຳລັງລົບໄຟລ໌...", key: "deleteFile" });
+
+      await deleteFile(file.id);
+      await fetchFiles();
+
+      message.success({ content: "ລົບໄຟລ໌ສຳເລັດ", key: "deleteFile" });
+
+      // If the deleted file was selected, clear the selection
+      if (selectedFile.value?.id === file.id) {
+        selectedFile.value = null;
+      }
+    } catch (error) {
+      console.error("Error in handleDeleteFile:", error);
+      message.error({
+        content: "ເກີດຂໍ້ຜິດພາດໃນການລົບໄຟລ໌",
+        key: "deleteFile",
+      });
+    }
+  };
+
   return {
     files,
     filteredFiles,
@@ -142,6 +198,7 @@ export const useFileManager = () => {
     uploadFile,
     isImageFile,
     formatFileSize,
-    debugApiConnection, // เพิ่ม debug function
+    debugApiConnection,
+    handleDeleteFile,
   };
 };

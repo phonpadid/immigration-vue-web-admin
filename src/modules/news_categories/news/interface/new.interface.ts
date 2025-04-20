@@ -35,7 +35,7 @@ export type NewResponse = {
   }[];
 };
 
-export interface NewForm  {
+export interface NewForm {
   category_id: string;
   // category: {
   //   id: number;
@@ -59,7 +59,30 @@ export interface NewForm  {
   //   content: string;
   //   lang: string;
   // }[];
-};
+}
+interface LanguageItem {
+  name: string;
+}
+
+interface CategoryData {
+  id?: number;
+  lo: LanguageItem;
+  en: LanguageItem;
+  zh_cn: LanguageItem;
+}
+export interface CategoryTranslate {
+  id: number;
+  lang: string;
+  name: string;
+  lo: { name: string };
+  en: { name: string };
+  zh_cn: { name: string };
+}
+
+export interface Category {
+  id: number;
+  translates: CategoryTranslate[];
+}
 
 export interface NewsResponse extends IPaginated {
   news: NewResponse[];
