@@ -52,7 +52,6 @@ const renderContent = computed(() => {
   if (typeof parsedContent.value === "string") {
     return parsedContent.value;
   }
-
   // กรณีอื่นๆ
   return JSON.stringify(parsedContent.value);
 });
