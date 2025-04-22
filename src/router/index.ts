@@ -21,6 +21,7 @@ import { popupsRoute } from "@/modules/banner-hero/popups/router";
 import { visaRoute } from "@/modules/visa-category/router";
 import { numberRoute } from "@/modules/registration/registration_number/router";
 import { servicesRoute } from "@/modules/service/router";
+import { hotelsRoute } from "@/modules/hotels/router";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -44,6 +45,7 @@ const routes: RouteRecordRaw[] = [
       ...visaRoute,
       ...numberRoute,
       ...servicesRoute,
+      ...hotelsRoute,
     ],
   },
   ...authRoute,

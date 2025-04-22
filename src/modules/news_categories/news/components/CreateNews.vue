@@ -1,7 +1,15 @@
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, watch } from "vue";
+import { reactive, ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { message } from "ant-design-vue";
+import { useNewsStore } from "../store/new.store";
+import { useNewscategoriesStore } from "../../news_categories/store/new.categories.store";
+import { storeToRefs } from "pinia";
+import type {
+  QuillDelta,
+  QuillContent,
+} from "@/components/editor/editor.types";
+import type { TabLanguage, TabConfig } from "../interface/new.interface";
 import Tab from "@/components/Tab/Tab.vue";
 import UiForm from "@/components/Form/UiForm.vue";
 import UiFormItem from "@/components/Form/UiFormItem.vue";
@@ -10,40 +18,20 @@ import Textarea from "@/components/Input/Textarea.vue";
 import InputSelect from "@/components/Input/InputSelect.vue";
 import QuillEditorComponent from "@/components/editor/QuillEditorComponent.vue";
 import UiButton from "@/components/button/UiButton.vue";
-import { useNewsStore } from "../store/new.store";
-import { useNewscategoriesStore } from "../../news_categories/store/new.categories.store";
-import { storeToRefs } from "pinia";
-import type {
-  QuillDelta,
-  QuillContent,
-} from "@/components/editor/editor.types";
 import UploadDragger from "@/components/Upload/UploadDragger.vue";
 
-// สร้างประเภทสำหรับภาษาต่างๆ
-type TabLanguage = "lo" | "en" | "zh_cn";
-
-// กำหนด interface สำหรับ tab config
-interface TabConfig {
-  key: string;
-  label: string;
-  slotName: string;
-  lang: TabLanguage;
-}
-
+/**************************************************************** */
 // Router และ Store
 const router = useRouter();
 const newsStore = useNewsStore();
 const categoriesStore = useNewscategoriesStore();
 const { newsCategories } = storeToRefs(categoriesStore);
-
-// ตัวแปรสำหรับการควบคุมสถานะของฟอร์ม
 const activeTab = ref("1");
 const isLoading = ref(false);
 const formRef = ref<InstanceType<typeof UiForm>>();
 const uploadedFile = ref<File | null>(null);
-const thumbnailError = ref(""); // เพิ่มตัวแปรสำหรับจัดการ error ของรูปภาพ
-
-// สร้างโครงสร้างข้อมูลสำหรับฟอร์ม
+const thumbnailError = ref("");
+/**************************************************************** */
 const newForm = reactive({
   category_id: "",
   status: "draft",
@@ -58,21 +46,21 @@ const newForm = reactive({
   >,
 });
 
-// กำหนดค่าเริ่มต้นสำหรับสถานะ
+//Satus options for the news
 const statusOptions = ref([
   { value: "draft", label: "ແບບຮ່າງ" },
   { value: "published", label: "ເຜີຍແຜ່" },
   { value: "private", label: "ສ່ວນໂຕ" },
 ]);
 
-// กำหนดค่าแท็บต่างๆ
+// tabConfig show language
 const tabsConfig: TabConfig[] = [
   { key: "1", label: "ພາສາລາວ", slotName: "tab1", lang: "lo" },
   { key: "2", label: "ພາສາອັງກິດ", slotName: "tab2", lang: "en" },
   { key: "3", label: "ພາສາຈີນ", slotName: "tab3", lang: "zh_cn" },
 ];
 
-// สร้าง computed property สำหรับตัวเลือกหมวดหมู่จาก store
+// funtion for get all categories
 const categoryOptions = computed(() => {
   const options = [{ value: "", label: "ກະລຸນາເລືອກໝວດໝູ່" }];
 
@@ -107,28 +95,28 @@ const categoryOptions = computed(() => {
   return options;
 });
 
-// กฎการตรวจสอบข้อมูล - เหลือเฉพาะการตรวจสอบหมวดหมู่เท่านั้น
+// validation rules for form
 const rules = {
   category_id: [
     { required: true, message: "ກະລຸນາເລືອກໝວດໝູ່", trigger: "change" },
   ],
 };
 
-// ฟังก์ชันจัดการการอัปโหลดไฟล์ใหม่
+// select file from UploadDragger component
 const handleFileSelect = (file: File) => {
   uploadedFile.value = file;
-  thumbnailError.value = ""; // ล้าง error เมื่อมีการอัพโหลดไฟล์ใหม่
+  thumbnailError.value = "";
 
-  // สร้าง URL สำหรับรูปที่อัพโหลด (สำหรับแสดงในหน้าเว็บ)
+  // Using URL.createObjectURL to create a temporary URL for the file
   const fileUrl = URL.createObjectURL(file);
 
-  // เก็บ URL ไว้ในฟอร์ม
+  // Save the file URL to the newForm object
   newForm.thumbnail = fileUrl;
 
   console.log("File selected:", file);
 };
 
-// ฟังก์ชันสำหรับแปลงข้อมูล Editor ให้อยู่ในรูปแบบที่ต้องการ
+// format content for submit
 const formatContentForSubmit = (
   content: string | QuillDelta | QuillContent
 ): string => {
@@ -248,37 +236,29 @@ const handleSubmit = async () => {
     if (uploadedFile.value) {
       formData.append("thumbnail", uploadedFile.value);
     }
-
-    // จัดการข้อมูลภาษาต่างๆ ตามรูปแบบที่ต้องการ
     const languages: TabLanguage[] = ["lo", "en", "zh_cn"];
 
     languages.forEach((lang) => {
-      // สร้าง JSON string สำหรับแต่ละภาษา
       const langData = {
         title:
           newForm.translates[lang].title ||
           (lang === "lo"
             ? "ຫົວຂໍ້ຂ່າວ"
             : lang === "en"
-            ? "News title"
-            : "新闻标题"),
+            ? "ຫົວຂໍ້ຂ່າວ"
+            : "ຫົວຂໍ້ຂ່າວ"),
         description:
           newForm.translates[lang].description ||
           (lang === "lo"
             ? "ຄຳອະທິບາຍ"
             : lang === "en"
-            ? "News description"
-            : "新闻描述"),
+            ? "ຄຳອະທິບາຍ"
+            : "ຄຳອະທິບາຍ"),
         content: formatContentForSubmit(newForm.translates[lang].content),
       };
-
-      // เพิ่มเข้า FormData ในรูปแบบที่ต้องการ
       formData.append(lang, JSON.stringify(langData));
     });
 
-    console.log("Submitting news with FormData...");
-
-    // ส่งข้อมูลไป API ด้วย FormData
     await newsStore.createNewsWithFormData(formData);
     message.success("ບັນທຶກຂ່າວສຳເລັດ");
     router.push("/news");
@@ -290,12 +270,7 @@ const handleSubmit = async () => {
   }
 };
 
-// ยกเลิกการส่งข้อมูลและกลับไปหน้าก่อนหน้า
-const handleCancel = () => {
-  router.push("/news");
-};
-
-// โหลดข้อมูลหมวดหมู่เมื่อโหลดหน้า
+// load categories when component mounted
 onMounted(async () => {
   try {
     await categoriesStore.getAllNewsCategories();
@@ -322,7 +297,6 @@ onMounted(async () => {
         :existingImageUrl="newForm.thumbnail"
         @onFileSelect="handleFileSelect"
       />
-      <!-- แสดงข้อความผิดพลาดสำหรับรูปภาพ -->
       <div v-if="thumbnailError" class="mt-1 text-sm text-red-500">
         {{ thumbnailError }}
       </div>
@@ -381,9 +355,6 @@ onMounted(async () => {
     </Tab>
 
     <div class="flex justify-start gap-4 mt-6">
-      <UiButton type="default" size="large" @click="handleCancel">
-        ຍົກເລີກ
-      </UiButton>
       <UiButton
         type="primary"
         size="large"
@@ -391,7 +362,7 @@ onMounted(async () => {
         :loading="isLoading"
         @click="handleSubmit"
       >
-        {{ isLoading ? "ກຳລັງບັນທຶກ..." : "ບັນທຶກ" }}
+        {{ isLoading ? "ກຳລັງບັນທຶກ..." : "ເພີ່ມຂ່າວ" }}
       </UiButton>
     </div>
   </UiForm>
