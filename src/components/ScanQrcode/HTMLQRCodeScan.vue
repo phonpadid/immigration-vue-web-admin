@@ -17,7 +17,12 @@
             </div>
 
             <!-- Scanner -->
-            <div id="reader" class="scanner-container"></div>
+            <div
+              v-show="showModal"
+              id="reader"
+              ref="scannerContainer"
+              class="scanner-container"
+            ></div>
 
             <!-- Status message -->
             <transition name="fade">
@@ -29,6 +34,11 @@
                 {{ scanStatus }}
               </div>
             </transition>
+
+            <!-- Debug info for better troubleshooting -->
+            <div v-if="showDebugInfo" class="debug-info">
+              <p>Debug Mode: {{ debugInfo }}</p>
+            </div>
 
             <!-- Actions -->
             <div class="modal-actions">
@@ -45,6 +55,20 @@
                   >
                     {{ camera.label }}
                   </option>
+                </select>
+                <div class="select-arrow">▼</div>
+              </div>
+
+              <!-- QR Code Format Selection -->
+              <div class="select-wrapper">
+                <select
+                  v-model="selectedFormat"
+                  class="format-dropdown"
+                  @change="updateScannerConfig"
+                >
+                  <option value="all">ທຸກຮູບແບບ QR</option>
+                  <option value="standard">QR ມາດຕະຖານ</option>
+                  <option value="custom">QR ແບບກຳນົດເອງ</option>
                 </select>
                 <div class="select-arrow">▼</div>
               </div>
@@ -69,6 +93,11 @@
               <button @click="scanImageFile" class="action-link">
                 <span class="button-icon">📁</span> Upload QR Code
               </button>
+
+              <!-- Reset Scanner Button -->
+              <button @click="resetScanner" class="reset-button">
+                <span class="button-icon">🔄</span> ຣີເຊັດກ້ອງ
+              </button>
             </div>
           </div>
         </div>
@@ -78,10 +107,135 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeUnmount, nextTick, onMounted, computed } from "vue";
-import { Html5Qrcode } from "html5-qrcode";
+import {
+  ref,
+  onBeforeUnmount,
+  nextTick,
+  onMounted,
+  computed,
+  watch,
+} from "vue";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
-// Console log filtering
+// Debug Mode
+const showDebugInfo = ref(false);
+const debugInfo = ref("");
+
+// Modal State
+const showModal = ref(false);
+const scanner = ref<Html5Qrcode | null>(null);
+const cameras = ref<{ id: string; label: string }[]>([]);
+const selectedCameraId = ref<string | null>(null);
+const isScanning = ref(false);
+const scanStatus = ref<string>("");
+const scanSuccessful = ref<boolean>(false);
+const selectedFormat = ref("all");
+const scannerContainer = ref<HTMLElement | null>(null);
+const instanceId = ref(`html5-qrcode-${Date.now()}`); // ใช้ ID ที่ไม่ซ้ำกันทุกครั้ง
+
+// QR Code configuration
+const scannerConfig = ref({
+  fps: 15,
+  qrbox: { width: 250, height: 250 },
+  aspectRatio: 1.0,
+  disableFlip: false,
+  experimentalFeatures: {
+    useBarCodeDetectorIfSupported: true,
+  },
+  formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE], // Default to QR Code only
+  videoConstraints: {
+    width: { min: 640, ideal: 1280, max: 1920 },
+    height: { min: 480, ideal: 720, max: 1080 },
+    facingMode: "environment",
+  },
+});
+
+// Computed property for scan status class
+const scanStatusClass = computed(() => {
+  return {
+    success: scanSuccessful.value,
+    error: !scanSuccessful.value && scanStatus.value !== "",
+  };
+});
+
+// ฟังก์ชันรีเซ็ตสแกนเนอร์ใหม่ (เพิ่มใหม่)
+const resetScanner = async () => {
+  logDebugInfo("กำลังรีเซ็ตสแกนเนอร์...");
+
+  // หยุดการสแกน
+  if (isScanning.value) {
+    await stopScanning();
+  }
+
+  // ล้างสแกนเนอร์เดิม
+  if (scanner.value) {
+    try {
+      await scanner.value.clear();
+      scanner.value = null;
+    } catch (error) {
+      logDebugInfo("ข้อผิดพลาดในการล้างสแกนเนอร์:", error);
+    }
+  }
+
+  // รีเซ็ต DOM element
+  if (scannerContainer.value) {
+    scannerContainer.value.innerHTML = "";
+
+    // สร้าง element div ใหม่
+    const newScannerElement = document.createElement("div");
+    newScannerElement.id = `reader-${Date.now()}`; // สร้าง ID ใหม่ทุกครั้ง
+    scannerContainer.value.appendChild(newScannerElement);
+
+    // สร้างสแกนเนอร์ใหม่
+    try {
+      scanner.value = new Html5Qrcode(newScannerElement.id, { verbose: false });
+      await fetchCameras();
+      scanStatus.value = "ຣີເຊັດກ້ອງສະແກນສຳເລັດ ກະລຸນາເລີ່ມສະແກນໃຫມ່";
+    } catch (error) {
+      logDebugInfo("ข้อผิดพลาดในการสร้างสแกนเนอร์ใหม่:", error);
+      scanStatus.value = "รีเซ็ตล้มเหลว กรุณาลองปิดและเปิดหน้าต่างใหม่";
+    }
+  }
+};
+
+// Update scanner configuration based on selected format
+const updateScannerConfig = () => {
+  switch (selectedFormat.value) {
+    case "all":
+      // Support all QR code formats
+      scannerConfig.value.formatsToSupport = [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.AZTEC,
+        Html5QrcodeSupportedFormats.DATA_MATRIX,
+      ];
+      break;
+    case "custom":
+      // Optimize for custom QR codes - may need adjustment based on your specific QR types
+      scannerConfig.value.formatsToSupport = [
+        Html5QrcodeSupportedFormats.QR_CODE,
+      ];
+      scannerConfig.value.qrbox = { width: 300, height: 300 }; // Larger scanning area
+      scannerConfig.value.fps = 10; // Slower but more accurate
+      break;
+    case "standard":
+      // For standard QR codes only
+      scannerConfig.value.formatsToSupport = [
+        Html5QrcodeSupportedFormats.QR_CODE,
+      ];
+      scannerConfig.value.qrbox = { width: 250, height: 250 };
+      scannerConfig.value.fps = 15;
+      break;
+  }
+
+  // Restart scanning if active
+  if (isScanning.value && scanner.value) {
+    stopScanning().then(() => {
+      startScanning();
+    });
+  }
+};
+
+// Improved console log filtering
 onMounted(() => {
   setupConsoleSuppression();
 });
@@ -93,12 +247,19 @@ const setupConsoleSuppression = () => {
     const originalError = console.error;
     const originalWarn = console.warn;
 
+    // Store original methods for restoration
+    window.console.__originalLog = originalLog;
+    window.console.__originalError = originalError;
+    window.console.__originalWarn = originalWarn;
+
     // Only filter html5-qrcode logs
     console.log = function (...args) {
       if (args && args.length > 0) {
         const firstArg = String(args[0]);
         if (!firstArg.includes("html5-qrcode")) {
           originalLog.apply(console, args);
+        } else if (showDebugInfo.value) {
+          debugInfo.value = `Log: ${firstArg}`;
         }
       } else {
         originalLog.apply(console, args);
@@ -108,10 +269,16 @@ const setupConsoleSuppression = () => {
     console.error = function (...args) {
       if (args && args.length > 0) {
         const firstArg = String(args[0]);
+        // Capture QR code errors for debugging but don't display in console
         if (
-          !firstArg.includes("html5-qrcode") &&
-          !firstArg.includes("NotFoundException")
+          firstArg.includes("html5-qrcode") ||
+          firstArg.includes("NotFoundException")
         ) {
+          // In debug mode, store the error message
+          if (showDebugInfo.value) {
+            debugInfo.value = `Error: ${firstArg}`;
+          }
+        } else {
           originalError.apply(console, args);
         }
       } else {
@@ -124,6 +291,8 @@ const setupConsoleSuppression = () => {
         const firstArg = String(args[0]);
         if (!firstArg.includes("html5-qrcode")) {
           originalWarn.apply(console, args);
+        } else if (showDebugInfo.value) {
+          debugInfo.value = `Warn: ${firstArg}`;
         }
       } else {
         originalWarn.apply(console, args);
@@ -135,54 +304,23 @@ const setupConsoleSuppression = () => {
 // Function to restore original console methods
 const restoreConsole = () => {
   if (window.console) {
-    // Fixed __proto__ error by using proper type checking
-    if (
-      typeof console.log === "function" &&
-      console.log.toString().includes("html5-qrcode")
-    ) {
-      // Restore original methods safely
-      Object.defineProperty(window.console, "log", {
-        value: window.console.__originalLog || console.log,
-        writable: true,
-        configurable: true,
-      });
-
-      Object.defineProperty(window.console, "error", {
-        value: window.console.__originalError || console.error,
-        writable: true,
-        configurable: true,
-      });
-
-      Object.defineProperty(window.console, "warn", {
-        value: window.console.__originalWarn || console.warn,
-        writable: true,
-        configurable: true,
-      });
+    if (window.console.__originalLog) {
+      console.log = window.console.__originalLog;
+    }
+    if (window.console.__originalError) {
+      console.error = window.console.__originalError;
+    }
+    if (window.console.__originalWarn) {
+      console.warn = window.console.__originalWarn;
     }
   }
 };
 
-// Modal State
-const showModal = ref(false);
-const scanner = ref<Html5Qrcode | null>(null);
-const cameras = ref<{ id: string; label: string }[]>([]);
-const selectedCameraId = ref<string | null>(null);
-const isScanning = ref(false);
-const scanStatus = ref<string>("");
-const scanSuccessful = ref<boolean>(false);
-
-// Computed property for scan status class
-const scanStatusClass = computed(() => {
-  return {
-    success: scanSuccessful.value,
-    error: !scanSuccessful.value && scanStatus.value !== "",
-  };
-});
-
-// Open Modal
+// Open Modal - แก้ไขเพื่อสร้าง scanner ใหม่ทุกครั้ง
 const openModal = async () => {
   showModal.value = true;
   scanStatus.value = "";
+  debugInfo.value = "";
 
   // Wait for DOM to render
   await nextTick();
@@ -191,25 +329,28 @@ const openModal = async () => {
   initScanner();
 };
 
-// Initialize Scanner
+// Initialize Scanner - ปรับปรุงให้สร้าง scanner ใหม่ทุกครั้ง
 const initScanner = async () => {
   try {
-    // Create new scanner instance if not exists
-    if (!scanner.value) {
-      // Create with verbose=false to disable internal logging
-      scanner.value = new Html5Qrcode("reader", { verbose: false });
+    // รีเซ็ต scanner container ก่อน
+    if (document.getElementById("reader")) {
+      document.getElementById("reader")!.innerHTML = "";
     }
+
+    // สร้าง scanner ใหม่ทุกครั้ง
+    scanner.value = new Html5Qrcode("reader", { verbose: false });
+
     await fetchCameras();
     // Show initial message
     scanStatus.value = "ເລືອກກ້ອງ ແລະ ກົດ Start Scanning ເພື່ອເລີມສະແກນ";
   } catch (error) {
-    console.error("Error initializing scanner:", error);
+    logDebugInfo("Error initializing scanner:", error);
     scanStatus.value = "ບໍ່ສາມາດເລີ່ມຕົ້ນກ້ອງໄດ້ ກະລຸນາລອງອີກຄັ້ງ";
     scanSuccessful.value = false;
   }
 };
 
-// Close Modal
+// Close Modal - ปรับปรุงให้ล้างทรัพยากรอย่างถูกต้อง
 const closeModal = async () => {
   // Make sure to stop scanning before closing modal
   if (isScanning.value) {
@@ -219,34 +360,52 @@ const closeModal = async () => {
   // Reset scanner to ensure clean state for next open
   if (scanner.value) {
     try {
-      scanner.value.clear();
+      await scanner.value.clear();
       scanner.value = null;
     } catch (error) {
-      console.error("Error clearing scanner:", error);
+      logDebugInfo("Error clearing scanner:", error);
     }
+  }
+
+  // เพิ่ม: ล้าง DOM element เพื่อเริ่มต้นใหม่ในครั้งถัดไป
+  if (document.getElementById("reader")) {
+    document.getElementById("reader")!.innerHTML = "";
   }
 
   showModal.value = false;
   scanStatus.value = "";
+  debugInfo.value = "";
 };
 
-// Fetch Available Cameras
+// Fetch Available Cameras - เพิ่มการจัดการข้อผิดพลาด
 const fetchCameras = async () => {
   try {
     const devices = await Html5Qrcode.getCameras();
-    cameras.value = devices.map((device) => ({
-      id: device.id,
-      label: device.label || `Camera ${cameras.value.length + 1}`,
-    }));
+    if (devices && devices.length) {
+      cameras.value = devices.map((device) => ({
+        id: device.id,
+        label: device.label || `Camera ${cameras.value.length + 1}`,
+      }));
 
-    if (cameras.value.length > 0) {
-      selectedCameraId.value = cameras.value[0].id;
+      if (cameras.value.length > 0) {
+        // Try to select back camera by default
+        const backCamera = cameras.value.find(
+          (camera) =>
+            camera.label.toLowerCase().includes("back") ||
+            camera.label.toLowerCase().includes("rear")
+        );
+
+        selectedCameraId.value = backCamera?.id || cameras.value[0].id;
+      } else {
+        scanStatus.value = "ບໍ່ພົບກ້ອງ ກະລຸນາກວດສອບການອະນຸຍາດໃຊ້ງານກ້ອງ";
+        scanSuccessful.value = false;
+      }
     } else {
       scanStatus.value = "ບໍ່ພົບກ້ອງ ກະລຸນາກວດສອບການອະນຸຍາດໃຊ້ງານກ້ອງ";
       scanSuccessful.value = false;
     }
   } catch (error) {
-    console.error("Error fetching cameras:", error);
+    logDebugInfo("Error fetching cameras:", error);
     scanStatus.value = "ບໍ່ສາມາດເຂົ້າເຖິງກ້ອງໄດ້ ກະລຸນາກວດສອບການອະນຸຍາດ";
     scanSuccessful.value = false;
   }
@@ -260,12 +419,20 @@ const onCameraChange = () => {
         startScanning();
       })
       .catch((error) => {
-        console.error("Error changing camera:", error);
+        logDebugInfo("Error changing camera:", error);
       });
   }
 };
 
-// Start Scanning
+// Log to debug info
+const logDebugInfo = (message: string, error?: any) => {
+  if (showDebugInfo.value) {
+    debugInfo.value = `${message} ${error ? JSON.stringify(error) : ""}`;
+    console.log(message, error);
+  }
+};
+
+// Start Scanning with improved error handling - ปรับปรุงให้มีการจัดการความผิดพลาดดีขึ้น
 const startScanning = async () => {
   if (!selectedCameraId.value || !scanner.value) {
     scanStatus.value = "ບໍ່ພົບກ້ອງ ກະລຸນາກວດສອບການອະນຸຍາດໃຊ້ງານ";
@@ -276,27 +443,15 @@ const startScanning = async () => {
   try {
     scanStatus.value = "ກຳລັງເລີ່ມກ້ອງ...";
 
-    // Comprehensive configuration for better QR code detection
-    const config = {
-      fps: 15, // Increased FPS for better detection
-      qrbox: { width: 250, height: 250 }, // Adjusted for better focus
-      aspectRatio: 1.0, // Square aspect ratio for QR codes
-      disableFlip: false, // Allow both normal and mirrored QR codes
-      experimentalFeatures: {
-        useBarCodeDetectorIfSupported: true, // Use native API if available
-      },
-      formatsToSupport: [0], // Focus only on QR_CODE format for better performance
-      // Advanced configuration
-      videoConstraints: {
-        width: { min: 640, ideal: 1280, max: 1920 },
-        height: { min: 480, ideal: 720, max: 1080 },
-        facingMode: "environment", // Use back camera by default
-      },
-    };
+    // ตรวจสอบว่ากำลังสแกนอยู่แล้วหรือไม่
+    if (isScanning.value) {
+      await stopScanning();
+    }
 
+    // Apply the current scanner configuration
     await scanner.value.start(
       selectedCameraId.value,
-      config,
+      scannerConfig.value,
       onScanSuccess,
       onScanError
     );
@@ -304,14 +459,37 @@ const startScanning = async () => {
     isScanning.value = true;
     scanStatus.value = "ກຳລັງສະແກນ... ກະລຸນາ QR code ມາໃກ້ກ້ອງ";
   } catch (error) {
-    console.error("Error starting scanner:", error);
-    scanStatus.value = "ບໍ່ສາມາດເລີ່ມຕົ້ນກ້ອງໄດ້ ກະລຸນາລອງອີກຄັ້ງ";
-    scanSuccessful.value = false;
-    isScanning.value = false;
+    logDebugInfo("Error starting scanner:", error);
+
+    // ถ้ามีข้อผิดพลาด ลองรีเซ็ตสแกนเนอร์อัตโนมัติ
+    try {
+      if (scanner.value) {
+        await scanner.value.clear();
+        scanner.value = null;
+      }
+
+      // สร้าง scanner ใหม่
+      scanner.value = new Html5Qrcode("reader", { verbose: false });
+
+      // ลองเริ่มการสแกนใหม่
+      await scanner.value.start(
+        selectedCameraId.value!,
+        scannerConfig.value,
+        onScanSuccess,
+        onScanError
+      );
+
+      isScanning.value = true;
+      scanStatus.value = "ກຳລັງສະແກນ... ກະລຸນາ QR code ມາໃກ້ກ້ອງ";
+    } catch (secondError) {
+      scanStatus.value = "ບໍ່ສາມາດເລີ່ມຕົ້ນກ້ອງໄດ້ ກະລຸນາກົດປຸ່ມ 'รีเซ็ตกล้อง'";
+      scanSuccessful.value = false;
+      isScanning.value = false;
+    }
   }
 };
 
-// Stop Scanning - returns a Promise
+// Stop Scanning - returns a Promise - ปรับปรุงให้จัดการข้อผิดพลาดดีขึ้น
 const stopScanning = async (): Promise<void> => {
   if (scanner.value && isScanning.value) {
     try {
@@ -319,13 +497,22 @@ const stopScanning = async (): Promise<void> => {
       isScanning.value = false;
       scanStatus.value = "ຢຸດສະແກນແລ້ວ";
     } catch (error) {
-      console.error("Error stopping scanner:", error);
+      logDebugInfo("Error stopping scanner:", error);
+      // ถ้าไม่สามารถหยุดได้ ให้รีเซ็ตทั้งหมด
+      try {
+        if (scanner.value) {
+          await scanner.value.clear();
+        }
+      } catch {}
+
+      isScanning.value = false;
+      scanner.value = null;
     }
   }
   return Promise.resolve();
 };
 
-// Scan an Image File
+// Improved scan image file with better error messaging
 const scanImageFile = () => {
   const fileInput = document.createElement("input");
   fileInput.type = "file";
@@ -338,40 +525,72 @@ const scanImageFile = () => {
     if (target.files && target.files.length > 0) {
       const file = target.files[0];
 
-      if (scanner.value) {
+      // ถ้าไม่มี scanner หรือการสแกนล้มเหลว สร้าง scanner ใหม่
+      if (!scanner.value) {
         try {
-          scanStatus.value = "ກຳລັງອ່ານ QR code ຈາກຮູບພາບ...";
-
-          // Try to scan in different modes for increased compatibility
-          let result: string;
-          try {
-            // First try with the default mode
-            result = await scanner.value.scanFile(file, true);
-          } catch (firstError) {
-            try {
-              // If failed, try with compatibility mode
-              result = await scanner.value.scanFile(file, false);
-            } catch (secondError) {
-              throw secondError; // If both fail, throw the error
-            }
-          }
-
-          scanSuccessful.value = true;
-          const processedResult = processQrCodeResult(result);
-          scanStatus.value = `ສະແກນສຳເລັດ: ${processedResult}`;
-          setTimeout(() => {
-            alert(`ສະແກນສຳເລັດ: ${processedResult}`);
-          }, 100);
+          scanner.value = new Html5Qrcode("reader", { verbose: false });
         } catch (error) {
-          console.error("Error scanning image file:", error);
-          scanSuccessful.value = false;
-          scanStatus.value = "ບໍ່ພົບ QR code ໃນຮູບພາບ ຫຼື ຮູບພາບບໍ່ຊັດເຈນ";
-          setTimeout(() => {
-            alert(
-              "ບໍ່ພົບ QR code ໃນຮູບພາບ ກະລຸນາກວດສອບວ່າຮູບພາບຊັດເຈນແລະມີ QR code"
-            );
-          }, 100);
+          logDebugInfo("Error creating scanner for file:", error);
+          scanStatus.value = "ไม่สามารถสร้างสแกนเนอร์ได้ กรุณาลองใหม่";
+          return;
         }
+      }
+
+      try {
+        scanStatus.value = "ກຳລັງອ່ານ QR code ຈາກຮູບພາບ...";
+
+        // Try different scanning modes with better error handling
+        try {
+          // First try with enhanced mode - this helps with custom QR codes
+          const result = await scanner.value.scanFile(
+            file,
+            /* verbose= */ true
+          );
+          handleScanSuccess(result);
+        } catch (firstError) {
+          logDebugInfo(
+            "First scan attempt failed, trying compatibility mode",
+            firstError
+          );
+          try {
+            // If failed, try with compatibility mode
+            const result = await scanner.value.scanFile(
+              file,
+              /* verbose= */ false
+            );
+            handleScanSuccess(result);
+          } catch (secondError) {
+            // Try one more time with different parameters for custom QR codes
+            logDebugInfo(
+              "Second scan attempt failed, trying with different parameters",
+              secondError
+            );
+
+            // Create a temporary image to get dimensions
+            const img = new Image();
+            img.onload = async () => {
+              try {
+                // For custom QRs, try again with advanced settings
+                if (scanner.value) {
+                  // Use scanFile with verbose mode enabled
+                  const result = await scanner.value.scanFile(
+                    file,
+                    /* verbose= */ true
+                  );
+                  handleScanSuccess(result);
+                }
+              } catch (thirdError) {
+                handleScanFailure();
+              }
+            };
+            img.onerror = () => {
+              handleScanFailure();
+            };
+            img.src = URL.createObjectURL(file);
+          }
+        }
+      } catch (error) {
+        handleScanFailure();
       }
     }
   };
@@ -379,14 +598,56 @@ const scanImageFile = () => {
   fileInput.click();
 };
 
-// Process QR Code result to handle custom QR codes better
+// Handle successful scan from file
+const handleScanSuccess = (result: string) => {
+  scanSuccessful.value = true;
+  const processedResult = processQrCodeResult(result);
+  scanStatus.value = `ສະແກນສຳເລັດ: ${processedResult}`;
+  setTimeout(() => {
+    alert(`ສະແກນສຳເລັດ: ${processedResult}`);
+  }, 100);
+};
+
+// Handle failed scan from file
+const handleScanFailure = () => {
+  scanSuccessful.value = false;
+  scanStatus.value = "ບໍ່ພົບ QR code ໃນຮູບພາບ ຫຼື ຮູບພາບບໍ່ຊັດເຈນ";
+  setTimeout(() => {
+    alert("ບໍ່ພົບ QR code ໃນຮູບພາບ ກະລຸນາກວດສອບວ່າຮູບພາບຊັດເຈນແລະມີ QR code");
+  }, 100);
+};
+
+// Enhanced process QR Code result to handle different formats better
 const processQrCodeResult = (result: string): string => {
   try {
+    // Check if it's a URL
+    if (result.startsWith("http")) {
+      return result;
+    }
+
     // Try if it's a valid JSON
     const jsonObject = JSON.parse(result);
     return JSON.stringify(jsonObject, null, 2);
   } catch (e) {
-    // If not JSON, just return the raw text
+    // Check if it has special encoding
+    try {
+      // Try decoding potential URL-encoded content
+      const decoded = decodeURIComponent(result);
+      if (decoded !== result) {
+        try {
+          // See if the decoded version is JSON
+          const jsonObject = JSON.parse(decoded);
+          return JSON.stringify(jsonObject, null, 2);
+        } catch {
+          // Otherwise return the decoded string
+          return decoded;
+        }
+      }
+    } catch {
+      // If decoding fails, just return the original
+    }
+
+    // If not JSON or special encoding, just return the raw text
     return result;
   }
 };
@@ -398,21 +659,23 @@ const onScanSuccess = (decodedText: string) => {
 
   scanSuccessful.value = true;
   scanStatus.value = `ສະແກນສຳເລັດ: ${processedResult}`;
+
+  // Log success in debug mode
+  logDebugInfo(`Successful scan: ${decodedText}`);
+
   setTimeout(() => {
     alert(`ສະແກນສຳເລັດ: ${processedResult}`);
   }, 100);
-
-  // Optionally stop scanning after successful scan
-  // stopScanning();
 };
 
-// Handle Scan Error - Simplified to reduce console spam
+// Enhanced error handling for scan error
 const onScanError = (error: unknown) => {
   // Don't log or display "NotFoundException" errors (normal during scanning)
   const errorStr = String(error);
   if (!errorStr.includes("NotFoundException")) {
     scanSuccessful.value = false;
     scanStatus.value = "ເກີດຂໍ້ຜິດພາດໃນການສະແກນ ກະລຸນາລອງໃໝ່ອີກຄັ້ງ";
+    logDebugInfo("Scan error:", error);
   }
 };
 
@@ -426,15 +689,9 @@ const handleKeyDown = (event: KeyboardEvent) => {
 // Setup event listeners
 onMounted(() => {
   document.addEventListener("keydown", handleKeyDown);
-  // Store original console methods for later restoration
-  if (window.console) {
-    window.console.__originalLog = window.console.log;
-    window.console.__originalError = window.console.error;
-    window.console.__originalWarn = window.console.warn;
-  }
 });
 
-// Cleanup Scanner and restore console functions on Unmount
+// Cleanup Scanner and restore console functions on Unmount - ปรับปรุงการเคลียร์ทรัพยากร
 onBeforeUnmount(() => {
   document.removeEventListener("keydown", handleKeyDown);
   if (scanner.value) {
@@ -447,14 +704,30 @@ onBeforeUnmount(() => {
           }
           return Promise.resolve();
         })
-        .catch(() => {
-          // Silent catch to prevent unhandled promise rejection
+        .catch((error) => {
+          logDebugInfo("Error during cleanup:", error);
+        })
+        .finally(() => {
+          // เพิ่ม: ล้าง DOM element
+          if (document.getElementById("reader")) {
+            document.getElementById("reader")!.innerHTML = "";
+          }
+          scanner.value = null;
         });
     } else if (scanner.value) {
       try {
         scanner.value.clear();
+        if (document.getElementById("reader")) {
+          document.getElementById("reader")!.innerHTML = "";
+        }
+        scanner.value = null;
       } catch (error) {
-        // Silent catch to prevent unhandled promise rejection
+        logDebugInfo("Error during cleanup:", error);
+        // เพิ่ม: ล้าง DOM element แม้จะมีข้อผิดพลาด
+        if (document.getElementById("reader")) {
+          document.getElementById("reader")!.innerHTML = "";
+        }
+        scanner.value = null;
       }
     }
   }
@@ -616,19 +889,6 @@ button {
   background-color: var(--gray-light);
 }
 
-/* Scanner Container */
-.scanner-container {
-  width: 100%;
-  height: 410px; /* Optimal height for scanner visibility */
-  border: 1px solid var(--gray-border);
-  border-radius: var(--border-radius-md);
-  margin-bottom: 16px;
-  position: relative;
-  overflow: hidden;
-  background-color: #f8f9fa;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-}
-
 /* Status message */
 .scan-status {
   margin-bottom: 16px;
@@ -764,10 +1024,6 @@ button {
     padding: 18px;
   }
 
-  .scanner-container {
-    height: 280px;
-  }
-
   .action-button,
   .action-link {
     padding: 12px;
@@ -785,10 +1041,6 @@ button {
     overflow-y: auto;
     padding: 16px;
   }
-
-  .scanner-container {
-    height: 220px;
-  }
 }
 
 /* High-resolution displays */
@@ -796,10 +1048,243 @@ button {
   .modal-content {
     max-width: 550px;
   }
+}
+/* Scanner Container - Professional Design */
+.scanner-container {
+  width: 100%;
+  height: 500px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: linear-gradient(to bottom, #fcfcfc, #f0f2f5);
+  border: 1px solid #e1e4e8;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
+    0 4px 16px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
 
-  .scanner-container {
-    height: 380px;
+/* Add scan frame animation and effects */
+.scanner-container::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 280px;
+  height: 280px;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(49, 130, 206, 0.8);
+  border-radius: 12px;
+  box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.25);
+  z-index: 10;
+  pointer-events: none;
+  animation: scanner-pulse 2s infinite;
+}
+
+.scanner-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 280px;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    rgba(49, 130, 206, 0),
+    rgba(49, 130, 206, 0.8),
+    rgba(49, 130, 206, 0)
+  );
+  transform: translateX(-50%);
+  animation: scanner-line 2s infinite ease-in-out;
+  z-index: 11;
+  box-shadow: 0 0 8px rgba(49, 130, 206, 0.6);
+}
+
+/* Corner markers for scan area */
+.scanner-container .corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: rgba(49, 130, 206, 0.9);
+  z-index: 12;
+}
+
+.scanner-container .corner-top-left {
+  top: 50%;
+  left: 50%;
+  transform: translate(calc(-50% - 140px), calc(-50% - 140px));
+  border-top: 3px solid;
+  border-left: 3px solid;
+  border-top-left-radius: 8px;
+}
+
+.scanner-container .corner-top-right {
+  top: 50%;
+  right: 50%;
+  transform: translate(calc(50% + 140px), calc(-50% - 140px));
+  border-top: 3px solid;
+  border-right: 3px solid;
+  border-top-right-radius: 8px;
+}
+
+.scanner-container .corner-bottom-left {
+  bottom: 50%;
+  left: 50%;
+  transform: translate(calc(-50% - 140px), calc(50% + 140px));
+  border-bottom: 3px solid;
+  border-left: 3px solid;
+  border-bottom-left-radius: 8px;
+}
+
+.scanner-container .corner-bottom-right {
+  bottom: 50%;
+  right: 50%;
+  transform: translate(calc(50% + 140px), calc(50% + 140px));
+  border-bottom: 3px solid;
+  border-right: 3px solid;
+  border-bottom-right-radius: 8px;
+}
+
+/* Status indicator */
+.scanner-status {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 15;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Scanner animations */
+@keyframes scanner-pulse {
+  0% {
+    box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.25);
+    border-color: rgba(49, 130, 206, 0.8);
   }
+  50% {
+    box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.3);
+    border-color: rgba(66, 153, 225, 0.9);
+  }
+  100% {
+    box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.25);
+    border-color: rgba(49, 130, 206, 0.8);
+  }
+}
+
+@keyframes scanner-line {
+  0% {
+    top: calc(50% - 140px);
+    opacity: 1;
+  }
+  50% {
+    top: calc(50% + 140px);
+    opacity: 0.8;
+  }
+  100% {
+    top: calc(50% - 140px);
+    opacity: 1;
+  }
+}
+
+/* Improve the video element styling */
+#reader video {
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Hide unnecessary html5-qrcode elements that don't look professional */
+#reader__dashboard_section_csr button {
+  background-color: #3182ce !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 8px 16px !important;
+  font-weight: 500 !important;
+  transition: background-color 0.3s ease !important;
+}
+
+#reader__dashboard_section_csr button:hover {
+  background-color: #2b6cb0 !important;
+}
+
+#reader__dashboard_section_swaplink {
+  display: none !important; /* Hide unnecessary swap link */
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .scanner-container {
+    height: 350px;
+  }
+
+  .scanner-container::before {
+    width: 220px;
+    height: 220px;
+  }
+
+  .scanner-container .corner-top-left {
+    transform: translate(calc(-50% - 110px), calc(-50% - 110px));
+  }
+
+  .scanner-container .corner-top-right {
+    transform: translate(calc(50% + 110px), calc(-50% - 110px));
+  }
+
+  .scanner-container .corner-bottom-left {
+    transform: translate(calc(-50% - 110px), calc(50% + 110px));
+  }
+
+  .scanner-container .corner-bottom-right {
+    transform: translate(calc(50% + 110px), calc(50% + 110px));
+  }
+
+  @keyframes scanner-line {
+    0% {
+      top: calc(50% - 110px);
+      opacity: 1;
+    }
+    50% {
+      top: calc(50% + 110px);
+      opacity: 0.8;
+    }
+    100% {
+      top: calc(50% - 110px);
+      opacity: 1;
+    }
+  }
+}
+
+/********************************************* */
+.debug-info {
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+  margin-top: 10px;
+  font-family: monospace;
+  font-size: 12px;
+  max-height: 100px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.format-dropdown {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background-color: white;
+  margin-right: 8px;
+  cursor: pointer;
+}
+.reset-button {
+  color: #0066cc;
 }
 </style>
 

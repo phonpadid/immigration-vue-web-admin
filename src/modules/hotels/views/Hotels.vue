@@ -15,6 +15,7 @@ import Switch from "@/components/Switch/Switch.vue";
 import Dropdown from "@/components/Dropdown/Dropdown.vue";
 import HTMLQRCodeScan from "@/components/ScanQrcode/HTMLQRCodeScan.vue";
 
+/********************************************************** */
 const router = useRouter();
 const hotelsStore = useHotelsStore();
 const { isLoading, hotels } = storeToRefs(hotelsStore);
@@ -46,20 +47,11 @@ const handleStatusChange = (value: string) => {
 
 const toggleStatus = async (record: any) => {
   try {
-    console.log("Toggle status for record:", record);
-    console.log("Current is_published value:", record.is_published);
-
     if (record.is_published) {
-      // ถ้าปัจจุบันเป็นสาธารณะ (true) ให้เปลี่ยนเป็นส่วนตัว (private)
       await hotelsStore.checkStatusPrivate(record.id);
-      message.success("อัปเดตเป็นส่วนตัวสำเร็จ");
     } else {
-      // ถ้าปัจจุบันเป็นส่วนตัว (false) ให้เปลี่ยนเป็นสาธารณะ (public)
       await hotelsStore.checkStatusPublic(record.id);
-      message.success("อัปเดตเป็นสาธารณะสำเร็จ");
     }
-
-    // ดึงข้อมูลใหม่เพื่อแสดงสถานะล่าสุด
     await fetchData();
   } catch (error) {
     console.error("❌ Failed to update status:", error);
@@ -68,7 +60,7 @@ const toggleStatus = async (record: any) => {
 };
 // ฟังก์ชันเปิดหน้าสร้างโรงแรมใหม่
 const handleAddNew = () => {
-  router.push("/hotels/create");
+  router.push({ name: "hotels_add" });
 };
 
 const { push } = useRouter();
@@ -80,10 +72,10 @@ const menuOptions = ref([
 ]);
 const handleSelect = (key: string, record: any) => {
   if (key === "1") {
-    push({ name: "countries_details", params: { id: record.id } });
+    push({ name: "hotels_details", params: { id: record.id } });
   }
   if (key === "2") {
-    push({ name: "countries_edit", params: { id: record.id } });
+    push({ name: "hotels_edit", params: { id: record.id } });
   } else if (key === "3") {
     Modal.confirm({
       title: "ຢືນຢັນການລົບ",
@@ -148,7 +140,8 @@ onMounted(() => {
       <UiButton
         type="primary"
         size="large"
-        colorClass="!bg-primary-700 hover:!bg-primary-900 text-white"
+        colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
+        icon="ant-design:plus-outlined"
         @click="handleAddNew"
       >
         ເພີ່ມຂໍ້ມູນໂຮງແຮມ
@@ -210,7 +203,7 @@ onMounted(() => {
 
       <template #status="{ record }">
         <Switch
-          :model-value="!record.is_published"
+          :model-value="record.is_published"
           @update:model-value="(value) => toggleStatus(record)"
           :loading="isLoading"
         />
@@ -231,7 +224,6 @@ onMounted(() => {
       </template>
     </Table>
   </div>
-
 
   <div>
     <HTMLQRCodeScan />

@@ -61,21 +61,51 @@ export const useHotelsStore = defineStore("hotels", () => {
   };
   /****************************************************************** */
 
-  // Create country
+  const appendFormData = (
+    formData: FormData,
+    key: string,
+    value: any
+  ): void => {
+    // Skip undefined or null values
+    if (value === undefined || value === null) {
+      return;
+    }
+
+    if (value instanceof File) {
+      formData.append(key, value);
+    } else if (typeof value === "object") {
+      formData.append(key, JSON.stringify(value));
+    } else if (typeof value === "boolean") {
+      formData.append(key, value ? "1" : "0");
+    } else {
+      formData.append(key, String(value));
+    }
+  };
+
+  // ใช้ใน createHotels function
   const createHotels = async (form: HotelForm) => {
     try {
       isLoading.value = true;
-
-      // Build form data for multipart upload
       const formData = new FormData();
 
-      // Add image if exists
-      if (form.image) {
-        formData.append("image", form.image);
+      // ใช้ helper function เพื่อความสะดวกและปลอดภัย
+      appendFormData(formData, "image", form.image);
+      appendFormData(formData, "link", form.link);
+      appendFormData(formData, "phone_number", form.phone_number);
+      appendFormData(formData, "is_published", form.is_published);
+      appendFormData(formData, "lo", form.lo);
+      appendFormData(formData, "en", form.en);
+      appendFormData(formData, "zh_cn", form.zh_cn);
+
+      if (form.user) {
+        appendFormData(formData, "user", form.user);
       }
 
-      // Add visa exemption status
-      formData.append("is_published", form.is_published ? "1" : "0");
+      // Log data being sent
+      console.log("FormData entries:");
+      for (const pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
 
       const { data } = await api.post("/hotel", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -86,50 +116,62 @@ export const useHotelsStore = defineStore("hotels", () => {
         return data;
       }
     } catch (error) {
-      console.error("Failed to create :", error);
+      console.error("Failed to create hotel:", error);
       throw error;
     } finally {
       isLoading.value = false;
     }
   };
-
-  // Update country
+  /****************************************************************** */
+  // Function to update hotel data
   const updateHotels = async (id: number, form: Partial<HotelForm>) => {
     try {
       isLoading.value = true;
-
-      // Build form data for multipart upload
       const formData = new FormData();
 
-      // Add language data
-      formData.append("map_link", JSON.stringify(form.map_link));
-      formData.append("link", JSON.stringify(form.link));
-      formData.append("phone_number", JSON.stringify(form.phone_number));
-      formData.append("lo_name", JSON.stringify(form.lo_name));
-      formData.append("lo_address", JSON.stringify(form.lo_address));
-      formData.append("en_name", JSON.stringify(form.en_name));
-      formData.append("en_address", JSON.stringify(form.en_address));
-      formData.append("zh_name", JSON.stringify(form.zh_name));
-      formData.append("zh_address", JSON.stringify(form.zh_address));
-
-      // Add image if exists
-      if (form.image) {
-        formData.append("image", form.image);
+      // ใช้ helper function เพื่อความสะดวกและปลอดภัย
+      if (form.image instanceof File) {
+        appendFormData(formData, "image", form.image);
       }
 
-      // Add visa exemption status
-      formData.append("is_published", form.is_published ? "1" : "0");
+      appendFormData(formData, "link", form.link);
+      appendFormData(formData, "phone_number", form.phone_number);
+      appendFormData(formData, "is_published", form.is_published);
 
-      const { data } = await api.put(`/country/${id}`, formData, {
+      // สำคัญ: ส่ง ID ไปด้วยในข้อมูลภาษา
+      appendFormData(formData, "lo", form.lo);
+      appendFormData(formData, "en", form.en);
+      appendFormData(formData, "zh_cn", form.zh_cn);
+
+      // Add user data if provided - ส่ง ID ไปด้วย
+      if (form.user) {
+        appendFormData(formData, "user", form.user);
+      }
+
+      // Debug logging
+      console.log("FormData entries to be sent:");
+      for (const pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
+
+      // ส่งข้อมูลไปยัง API
+      const { data } = await api.put(`/hotel/${id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       if (data) {
+        // รีเฟรชข้อมูล
         await getAllHotels();
+
+        // อัปเดต currentHotels ถ้ากำลังดูโรงแรมที่เพิ่งอัปเดต
+        if (currentHotels.value?.id === id) {
+          currentHotels.value = data;
+        }
+
         return data;
       }
     } catch (error) {
-      console.error("Failed to:", error);
+      console.error("Failed to update hotel:", error);
       throw error;
     } finally {
       isLoading.value = false;
@@ -160,7 +202,7 @@ export const useHotelsStore = defineStore("hotels", () => {
         if (index !== -1) {
           hotels.data = [
             ...hotels.data.slice(0, index),
-            { ...hotels.data[index], is_published: false },
+            { ...hotels.data[index], is_published: true },
             ...hotels.data.slice(index + 1),
           ];
         }
@@ -184,7 +226,7 @@ export const useHotelsStore = defineStore("hotels", () => {
         if (index !== -1) {
           hotels.data = [
             ...hotels.data.slice(0, index),
-            { ...hotels.data[index], is_published: true },
+            { ...hotels.data[index], is_published: false },
             ...hotels.data.slice(index + 1),
           ];
         }
@@ -207,6 +249,7 @@ export const useHotelsStore = defineStore("hotels", () => {
     deleteHotels,
     createHotels,
     updateHotels,
+
     checkStatusPrivate,
     checkStatusPublic,
   };

@@ -152,30 +152,6 @@ const loadServiceData = async () => {
     loading.value = false;
   }
 };
-
-// ฟังก์ชันแปลงข้อมูลสำหรับส่ง API
-const formatContentForSubmit = (content: any): string | any => {
-  try {
-    // ถ้าเป็น string ให้ตรวจสอบว่าเป็น JSON หรือไม่
-    if (typeof content === "string") {
-      try {
-        // ลองแปลงเป็น JSON object
-        const jsonObj = JSON.parse(content);
-        return jsonObj;
-      } catch (e) {
-        // ถ้าแปลงไม่ได้ แสดงว่าไม่ใช่ JSON
-        return content;
-      }
-    }
-
-    // ถ้าเป็น object อยู่แล้ว ส่งคืนเป็น object
-    return content;
-  } catch (e) {
-    console.error("Error formatting content:", e);
-    return content;
-  }
-};
-
 // ฟังก์ชันส่งข้อมูลอัพเดต
 const handleSubmit = async () => {
   if (submitting.value || !serviceId.value) return;
