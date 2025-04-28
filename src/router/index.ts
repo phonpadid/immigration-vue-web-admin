@@ -22,6 +22,7 @@ import { visaRoute } from "@/modules/visa-category/router";
 import { numberRoute } from "@/modules/registration/registration_number/router";
 import { servicesRoute } from "@/modules/service/router";
 import { hotelsRoute } from "@/modules/hotels/router";
+import { arrivalRoute } from "@/modules/registration/registration_arrival/router";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -46,6 +47,7 @@ const routes: RouteRecordRaw[] = [
       ...numberRoute,
       ...servicesRoute,
       ...hotelsRoute,
+      ...arrivalRoute,
     ],
   },
   ...authRoute,

@@ -1,10 +1,19 @@
 <template>
   <div>
     <!-- Button to Open Modal -->
-    <button @click="openModal" class="open-modal-button">
-      <span class="icon">🔍</span>
-      <span>ກວດສອບ QR Code</span>
-    </button>
+    <UiButton
+      @click="openModal"
+      type="primary"
+      size="large"
+      colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
+      icon="material-symbols:verified-rounded"
+    >
+      ກວດສອບ
+    </UiButton>
+    <div v-if="arrivalStore.isLoading" class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <span>ກຳລັງກວດສອບ QR Code...</span>
+    </div>
 
     <!-- Modal -->
     <Teleport to="body">
@@ -107,19 +116,17 @@
 </template>
 
 <script setup lang="ts">
-import {
-  ref,
-  onBeforeUnmount,
-  nextTick,
-  onMounted,
-  computed,
-  watch,
-} from "vue";
+import { ref, onBeforeUnmount, nextTick, onMounted, computed } from "vue";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
+import { useRouter } from "vue-router";
+import { useArrivalStore } from "@/modules/registration/registration_arrival/store/arrival.store";
+import UiButton from "../button/UiButton.vue";
 
 // Debug Mode
 const showDebugInfo = ref(false);
 const debugInfo = ref("");
+const router = useRouter();
+const arrivalStore = useArrivalStore();
 
 // Modal State
 const showModal = ref(false);
@@ -599,15 +606,28 @@ const scanImageFile = () => {
 };
 
 // Handle successful scan from file
-const handleScanSuccess = (result: string) => {
-  scanSuccessful.value = true;
-  const processedResult = processQrCodeResult(result);
-  scanStatus.value = `ສະແກນສຳເລັດ: ${processedResult}`;
-  setTimeout(() => {
-    alert(`ສະແກນສຳເລັດ: ${processedResult}`);
-  }, 100);
-};
+const handleScanSuccess = async (result: string) => {
+  try {
+    scanStatus.value = `ກຳລັງກວດສອບ QR Code...`;
 
+    // เรียกใช้ scanArrival จาก store
+    const scanResult = await arrivalStore.scanArrival(result);
+
+    if (scanResult?.id) {
+      // ปิด Modal
+      await closeModal();
+
+      // นำทางไปยังหน้า details
+      await router.push({
+        name: "arrival_details",
+        params: { id: scanResult.id.toString() },
+      });
+    }
+  } catch (error) {
+    console.error("Scan processing error:", error);
+    scanStatus.value = "ເກີດຂໍ້ຜິດພາດໃນການປະມວນຜົນ QR Code";
+  }
+};
 // Handle failed scan from file
 const handleScanFailure = () => {
   scanSuccessful.value = false;
@@ -617,55 +637,30 @@ const handleScanFailure = () => {
   }, 100);
 };
 
-// Enhanced process QR Code result to handle different formats better
-const processQrCodeResult = (result: string): string => {
+const onScanSuccess = async (decodedText: string) => {
   try {
-    // Check if it's a URL
-    if (result.startsWith("http")) {
-      return result;
-    }
+    scanStatus.value = `ກຳລັງກວດສອບ QR Code...`;
 
-    // Try if it's a valid JSON
-    const jsonObject = JSON.parse(result);
-    return JSON.stringify(jsonObject, null, 2);
-  } catch (e) {
-    // Check if it has special encoding
-    try {
-      // Try decoding potential URL-encoded content
-      const decoded = decodeURIComponent(result);
-      if (decoded !== result) {
-        try {
-          // See if the decoded version is JSON
-          const jsonObject = JSON.parse(decoded);
-          return JSON.stringify(jsonObject, null, 2);
-        } catch {
-          // Otherwise return the decoded string
-          return decoded;
-        }
-      }
-    } catch {
-      // If decoding fails, just return the original
-    }
+    // เรียกใช้ scanArrival จาก store
+    const result = await arrivalStore.scanArrival(decodedText);
 
-    // If not JSON or special encoding, just return the raw text
-    return result;
+    if (result?.id) {
+      // หยุดการสแกน
+      await stopScanning();
+
+      // ปิด Modal
+      await closeModal();
+
+      // นำทางไปยังหน้า details
+      await router.push({
+        name: "arrival_details",
+        params: { id: result.id.toString() },
+      });
+    }
+  } catch (error) {
+    console.error("Scan processing error:", error);
+    scanStatus.value = "ເກີດຂໍ້ຜິດພາດໃນການປະມວນຜົນ QR Code";
   }
-};
-
-// Handle Scan Success
-const onScanSuccess = (decodedText: string) => {
-  // Process the result to handle custom QR codes
-  const processedResult = processQrCodeResult(decodedText);
-
-  scanSuccessful.value = true;
-  scanStatus.value = `ສະແກນສຳເລັດ: ${processedResult}`;
-
-  // Log success in debug mode
-  logDebugInfo(`Successful scan: ${decodedText}`);
-
-  setTimeout(() => {
-    alert(`ສະແກນສຳເລັດ: ${processedResult}`);
-  }, 100);
 };
 
 // Enhanced error handling for scan error
@@ -1336,6 +1331,39 @@ button {
   }
   100% {
     box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 </style>
