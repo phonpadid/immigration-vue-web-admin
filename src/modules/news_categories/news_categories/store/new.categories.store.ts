@@ -1,7 +1,10 @@
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import { api } from "@/lib/axios";
-import type { NewsCategoryForm } from "../interface/new.categories.interface";
+import type {
+  NewsCategoryForm,
+  CreateNewsCategoryForm,
+} from "../interface/new.categories.interface";
 
 export const useNewscategoriesStore = defineStore("nesCategories", () => {
   const isLoading = ref(false);
@@ -45,7 +48,9 @@ export const useNewscategoriesStore = defineStore("nesCategories", () => {
     }
   };
 
-  const createNewsCategories = async (newsCategories: NewsCategoryForm) => {
+  const createNewsCategories = async (
+    newsCategories: CreateNewsCategoryForm
+  ) => {
     try {
       isLoading.value = true;
       const { data } = await api.post("/news-categories", newsCategories);

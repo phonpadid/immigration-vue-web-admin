@@ -1,29 +1,28 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { columns } from "../interface/column";
-import { useArrivalStore } from "../store/arrival.store";
+import { useDepartureStore } from "../store/departure.store";
 import { formatDateTime } from "@/utils/FormatDataTime";
-import { useRouter } from "vue-router"; // Add router import
+import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import InputSelect from "@/components/Input/InputSelect.vue";
 import InputSearch from "@/components/Input/InputSearch.vue";
 import Table from "@/components/table/Table.vue";
 import HTMLQRCodeScan from "@/components/ScanQrcode/HTMLQRCodeScan.vue";
 
-const router = useRouter(); // Initialize router
-const arrivalStore = useArrivalStore();
+const router = useRouter();
+const departureStore = useDepartureStore();
 
-// สถานะสำหรับการค้นหา
+// Search state
 const searchState = ref({
-  entry_name: "",
+  departure_name: "",
   passport_number: "",
-  visa_number: "",
   verification_code: "",
   is_verified: "",
   black_list: "",
 });
 
-// ตัวแปรสำหรับ pagination
+// Pagination
 const pagination = ref({
   current: 1,
   pageSize: 10,
@@ -31,7 +30,7 @@ const pagination = ref({
   total: 0,
 });
 
-// ตัวเลือกสำหรับ Select components
+// Select options
 const verificationOptions = [
   { label: "ການກວດສອບ", value: "" },
   { label: "ສຳເລັດ", value: "verified" },
@@ -44,96 +43,60 @@ const blacklistOptions = [
   { label: "ມີໃນບັນຊີດຳ", value: "unavailable" },
 ];
 
-// Function to navigate to details page
+// Navigation function
 const navigateToDetails = (id: number) => {
-  router.push(`/arrival/details/${id}`);
+  router.push(`/departure/details/${id}`);
 };
 
-const handleClear = async (field: keyof typeof searchState.value) => {
-  // รีเซ็ตค่าใน searchState
-  searchState.value[field] = "";
-
-  // รีเซ็ต pagination
-  pagination.value.current = 1;
-  const offset = 0;
-
-  // สร้าง filters ใหม่
-  const filters = {
-    entry_name: searchState.value.entry_name,
-    passport_number: searchState.value.passport_number,
-    visa_number: searchState.value.visa_number,
-    verification_code: searchState.value.verification_code,
-    is_verified: searchState.value.is_verified,
-    black_list: searchState.value.black_list,
-    offset,
-    limit: pagination.value.pageSize,
-  };
-
-  // อัพเดท filters และโหลดข้อมูลใหม่
-  await arrivalStore.setFilters(filters);
-  await arrivalStore.getAllArrival();
-  pagination.value.total = arrivalStore.arrival.total;
-};
-
-// ปรับปรุงฟังก์ชัน handleSearch
+// Search handling
 const handleSearch = async () => {
   pagination.value.current = 1;
   const offset = (pagination.value.current - 1) * pagination.value.pageSize;
 
-  const filters = {
-    entry_name: searchState.value.entry_name,
+  await departureStore.setFilters({
+    departure_name: searchState.value.departure_name,
     passport_number: searchState.value.passport_number,
-    visa_number: searchState.value.visa_number,
     verification_code: searchState.value.verification_code,
-    is_verified: searchState.value.is_verified,
     black_list: searchState.value.black_list,
     offset,
     limit: pagination.value.pageSize,
-  };
+  });
 
-  await arrivalStore.setFilters(filters);
-  await arrivalStore.getAllArrival();
-  pagination.value.total = arrivalStore.arrival.total;
+  await departureStore.getAllDeparture();
+  pagination.value.total = departureStore.departure.total;
 };
 
-// ปรับปรุงฟังก์ชัน handleInputChange
+// Table change handler
+const handleTableChange = async (paginationInfo: any) => {
+  pagination.value.current = paginationInfo.current;
+  pagination.value.pageSize = paginationInfo.pageSize;
+
+  const offset = (pagination.value.current - 1) * pagination.value.pageSize;
+
+  await departureStore.setFilters({
+    offset,
+    limit: pagination.value.pageSize,
+  });
+
+  await departureStore.getAllDeparture();
+};
+
+// Input change handler
 const handleInputChange = (
   field: keyof typeof searchState.value,
   value: string
 ) => {
   searchState.value[field] = value;
-  // ค้นหาทันทีเฉพาะกรณี select เท่านั้น
-  if (field === "is_verified" || field === "black_list") {
-    handleSearch();
-  }
-};
-const handleTableChange = async (
-  paginationInfo: any,
-  filters: any,
-  sorter: any
-) => {
-  pagination.value.current = paginationInfo.current;
-  pagination.value.pageSize = paginationInfo.pageSize;
-
-  // Calculate offset based on current page and page size
-  const offset = (pagination.value.current - 1) * pagination.value.pageSize;
-
-  await arrivalStore.setFilters({
-    offset: offset,
-    limit: pagination.value.pageSize,
-  });
-
-  await arrivalStore.getAllArrival();
 };
 
-// โหลดข้อมูลครั้งแรก
+// Initial data load
 onMounted(async () => {
-  await arrivalStore.setFilters({
+  await departureStore.setFilters({
     offset: 0,
     limit: pagination.value.pageSize,
   });
-  await arrivalStore.getAllArrival();
-  pagination.value.total = arrivalStore.arrival.total;
+  await departureStore.getAllDeparture();
+  pagination.value.total = departureStore.departure.total;
 });
 </script>
 
@@ -144,38 +107,32 @@ onMounted(async () => {
       class="flex flex-col sm:flex-row justify-between border-b dark:border-gray-600 gap-2 p-4 items-start sm:items-center mt-12"
     >
       <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
-        ລາຍການລົງທະບຽນເຂົ້າເມືອງ
+        ລາຍການລົງທະບຽນອອກເມືອງ
       </h2>
       <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-fit">
-        <HTMLQRCodeScan type="arrival" />
+        <HTMLQRCodeScan type="departure" />
       </div>
     </div>
 
     <!-- Search Filters -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 py-3 mx-4">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 py-3 mx-4">
       <InputSearch
-        v-model="searchState.entry_name"
-        placeholder="ຈຸດເຂົ້າ..."
+        v-model="searchState.departure_name"
+        placeholder="ຈຸດອອກ..."
+        @input="(value) => handleInputChange('departure_name', value)"
         @search="handleSearch"
-        @clear="handleClear('entry_name')"
       />
       <InputSearch
         v-model="searchState.passport_number"
         placeholder="ເລກທີ່ passport..."
+        @input="(value) => handleInputChange('passport_number', value)"
         @search="handleSearch"
-        @clear="handleClear('passport_number')"
-      />
-      <InputSearch
-        v-model="searchState.visa_number"
-        placeholder="ເລກທີ່ visa..."
-        @search="handleSearch"
-        @clear="handleClear('visa_number')"
       />
       <InputSearch
         v-model="searchState.verification_code"
         placeholder="ລະຫັດຢືນຢັນ..."
+        @input="(value) => handleInputChange('verification_code', value)"
         @search="handleSearch"
-        @clear="handleClear('verification_code')"
       />
       <InputSelect
         v-model="searchState.is_verified"
@@ -190,26 +147,23 @@ onMounted(async () => {
         @change="(value) => handleInputChange('black_list', value)"
       />
     </div>
+
     <!-- Table Section -->
     <Table
       :columns="columns"
-      :dataSource="arrivalStore.arrival.data"
-      :loading="arrivalStore.isLoading"
+      :dataSource="departureStore.departure.data"
+      :loading="departureStore.isLoading"
       :pagination="pagination"
       class="mt-4"
       @change="handleTableChange"
     >
-      <template #passport_and_visa="{ record }">
+      <template #passport_information="{ record }">
         <div class="flex flex-col">
           <div>
             Passport:
             <span class="font-bold">{{
               record.passport_information.number
             }}</span>
-          </div>
-          <div>
-            Visa:
-            <span class="font-bold">{{ record.visa_information.number }}</span>
           </div>
         </div>
       </template>
@@ -222,11 +176,14 @@ onMounted(async () => {
             'font-medium text-gray-900 dark:text-white': !record.verified_at,
           }"
         >
+          <!-- ไอคอนจะแสดงเมื่อมีการยืนยันแล้ว -->
           <Icon
             icon="material-symbols:check-circle-rounded"
             v-if="record.verified_at"
             class="text-green-600 dark:text-green-400 text-lg"
           />
+
+          <!-- แสดง verification code หรือข้อความ "ລົງທະບຽນບໍ່ສຳເລັດ" -->
           <span>
             {{
               record.verification_code
@@ -236,7 +193,6 @@ onMounted(async () => {
           </span>
         </div>
       </template>
-
       <template #created_at="{ record }">
         <div class="flex flex-col">
           <div>{{ formatDateTime(record.created_at) }}</div>

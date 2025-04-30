@@ -13,7 +13,6 @@ import InputSelect from "@/components/Input/InputSelect.vue";
 import Table from "@/components/table/Table.vue";
 import Switch from "@/components/Switch/Switch.vue";
 import Dropdown from "@/components/Dropdown/Dropdown.vue";
-import HTMLQRCodeScan from "@/components/ScanQrcode/HTMLQRCodeScan.vue";
 
 /********************************************************** */
 const router = useRouter();
@@ -223,9 +222,5 @@ onMounted(() => {
         </Dropdown>
       </template>
     </Table>
-  </div>
-
-  <div>
-    <HTMLQRCodeScan />
   </div>
 </template>
