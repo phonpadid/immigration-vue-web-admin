@@ -21,7 +21,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["update:modelValue", "input", "search"]);
+const emit = defineEmits(["update:modelValue", "input", "search", "clear"]);
 
 const handleInput = (e: Event) => {
   const value = (e.target as HTMLInputElement).value;
@@ -29,8 +29,17 @@ const handleInput = (e: Event) => {
   emit("input", value);
 };
 
-const handleSearch = (value: string) => {
-  emit("search", value);
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.key === "Enter") {
+    emit("search", props.modelValue);
+  }
+};
+
+// เพิ่มฟังก์ชันสำหรับจัดการการ clear
+const handleClear = () => {
+  emit("update:modelValue", "");
+  emit("clear");
+  emit("search", ""); // ส่ง empty string เพื่อ reset การค้นหา
 };
 </script>
 
@@ -38,35 +47,15 @@ const handleSearch = (value: string) => {
   <a-input
     :value="modelValue"
     @input="handleInput"
-    @search="handleSearch"
+    @keydown="handleKeyDown"
+    @clear="handleClear"
     :placeholder="placeholder"
     :style="{ width }"
     :size="size"
     allow-clear
-    v-bind="$attrs"
   >
     <template #prefix>
       <SearchOutlined />
     </template>
   </a-input>
 </template>
-
-<style scoped>
-:deep(.ant-input-search) {
-  width: 100%;
-}
-
-:deep(.ant-input-affix-wrapper) {
-  border-radius: 6px;
-}
-
-:deep(.ant-input-search-button) {
-  height: 100%;
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
-}
-
-:deep(.anticon) {
-  color: #bfbfbf;
-}
-</style>

@@ -36,6 +36,24 @@ export interface NewsCategoryForm {
   }[];
 }
 
+export interface CreateNewsCategoryForm {
+  lo: {
+    name: string;
+  };
+  en: {
+    name: string;
+  };
+  zh_cn: {
+    name: string;
+  };
+}
+
+// Type สำหรับ news category ที่มีอยู่ในระบบ
+export interface NewsCategoryForm extends CreateNewsCategoryForm {
+  id: number;
+  translate: boolean;
+}
+
 export interface NewsCategoriessResponse extends IPaginated {
   data: NewCategoriessResponse[];
 }

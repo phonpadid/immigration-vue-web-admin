@@ -23,6 +23,7 @@ import { numberRoute } from "@/modules/registration/registration_number/router";
 import { servicesRoute } from "@/modules/service/router";
 import { hotelsRoute } from "@/modules/hotels/router";
 import { arrivalRoute } from "@/modules/registration/registration_arrival/router";
+import { departureRoute } from "@/modules/registration/registration_departure/router";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -48,6 +49,7 @@ const routes: RouteRecordRaw[] = [
       ...servicesRoute,
       ...hotelsRoute,
       ...arrivalRoute,
+      ...departureRoute,
     ],
   },
   ...authRoute,

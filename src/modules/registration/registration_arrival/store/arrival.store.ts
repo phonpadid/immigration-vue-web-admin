@@ -84,6 +84,7 @@ export const useArrivalStore = defineStore("arrival", () => {
     passport_number: "",
     visa_number: "",
     black_list: "",
+    is_verified: "",
     verification_code: "",
     offset: 0,
     limit: 10,

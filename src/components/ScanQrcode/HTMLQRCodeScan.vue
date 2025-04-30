@@ -8,20 +8,25 @@
       colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
       icon="material-symbols:verified-rounded"
     >
-      ກວດສອບ
+      {{ props.type === "arrival" ? "ກວດສອບ" : "ກວດສອບ" }}
     </UiButton>
-    <div v-if="arrivalStore.isLoading" class="loading-overlay">
+    <!-- <div v-if="arrivalStore.isLoading" class="loading-overlay">
       <div class="loading-spinner"></div>
       <span>ກຳລັງກວດສອບ QR Code...</span>
-    </div>
-
+    </div> -->
     <!-- Modal -->
     <Teleport to="body">
       <transition name="modal-fade">
         <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
           <div class="modal-content" :class="{ 'modal-scanning': isScanning }">
             <div class="modal-header">
-              <h3>ກວດສອບລະຫັດຈາກ QR Code</h3>
+              <h3>
+                {{
+                  props.type === "arrival"
+                    ? "ກວດສອບລະຫັດລົງທະບຽນເຂົ້າເມືອງ"
+                    : "ກວດສອບລະຫັດລົງທະບຽນອອກເມືອງ"
+                }}
+              </h3>
               <button class="close-button" @click="closeModal">×</button>
             </div>
 
@@ -120,6 +125,8 @@ import { ref, onBeforeUnmount, nextTick, onMounted, computed } from "vue";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { useRouter } from "vue-router";
 import { useArrivalStore } from "@/modules/registration/registration_arrival/store/arrival.store";
+import type { ScannerType } from "@/modules/registration/registration_arrival/interface/arrival.interface";
+import { useScannerStore } from "@/modules/registration/registration_arrival/store/scanner.store";
 import UiButton from "../button/UiButton.vue";
 
 // Debug Mode
@@ -127,7 +134,11 @@ const showDebugInfo = ref(false);
 const debugInfo = ref("");
 const router = useRouter();
 const arrivalStore = useArrivalStore();
-
+// Props for scanner type
+const props = defineProps<{
+  type: ScannerType;
+}>();
+const scannerStore = useScannerStore();
 // Modal State
 const showModal = ref(false);
 const scanner = ref<Html5Qrcode | null>(null);
@@ -138,7 +149,6 @@ const scanStatus = ref<string>("");
 const scanSuccessful = ref<boolean>(false);
 const selectedFormat = ref("all");
 const scannerContainer = ref<HTMLElement | null>(null);
-const instanceId = ref(`html5-qrcode-${Date.now()}`); // ใช้ ID ที่ไม่ซ้ำกันทุกครั้ง
 
 // QR Code configuration
 const scannerConfig = ref({
@@ -167,7 +177,7 @@ const scanStatusClass = computed(() => {
 
 // ฟังก์ชันรีเซ็ตสแกนเนอร์ใหม่ (เพิ่มใหม่)
 const resetScanner = async () => {
-  logDebugInfo("กำลังรีเซ็ตสแกนเนอร์...");
+  logDebugInfo("ກຳລັງຣີເຊັດສະແກນເນີ...");
 
   // หยุดการสแกน
   if (isScanning.value) {
@@ -637,12 +647,43 @@ const handleScanFailure = () => {
   }, 100);
 };
 
+// const onScanSuccess = async (decodedText: string) => {
+//   try {
+//     scanStatus.value = `ກຳລັງກວດສອບ QR Code...`;
+
+//     // เรียกใช้ scanArrival จาก store
+//     const result = await arrivalStore.scanArrival(decodedText);
+
+//     if (result?.id) {
+//       // หยุดการสแกน
+//       await stopScanning();
+
+//       // ปิด Modal
+//       await closeModal();
+
+//       // นำทางไปยังหน้า details
+//       await router.push({
+//         name: "arrival_details",
+//         params: { id: result.id.toString() },
+//       });
+//     }
+//   } catch (error) {
+//     console.error("Scan processing error:", error);
+//     scanStatus.value = "ເກີດຂໍ້ຜິດພາດໃນການປະມວນຜົນ QR Code";
+//   }
+// };
+
+// Enhanced error handling for scan error
+onMounted(() => {
+  scannerStore.setScannerType(props.type);
+});
+
+// Handle Scan Success
 const onScanSuccess = async (decodedText: string) => {
   try {
     scanStatus.value = `ກຳລັງກວດສອບ QR Code...`;
 
-    // เรียกใช้ scanArrival จาก store
-    const result = await arrivalStore.scanArrival(decodedText);
+    const result = await scannerStore.scanCode(decodedText);
 
     if (result?.id) {
       // หยุดการสแกน
@@ -651,9 +692,12 @@ const onScanSuccess = async (decodedText: string) => {
       // ปิด Modal
       await closeModal();
 
-      // นำทางไปยังหน้า details
+      // นำทางไปยังหน้า details ตามประเภท
+      const routeName =
+        result.type === "arrival" ? "arrival_details" : "departure_details";
+
       await router.push({
-        name: "arrival_details",
+        name: routeName,
         params: { id: result.id.toString() },
       });
     }
@@ -663,7 +707,6 @@ const onScanSuccess = async (decodedText: string) => {
   }
 };
 
-// Enhanced error handling for scan error
 const onScanError = (error: unknown) => {
   // Don't log or display "NotFoundException" errors (normal during scanning)
   const errorStr = String(error);
@@ -1348,7 +1391,7 @@ button {
   z-index: 1000;
 }
 
-.loading-spinner {
+/* .loading-spinner {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
@@ -1356,7 +1399,7 @@ button {
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 10px;
-}
+} */
 
 @keyframes spin {
   0% {
