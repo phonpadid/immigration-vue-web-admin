@@ -161,6 +161,17 @@ export const menuItems: ItemType[] = reactive([
       ]),
   },
   {
+    key: "hotels",
+    label: "ຈັດການໂຮງແຮມ",
+    icon: () =>
+      h("div", {}, [
+        h(Icon, {
+          icon: "material-symbols:apartment",
+          class: "text-base",
+        }),
+      ]),
+  },
+  {
     key: "countries",
     label: "ປະເທດ",
     icon: () =>

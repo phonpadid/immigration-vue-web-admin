@@ -11,3 +11,6 @@ export const getFileUrl = (filePath: string | undefined) => {
   if (!filePath) return "";
   return `${imgBaseUrl}/${filePath}`;
 };
+export const imageBaseUrl =
+  import.meta.env.VITE_IMG_URL || "http://178.128.20.203:81/api";
+

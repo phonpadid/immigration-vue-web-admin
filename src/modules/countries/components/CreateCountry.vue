@@ -27,8 +27,8 @@ const selectedImage = ref<File | null>(null);
 // Tabs configuration
 const tabsConfig = [
   { key: "1", label: "ພາສາລາວ", slotName: "tab1" },
-  { key: "2", label: "English", slotName: "tab2" },
-  { key: "3", label: "中文", slotName: "tab3" },
+  { key: "2", label: "ພາສາອັງກິດ", slotName: "tab2" },
+  { key: "3", label: "ພາສາຈີນ", slotName: "tab3" },
 ];
 
 // Form validation schema

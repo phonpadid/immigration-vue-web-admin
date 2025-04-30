@@ -37,28 +37,6 @@ export type NewResponse = {
 
 export interface NewForm {
   category_id: string;
-  // category: {
-  //   id: number;
-  //   translates: {
-  //     id: number;
-  //     lang: "lo" | "en" | "zh_cn";
-  //     name: string;
-  //   }[];
-  // };
-  // thumbnail: string;
-  // status: "draft" | "published" | "private";
-  // public_at: string;
-  // created_at: string;
-  // updated_at: string;
-  // translates: {
-  //   id: number;
-  //   news_id: number;
-  //   title: string;
-  //   slug: string;
-  //   description: string;
-  //   content: string;
-  //   lang: string;
-  // }[];
 }
 interface LanguageItem {
   name: string;
@@ -83,6 +61,19 @@ export interface Category {
   id: number;
   translates: CategoryTranslate[];
 }
+export interface TabConfig {
+  key: string;
+  label: string;
+  slotName: string;
+  lang: TabLanguage;
+}
+export interface TabConfigDetails {
+  key: string;
+  label: string;
+  slotName: string;
+  lang: string;
+}
+export type TabLanguage = "lo" | "en" | "zh_cn";
 
 export interface NewsResponse extends IPaginated {
   news: NewResponse[];

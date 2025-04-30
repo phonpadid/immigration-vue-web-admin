@@ -1,7 +1,18 @@
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, watch } from "vue";
+import { reactive, ref, onMounted, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { message } from "ant-design-vue";
+import { useNewsStore } from "../store/new.store";
+import { useNewscategoriesStore } from "../../news_categories/store/new.categories.store";
+import { storeToRefs } from "pinia";
+import type {
+  QuillDelta,
+  QuillContent,
+} from "@/components/editor/editor.types";
+import type { TabLanguage, TabConfig } from "../interface/new.interface";
+import { getFileUrl } from "@/utils/ConfigPathImage";
+import { Modal } from "ant-design-vue";
+import { useNotification } from "@/utils/notificationService";
 import Tab from "@/components/Tab/Tab.vue";
 import UiForm from "@/components/Form/UiForm.vue";
 import UiFormItem from "@/components/Form/UiFormItem.vue";
@@ -10,32 +21,10 @@ import Textarea from "@/components/Input/Textarea.vue";
 import InputSelect from "@/components/Input/InputSelect.vue";
 import QuillEditorComponent from "@/components/editor/QuillEditorComponent.vue";
 import UiButton from "@/components/button/UiButton.vue";
-import { useNewsStore } from "../store/new.store";
-import { useNewscategoriesStore } from "../../news_categories/store/new.categories.store";
-import { storeToRefs } from "pinia";
-import type {
-  QuillDelta,
-  QuillContent,
-} from "@/components/editor/editor.types";
 import UploadDragger from "@/components/Upload/UploadDragger.vue";
+import LoadingSpinner from "@/components/loading/LoadingSpinner.vue";
 
-// สร้างประเภทสำหรับภาษาต่างๆ
-type TabLanguage = "lo" | "en" | "zh_cn";
-
-// กำหนด interface สำหรับ tab config
-interface TabConfig {
-  key: string;
-  label: string;
-  slotName: string;
-  lang: TabLanguage;
-}
-
-// ดึงค่า API URL จาก .env
-const baseApiUrl =
-  import.meta.env.VITE_BASE_API_URL || "http://178.128.20.203:81/api";
-const baseImgUrl =
-  import.meta.env.VITE_IMG_URL || "http://178.128.20.203:81/api";
-
+/******************************************************************* */
 // Router และ Store
 const router = useRouter();
 const route = useRoute();
@@ -44,16 +33,15 @@ const newsStore = useNewsStore();
 const categoriesStore = useNewscategoriesStore();
 const { newsCategories } = storeToRefs(categoriesStore);
 const { currentNews } = storeToRefs(newsStore);
-
-// ตัวแปรสำหรับการควบคุมสถานะของฟอร์ม
+const { openNotification } = useNotification();
 const activeTab = ref("1");
 const isLoading = ref(false);
 const formRef = ref<InstanceType<typeof UiForm>>();
 const uploadedFile = ref<File | null>(null);
-const thumbnailError = ref(""); // เพิ่มตัวแปรสำหรับจัดการ error ของรูปภาพ
-const originalThumbnail = ref(""); // เก็บ path รูปภาพต้นฉบับ
+const thumbnailError = ref(""); // error message for thumbnail
+const originalThumbnail = ref(""); // save original thumbnail path
 
-// สร้างโครงสร้างข้อมูลสำหรับฟอร์ม
+// form data update news
 const editForm = reactive({
   category_id: "",
   status: "draft",
@@ -68,21 +56,21 @@ const editForm = reactive({
   >,
 });
 
-// กำหนดค่าเริ่มต้นสำหรับสถานะ
+// status options for news
 const statusOptions = ref([
   { value: "draft", label: "ແບບຮ່າງ" },
   { value: "published", label: "ເຜີຍແຜ່" },
   { value: "private", label: "ສ່ວນໂຕ" },
 ]);
 
-// กำหนดค่าแท็บต่างๆ
+// TabConfig show language
 const tabsConfig: TabConfig[] = [
   { key: "1", label: "ພາສາລາວ", slotName: "tab1", lang: "lo" },
   { key: "2", label: "ພາສາອັງກິດ", slotName: "tab2", lang: "en" },
   { key: "3", label: "ພາສາຈີນ", slotName: "tab3", lang: "zh_cn" },
 ];
 
-// สร้าง computed property สำหรับตัวเลือกหมวดหมู่จาก store
+// funtions for get news categories
 const categoryOptions = computed(() => {
   const options = [{ value: "", label: "ກະລຸນາເລືອກໝວດໝູ່" }];
 
@@ -117,7 +105,7 @@ const categoryOptions = computed(() => {
   return options;
 });
 
-// กฎการตรวจสอบข้อมูล - เหลือเฉพาะการตรวจสอบหมวดหมู่เท่านั้น
+//validate rules for form
 const rules = {
   category_id: [
     { required: true, message: "ກະລຸນາເລືອກໝວດໝູ່", trigger: "change" },
@@ -136,22 +124,6 @@ const handleFileSelect = (file: File) => {
   editForm.thumbnail = fileUrl;
 
   console.log("File selected:", file);
-};
-
-// ฟังก์ชันสร้าง URL เต็มสำหรับรูปภาพ
-const getFullImageUrl = (path: string): string => {
-  if (!path) return "";
-
-  // ถ้า path เริ่มต้นด้วย http หรือ https ให้ใช้ URL นั้นเลย
-  if (path.startsWith("http://") || path.startsWith("https://")) {
-    return path;
-  }
-
-  // ถ้ามี / นำหน้า ให้ลบออก
-  const trimmedPath = path.startsWith("/") ? path.substring(1) : path;
-
-  // สร้าง URL เต็ม
-  return `${baseImgUrl}/${trimmedPath}`;
 };
 
 // ฟังก์ชันสำหรับแปลงข้อมูล Editor ให้อยู่ในรูปแบบที่ต้องการ
@@ -311,7 +283,7 @@ const loadNewsData = async () => {
 
     // จัดการรูปภาพให้มี URL เต็ม
     originalThumbnail.value = currentNews.value.thumbnail;
-    editForm.thumbnail = getFullImageUrl(currentNews.value.thumbnail);
+    editForm.thumbnail = getFileUrl(currentNews.value.thumbnail);
 
     // เติมข้อมูลภาษาต่างๆ
     if (
@@ -408,8 +380,6 @@ const handleSubmit = async () => {
         console.log(`${pair[0]}: ${pair[1]}`);
       }
     }
-
-    // ส่งข้อมูลไป API ด้วย FormData
     await newsStore.updateNewsWithFormData(newsId.value, formData);
     message.success("ອັບເດດຂ່າວສຳເລັດ");
     router.push("/news");
@@ -421,23 +391,29 @@ const handleSubmit = async () => {
   }
 };
 
-// เพิ่มฟังก์ชันสำหรับลบข่าว
+// delete news
 const handleDelete = async () => {
-  try {
-    if (confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຂ່າວນີ້?")) {
-      isLoading.value = true;
-      await newsStore.deleteNews(newsId.value);
-      message.success("ລຶບຂ່າວສຳເລັດ");
-      router.push("/news");
-    }
-  } catch (error: any) {
-    console.error("Error deleting news:", error);
-    message.error(error?.message || "ເກີດຂໍ້ຜິດພາດໃນການລຶບຂ່າວ");
-  } finally {
-    isLoading.value = false;
-  }
+  Modal.confirm({
+    title: "ຢືນຢັນການລົບ",
+    content: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້??",
+    okText: "ແມ່ນແລ້ວ,ຂ້ອຍແນ່ໃຈ",
+    cancelText: "ບໍ່,ຍົກເລີກ",
+    okType: "danger",
+    onOk: async () => {
+      try {
+        isLoading.value = true;
+        await newsStore.deleteNews(newsId.value);
+        router.push({ name: "news" });
+        openNotification("success", "ລຶບຂໍ້ມູນ", "ລົບຂໍ້ມູນສຳເລັດ");
+      } catch (err) {
+        console.error("Error:", err);
+      } finally {
+        isLoading.value = false;
+      }
+    },
+  });
 };
-// โหลดข้อมูลเมื่อเริ่มต้น
+// load data
 onMounted(async () => {
   try {
     await Promise.all([categoriesStore.getAllNewsCategories(), loadNewsData()]);
@@ -453,20 +429,10 @@ onMounted(async () => {
     ອັບເດດຂ່າວ
   </h2>
 
-  <div v-if="isLoading" class="flex justify-center items-center py-10">
-    <div class="text-center">
-      <div
-        class="spinner-border inline-block w-8 h-8 border-4 rounded-full text-primary-600"
-        role="status"
-      >
-        <span class="sr-only">ກຳລັງໂຫລດ...</span>
-      </div>
-      <div class="mt-2 text-primary-600">ກຳລັງໂຫລດຂໍ້ມູນຂ່າວ...</div>
-    </div>
-  </div>
+  <LoadingSpinner v-if="isLoading" class="relative h-[80vh]" />
 
   <UiForm v-else ref="formRef" :model="editForm" :rules="rules">
-    <!-- รูปภาพ -->
+    <!-- photo -->
     <div class="mb-6">
       <label
         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -477,7 +443,7 @@ onMounted(async () => {
         :existingImageUrl="editForm.thumbnail"
         @onFileSelect="handleFileSelect"
       />
-      <!-- แสดงข้อความผิดพลาดสำหรับรูปภาพ -->
+      <!-- error photo -->
       <div v-if="thumbnailError" class="mt-1 text-sm text-red-500">
         {{ thumbnailError }}
       </div>
@@ -543,7 +509,7 @@ onMounted(async () => {
         :loading="isLoading"
         @click="handleSubmit"
       >
-        {{ isLoading ? "ກຳລັງອັບເດດ..." : "ອັບເດດ" }}
+        {{ isLoading ? "ກຳລັງອັບເດດ..." : "ອັບເດດຂ່າວ" }}
       </UiButton>
       <UiButton
         type="default"

@@ -1,0 +1,223 @@
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { columns } from "../interface/column";
+import { useArrivalStore } from "../store/arrival.store";
+import { formatDateTime } from "@/utils/FormatDataTime";
+import InputSelect from "@/components/Input/InputSelect.vue";
+import InputSearch from "@/components/Input/InputSearch.vue";
+import Table from "@/components/table/Table.vue";
+import HTMLQRCodeScan from "@/components/ScanQrcode/HTMLQRCodeScan.vue";
+import { useRouter } from "vue-router"; // Add router import
+
+const router = useRouter(); // Initialize router
+const arrivalStore = useArrivalStore();
+
+// สถานะสำหรับการค้นหา
+const searchState = ref({
+  entry_name: "",
+  passport_number: "",
+  visa_number: "",
+  verification_code: "",
+  is_verified: "",
+  black_list: "",
+});
+
+// ตัวแปรสำหรับ pagination
+const pagination = ref({
+  current: 1,
+  pageSize: 10,
+  showSizeChanger: true,
+  total: 0,
+});
+
+// ตัวเลือกสำหรับ Select components
+const verificationOptions = [
+  { label: "ການກວດສອບ", value: "" },
+  { label: "ສຳເລັດ", value: "verified" },
+  { label: "ຍັງບໍ່ສຳເລັດ", value: "no_verified" },
+];
+
+const blacklistOptions = [
+  { label: "ບັນຊີດຳ", value: "" },
+  { label: "ບໍ່ມີໃນບັນຊີດຳ", value: "available" },
+  { label: "ມີໃນບັນຊີດຳ", value: "unavailable" },
+];
+
+// Function to navigate to details page
+const navigateToDetails = (id: number) => {
+  router.push(`/arrival/details/${id}`);
+};
+
+// ฟังก์ชันสำหรับการค้นหา
+const handleSearch = async () => {
+  pagination.value.current = 1;
+
+  // Calculate offset based on current page and page size
+  const offset = (pagination.value.current - 1) * pagination.value.pageSize;
+
+  await arrivalStore.setFilters({
+    entry_name: searchState.value.entry_name,
+    passport_number: searchState.value.passport_number,
+    visa_number: searchState.value.visa_number,
+    verification_code: searchState.value.verification_code,
+    black_list: searchState.value.black_list,
+    offset: offset,
+    limit: pagination.value.pageSize,
+  });
+
+  await arrivalStore.getAllArrival();
+
+  // อัพเดท total จำนวนข้อมูลทั้งหมด
+  pagination.value.total = arrivalStore.arrival.total;
+};
+const handleTableChange = async (
+  paginationInfo: any,
+  filters: any,
+  sorter: any
+) => {
+  pagination.value.current = paginationInfo.current;
+  pagination.value.pageSize = paginationInfo.pageSize;
+
+  // Calculate offset based on current page and page size
+  const offset = (pagination.value.current - 1) * pagination.value.pageSize;
+
+  await arrivalStore.setFilters({
+    offset: offset,
+    limit: pagination.value.pageSize,
+  });
+
+  await arrivalStore.getAllArrival();
+};
+
+// การจัดการเมื่อมีการเปลี่ยนแปลงในช่องค้นหา
+const handleInputChange = (
+  field: keyof typeof searchState.value,
+  value: string
+) => {
+  searchState.value[field] = value;
+};
+
+// โหลดข้อมูลครั้งแรก
+onMounted(async () => {
+  await arrivalStore.setFilters({
+    offset: 0,
+    limit: pagination.value.pageSize,
+  });
+
+  await arrivalStore.getAllArrival();
+
+  // อัพเดท total จำนวนข้อมูลทั้งหมด
+  pagination.value.total = arrivalStore.arrival.total;
+});
+</script>
+
+<template>
+  <div>
+    <!-- Header Section -->
+    <div
+      class="flex flex-col sm:flex-row justify-between border-b dark:border-gray-600 gap-2 p-4 items-start sm:items-center mt-12"
+    >
+      <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
+        ລາຍການລົງທະບຽນເຂົ້າເມືອງ
+      </h2>
+      <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-fit">
+        <HTMLQRCodeScan />
+      </div>
+    </div>
+
+    <!-- Search Filters -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 py-3 mx-4">
+      <InputSearch
+        v-model="searchState.entry_name"
+        placeholder="ຈຸດເຂົ້າ..."
+        @input="(value) => handleInputChange('entry_name', value)"
+        @search="handleSearch"
+      />
+      <InputSearch
+        v-model="searchState.passport_number"
+        placeholder="ເລກທີ່ passport..."
+        @input="(value) => handleInputChange('passport_number', value)"
+        @search="handleSearch"
+      />
+      <InputSearch
+        v-model="searchState.visa_number"
+        placeholder="ເລກທີ່ visa..."
+        @input="(value) => handleInputChange('visa_number', value)"
+        @search="handleSearch"
+      />
+      <InputSearch
+        v-model="searchState.verification_code"
+        placeholder="ລະຫັດຢືນຢັນ..."
+        @input="(value) => handleInputChange('verification_code', value)"
+        @search="handleSearch"
+      />
+      <InputSelect
+        v-model="searchState.is_verified"
+        :options="verificationOptions"
+        placeholder="ການກວດສອບ"
+        @change="(value) => handleInputChange('is_verified', value)"
+      />
+      <InputSelect
+        v-model="searchState.black_list"
+        :options="blacklistOptions"
+        placeholder="ບັນຊີດຳ"
+        @change="(value) => handleInputChange('black_list', value)"
+      />
+    </div>
+
+    <!-- Table Section -->
+    <Table
+      :columns="columns"
+      :dataSource="arrivalStore.arrival.data"
+      :loading="arrivalStore.isLoading"
+      :pagination="pagination"
+      class="mt-4"
+      @change="handleTableChange"
+    >
+      <template #passport_and_visa="{ record }">
+        <div class="flex flex-col">
+          <div>
+            Passport:
+            <span class="font-bold">{{
+              record.passport_information.number
+            }}</span>
+          </div>
+          <div>
+            Visa:
+            <span class="font-bold">{{ record.visa_information.number }}</span>
+          </div>
+        </div>
+      </template>
+      <template #created_at="{ record }">
+        <div class="flex flex-col">
+          <div>{{ formatDateTime(record.created_at) }}</div>
+        </div>
+      </template>
+      <template #verified_at="{ record }">
+        <div class="flex items-center">
+          <span
+            class="w-2 h-2 rounded-full mr-2"
+            :class="record.verified_at === null ? 'bg-green-500' : 'bg-red-500'"
+          ></span>
+          {{ record.verified_at === null ? "ບໍ່ມີໃນບັນຊີດຳ" : "ມີໃນບັນຊີດຳ" }}
+        </div>
+      </template>
+      <template #action="{ record }">
+        <div class="flex space-x-2">
+          <a
+            href="javascript:void(0)"
+            @click="navigateToDetails(record.id)"
+            class="text-primary-600 hover:text-primary-600 hover:underline cursor-pointer"
+            >ລາຍລະອຽດ</a
+          >
+        </div>
+      </template>
+    </Table>
+  </div>
+</template>
+
+<style scoped>
+.whitespace-pre-line {
+  white-space: pre-line;
+}
+</style>
