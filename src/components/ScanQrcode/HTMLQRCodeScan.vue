@@ -626,7 +626,6 @@ const handleScanSuccess = async (result: string) => {
     if (scanResult?.id) {
       // ปิด Modal
       await closeModal();
-
       // นำทางไปยังหน้า details
       await router.push({
         name: "arrival_details",
@@ -878,17 +877,18 @@ button {
 /* Modal Content */
 .modal-content {
   background: white;
-  padding: 24px;
+  padding: 14px; /* ลดจาก 24px เป็น 16px เพื่อประหยัดพื้นที่ */
   border-radius: var(--border-radius-lg);
-  width: 90%;
-  max-width: 500px;
+  width: 85%;
+  max-width: 420px; /* ลดจาก 500px เป็น 450px */
   text-align: center;
   box-shadow: var(--shadow-lg);
   z-index: 1001;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   transform: translateY(0);
+  max-height: 90vh; /* เพิ่มความสูงสูงสุดเป็น 90% ของความสูงหน้าจอ */
+  overflow-y: auto; /* เพิ่ม scrollbar เมื่อเนื้อหายาวเกินไป */
 }
-
 .modal-scanning {
   box-shadow: 0 0 0 2px var(--primary-color), var(--shadow-lg);
 }
@@ -898,13 +898,13 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
+  margin-bottom: 2px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--gray-medium);
 }
 
 .modal-header h3 {
-  font-size: 20px;
+  font-size: 18px;
   margin: 0;
   font-weight: 600;
   color: var(--text-dark);
@@ -929,10 +929,10 @@ button {
 
 /* Status message */
 .scan-status {
-  margin-bottom: 16px;
+  margin-bottom: 4px;
   padding: 10px 12px;
   border-radius: var(--border-radius-md);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.5;
   box-shadow: var(--shadow-sm);
 }
@@ -952,7 +952,7 @@ button {
 /* Custom dropdown */
 .select-wrapper {
   position: relative;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .camera-dropdown {
@@ -993,7 +993,7 @@ button {
 .modal-actions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 2px;
 }
 
 .action-button {
@@ -1314,7 +1314,7 @@ button {
 }
 
 .format-dropdown {
-  padding: 8px;
+  padding: 4px;
   border-radius: 4px;
   border: 1px solid #ddd;
   background-color: white;
@@ -1390,17 +1390,6 @@ button {
   justify-content: center;
   z-index: 1000;
 }
-
-/* .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 10px;
-} */
-
 @keyframes spin {
   0% {
     transform: rotate(0deg);

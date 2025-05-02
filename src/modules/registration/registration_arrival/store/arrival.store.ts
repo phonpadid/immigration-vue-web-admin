@@ -90,45 +90,64 @@ export const useArrivalStore = defineStore("arrival", () => {
     limit: 10,
   });
 
-  // Function to fetch all arrivals with pagination
+  let currentRequest: Promise<void> | null = null;
+
   const getAllArrival = async () => {
+    // ถ้ากำลังโหลดอยู่ให้รอให้เสร็จก่อน
+    if (currentRequest) {
+      await currentRequest;
+      return;
+    }
+
     try {
       isLoading.value = true;
 
-      // Create query string from filters
+      // สร้าง query string
       const queryParams = new URLSearchParams();
-
-      // Add non-empty filters to query params
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== null && value !== undefined && value !== "") {
           queryParams.append(key, value.toString());
         }
       });
 
-      const { data } = await api.get(`/arrival?${queryParams.toString()}`);
+      // เก็บ reference ของ request ปัจจุบัน
+      currentRequest = api
+        .get(`/arrival?${queryParams.toString()}`)
+        .then(({ data }) => {
+          if (data?.data && Array.isArray(data.data)) {
+            arrival.data = data.data;
+            arrival.total = data.total ?? 0;
+            arrival.meta = data.meta ?? null;
+          }
+        })
+        .catch((error) => {
+          console.error("❌ Failed to fetch arrivals", error);
+          notification.error({
+            message: "ຂໍ້ຜິດພາດ",
+            description: "ບໍ່ສາມາດດຶງຂໍ້ມູນການເຂົ້າເມືອງໄດ້",
+          });
+          throw error;
+        })
+        .finally(() => {
+          isLoading.value = false;
+          currentRequest = null;
+        });
 
-      if (data?.data && Array.isArray(data.data)) {
-        arrival.data = data.data;
-        arrival.total = data.total ?? 0;
-        arrival.meta = data.meta ?? null;
-      }
+      await currentRequest;
     } catch (error) {
-      console.error("❌ Failed to fetch arrivals", error);
-      notification.error({
-        message: "ຂໍ້ຜິດພາດ",
-        description: "ບໍ່ສາມາດດຶງຂໍ້ມູນການເຂົ້າເມືອງໄດ້",
-      });
-    } finally {
-      isLoading.value = false;
+      // Error handling is done in the promise chain above
     }
   };
 
+  const setFilters = (newFilters: Partial<typeof filters>) => {
+    Object.assign(filters, newFilters);
+  };
+
   // Function to fetch arrival details
-  const getArrivalById = async (id: string | number) => {
-    if (!shouldLoadArrival(id)) {
+  const getArrivalById = async (id: string | number, forceReload = false) => {
+    if (!forceReload && !shouldLoadArrival(id)) {
       return currentArrival.value;
     }
-
     try {
       isDetailLoading.value = true;
       const { data } = await api.get(`/arrival/${id}`);
@@ -151,13 +170,8 @@ export const useArrivalStore = defineStore("arrival", () => {
     try {
       isVerifying.value = true;
       await api.put(`/arrival/${id}`);
-      notification.success({
-        message: "ສຳເລັດ",
-        description: "ຢືນຢັນການເຂົ້າເມືອງສຳເລັດ",
-      });
-
       // Refresh data after verification
-      await getArrivalById(id);
+      await getArrivalById(id, true);
       return true;
     } catch (error) {
       console.error("❌ Failed to verify arrival", error);
@@ -205,9 +219,6 @@ export const useArrivalStore = defineStore("arrival", () => {
     return gender === "male" ? "ຊາຍ" : gender === "female" ? "ຍົງ" : gender;
   };
 
-  const setFilters = (newFilters: Partial<typeof filters>) => {
-    Object.assign(filters, newFilters);
-  };
   const shouldLoadArrival = (id: string | number) => {
     return (
       !currentArrival.value ||

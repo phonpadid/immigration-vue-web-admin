@@ -49,15 +49,17 @@ const navigateToDetails = (id: number) => {
   router.push(`/arrival/details/${id}`);
 };
 
-const handleClear = async (field: keyof typeof searchState.value) => {
-  // รีเซ็ตค่าใน searchState
-  searchState.value[field] = "";
+const handleInputSearch = async (
+  field: keyof typeof searchState.value,
+  value: string
+) => {
+  // อัพเดทค่าใน searchState
+  searchState.value[field] = value;
 
   // รีเซ็ต pagination
   pagination.value.current = 1;
-  const offset = 0;
 
-  // สร้าง filters ใหม่
+  // สร้าง filters ใหม่และเรียก API เพียงครั้งเดียว
   const filters = {
     entry_name: searchState.value.entry_name,
     passport_number: searchState.value.passport_number,
@@ -65,53 +67,33 @@ const handleClear = async (field: keyof typeof searchState.value) => {
     verification_code: searchState.value.verification_code,
     is_verified: searchState.value.is_verified,
     black_list: searchState.value.black_list,
-    offset,
+    offset: 0,
     limit: pagination.value.pageSize,
   };
 
-  // อัพเดท filters และโหลดข้อมูลใหม่
-  await arrivalStore.setFilters(filters);
-  await arrivalStore.getAllArrival();
-  pagination.value.total = arrivalStore.arrival.total;
+  try {
+    // เรียก API เพียงครั้งเดียว
+    await arrivalStore.setFilters(filters);
+    await arrivalStore.getAllArrival();
+
+    // อัพเดท total หลังจากได้ข้อมูลใหม่
+    pagination.value.total = arrivalStore.arrival.total;
+  } catch (error) {
+    console.error("Failed to search:", error);
+  }
 };
-
-// ปรับปรุงฟังก์ชัน handleSearch
-const handleSearch = async () => {
-  pagination.value.current = 1;
-  const offset = (pagination.value.current - 1) * pagination.value.pageSize;
-
-  const filters = {
-    entry_name: searchState.value.entry_name,
-    passport_number: searchState.value.passport_number,
-    visa_number: searchState.value.visa_number,
-    verification_code: searchState.value.verification_code,
-    is_verified: searchState.value.is_verified,
-    black_list: searchState.value.black_list,
-    offset,
-    limit: pagination.value.pageSize,
-  };
-
-  await arrivalStore.setFilters(filters);
-  await arrivalStore.getAllArrival();
-  pagination.value.total = arrivalStore.arrival.total;
-};
-
-// ปรับปรุงฟังก์ชัน handleInputChange
-const handleInputChange = (
+// แยกฟังก์ชันสำหรับจัดการ select
+const handleInputChange = async (
   field: keyof typeof searchState.value,
   value: string
 ) => {
   searchState.value[field] = value;
-  // ค้นหาทันทีเฉพาะกรณี select เท่านั้น
   if (field === "is_verified" || field === "black_list") {
-    handleSearch();
+    // ใช้ฟังก์ชันเดียวกับ search
+    await handleInputSearch(field, value);
   }
 };
-const handleTableChange = async (
-  paginationInfo: any,
-  filters: any,
-  sorter: any
-) => {
+const handleTableChange = async (paginationInfo: any) => {
   pagination.value.current = paginationInfo.current;
   pagination.value.pageSize = paginationInfo.pageSize;
 
@@ -156,26 +138,22 @@ onMounted(async () => {
       <InputSearch
         v-model="searchState.entry_name"
         placeholder="ຈຸດເຂົ້າ..."
-        @search="handleSearch"
-        @clear="handleClear('entry_name')"
+        @search="(value) => handleInputSearch('entry_name', value)"
       />
       <InputSearch
         v-model="searchState.passport_number"
         placeholder="ເລກທີ່ passport..."
-        @search="handleSearch"
-        @clear="handleClear('passport_number')"
+        @search="(value) => handleInputSearch('passport_number', value)"
       />
       <InputSearch
         v-model="searchState.visa_number"
         placeholder="ເລກທີ່ visa..."
-        @search="handleSearch"
-        @clear="handleClear('visa_number')"
+        @search="(value) => handleInputSearch('visa_number', value)"
       />
       <InputSearch
         v-model="searchState.verification_code"
         placeholder="ລະຫັດຢືນຢັນ..."
-        @search="handleSearch"
-        @clear="handleClear('verification_code')"
+        @search="(value) => handleInputSearch('verification_code', value)"
       />
       <InputSelect
         v-model="searchState.is_verified"

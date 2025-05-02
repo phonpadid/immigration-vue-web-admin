@@ -5,7 +5,7 @@ import type { PropType } from "vue";
 defineProps({
   modelValue: {
     type: [String, Number] as PropType<string | number>,
-    default: "",
+    default: null, // Default value set to null
   },
   options: {
     type: Array as PropType<{ label: string; value: string | number }[]>,
@@ -17,11 +17,11 @@ defineProps({
   },
   width: {
     type: String,
-    default: "100%", // เปลี่ยนเป็น 100% เพื่อให้ตัว select กว้างเต็มพื้นที่ parent
+    default: "100%",
   },
   size: {
     type: String as PropType<"large" | "middle" | "small">,
-    default: "middle", // ค่าเริ่มต้นเป็น middle ตามมาตรฐาน Ant Design
+    default: "middle",
   },
 });
 
@@ -29,7 +29,7 @@ const emit = defineEmits(["update:modelValue", "change"]);
 
 function onChange(value: string | number) {
   emit("update:modelValue", value);
-  emit("change", value); // เพิ่ม emit event change เพื่อให้สามารถใช้ @change ได้
+  emit("change", value);
 }
 </script>
 
@@ -41,11 +41,13 @@ function onChange(value: string | number) {
     :style="{ width }"
     :size="size"
     allow-clear
+    :dropdown-match-select-width="false"
   >
     <a-select-option
       v-for="option in options"
       :key="option.value"
       :value="option.value"
+      :title="option.label"
     >
       {{ option.label }}
     </a-select-option>
@@ -53,14 +55,40 @@ function onChange(value: string | number) {
 </template>
 
 <style scoped>
-/* เพิ่ม CSS เพื่อให้มั่นใจว่า placeholder แสดงผลถูกต้อง */
-:deep(.ant-select-selection-placeholder) {
-  opacity: 0.6;
-  color: #888;
+/* ปรับแต่ง dropdown ให้กว้างขึ้น และรองรับข้อความยาว */
+:deep(.ant-select-dropdown) {
+  min-width: 200px !important;
+  max-width: 400px !important;
 }
 
-/* ปรับขนาดตาม size */
-:deep(.ant-select-lg) {
-  font-size: 16px;
+/* ปรับแต่งตัวเลือกให้แสดงข้อความยาวได้ */
+:deep(.ant-select-item) {
+  white-space: normal !important;
+  height: auto !important;
+  padding: 8px 12px !important;
+}
+
+:deep(.ant-select-item-option-content) {
+  white-space: normal !important;
+  word-break: break-word !important;
+  line-height: 1.4 !important;
+}
+
+/* สำหรับตัว select เมื่อเลือกแล้ว */
+:deep(.ant-select-selection-item) {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* เพิ่ม hover effect */
+:deep(.ant-select-item:hover) {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* ปรับความสูงของแต่ละ option ให้พอดีกับเนื้อหา */
+:deep(.ant-select-item-option) {
+  min-height: 32px;
+  height: auto !important;
 }
 </style>
