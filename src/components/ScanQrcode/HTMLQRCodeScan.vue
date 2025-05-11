@@ -29,7 +29,6 @@
               </h3>
               <button class="close-button" @click="closeModal">×</button>
             </div>
-
             <!-- Scanner -->
             <div
               v-show="showModal"
@@ -529,7 +528,34 @@ const stopScanning = async (): Promise<void> => {
   return Promise.resolve();
 };
 
-// Improved scan image file with better error messaging
+// แก้ไขฟังก์ชัน handleScanSuccess
+const handleScanSuccess = async (result: string) => {
+  try {
+    scanStatus.value = `ກຳລັງກວດສອບ QR Code...`;
+
+    // ใช้ scannerStore แทน arrivalStore
+    const scanResult = await scannerStore.scanCode(result);
+
+    if (scanResult?.id) {
+      // ปิด Modal
+      await closeModal();
+
+      // นำทางไปยังหน้า details ตามประเภท
+      const routeName =
+        scanResult.type === "arrival" ? "arrival_details" : "departure_details";
+
+      await router.push({
+        name: routeName,
+        params: { id: scanResult.id.toString() },
+      });
+    }
+  } catch (error) {
+    console.error("Scan processing error:", error);
+    scanStatus.value = "ເກີດຂໍ້ຜິດພາດໃນການປະມວນຜົນ QR Code";
+  }
+};
+
+// แก้ไขฟังก์ชัน scanImageFile
 const scanImageFile = () => {
   const fileInput = document.createElement("input");
   fileInput.type = "file";
@@ -548,7 +574,7 @@ const scanImageFile = () => {
           scanner.value = new Html5Qrcode("reader", { verbose: false });
         } catch (error) {
           logDebugInfo("Error creating scanner for file:", error);
-          scanStatus.value = "ไม่สามารถสร้างสแกนเนอร์ได้ กรุณาลองใหม่";
+          scanStatus.value = "ບໍ່ສາມາດສ້າງເຄື່ອງສະແກນໄດ້ ກະລຸນາລອງໃໝ່";
           return;
         }
       }
@@ -556,45 +582,34 @@ const scanImageFile = () => {
       try {
         scanStatus.value = "ກຳລັງອ່ານ QR code ຈາກຮູບພາບ...";
 
-        // Try different scanning modes with better error handling
+        // ลองสแกนในโหมดต่างๆ
         try {
-          // First try with enhanced mode - this helps with custom QR codes
-          const result = await scanner.value.scanFile(
-            file,
-            /* verbose= */ true
-          );
-          handleScanSuccess(result);
+          // โหมดแรก - สำหรับ QR code ที่ซับซ้อน
+          const result = await scanner.value.scanFile(file, true);
+          await handleScanSuccess(result);
         } catch (firstError) {
           logDebugInfo(
             "First scan attempt failed, trying compatibility mode",
             firstError
           );
+
           try {
-            // If failed, try with compatibility mode
-            const result = await scanner.value.scanFile(
-              file,
-              /* verbose= */ false
-            );
-            handleScanSuccess(result);
+            // โหมดที่สอง - โหมด compatibility
+            const result = await scanner.value.scanFile(file, false);
+            await handleScanSuccess(result);
           } catch (secondError) {
-            // Try one more time with different parameters for custom QR codes
             logDebugInfo(
               "Second scan attempt failed, trying with different parameters",
               secondError
             );
 
-            // Create a temporary image to get dimensions
+            // สร้างภาพชั่วคราวเพื่อดูขนาด
             const img = new Image();
             img.onload = async () => {
               try {
-                // For custom QRs, try again with advanced settings
                 if (scanner.value) {
-                  // Use scanFile with verbose mode enabled
-                  const result = await scanner.value.scanFile(
-                    file,
-                    /* verbose= */ true
-                  );
-                  handleScanSuccess(result);
+                  const result = await scanner.value.scanFile(file, true);
+                  await handleScanSuccess(result);
                 }
               } catch (thirdError) {
                 handleScanFailure();
@@ -615,29 +630,7 @@ const scanImageFile = () => {
   fileInput.click();
 };
 
-// Handle successful scan from file
-const handleScanSuccess = async (result: string) => {
-  try {
-    scanStatus.value = `ກຳລັງກວດສອບ QR Code...`;
-
-    // เรียกใช้ scanArrival จาก store
-    const scanResult = await arrivalStore.scanArrival(result);
-
-    if (scanResult?.id) {
-      // ปิด Modal
-      await closeModal();
-      // นำทางไปยังหน้า details
-      await router.push({
-        name: "arrival_details",
-        params: { id: scanResult.id.toString() },
-      });
-    }
-  } catch (error) {
-    console.error("Scan processing error:", error);
-    scanStatus.value = "ເກີດຂໍ້ຜິດພາດໃນການປະມວນຜົນ QR Code";
-  }
-};
-// Handle failed scan from file
+// คงฟังก์ชัน handleScanFailure ไว้เหมือนเดิม
 const handleScanFailure = () => {
   scanSuccessful.value = false;
   scanStatus.value = "ບໍ່ພົບ QR code ໃນຮູບພາບ ຫຼື ຮູບພາບບໍ່ຊັດເຈນ";
@@ -645,32 +638,6 @@ const handleScanFailure = () => {
     alert("ບໍ່ພົບ QR code ໃນຮູບພາບ ກະລຸນາກວດສອບວ່າຮູບພາບຊັດເຈນແລະມີ QR code");
   }, 100);
 };
-
-// const onScanSuccess = async (decodedText: string) => {
-//   try {
-//     scanStatus.value = `ກຳລັງກວດສອບ QR Code...`;
-
-//     // เรียกใช้ scanArrival จาก store
-//     const result = await arrivalStore.scanArrival(decodedText);
-
-//     if (result?.id) {
-//       // หยุดการสแกน
-//       await stopScanning();
-
-//       // ปิด Modal
-//       await closeModal();
-
-//       // นำทางไปยังหน้า details
-//       await router.push({
-//         name: "arrival_details",
-//         params: { id: result.id.toString() },
-//       });
-//     }
-//   } catch (error) {
-//     console.error("Scan processing error:", error);
-//     scanStatus.value = "ເກີດຂໍ້ຜິດພາດໃນການປະມວນຜົນ QR Code";
-//   }
-// };
 
 // Enhanced error handling for scan error
 onMounted(() => {

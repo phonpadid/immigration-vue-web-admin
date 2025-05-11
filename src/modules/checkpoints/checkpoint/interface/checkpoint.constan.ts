@@ -1,4 +1,8 @@
-import type { TabConfig, CountryType, CheckpointForm } from "@/types/checkpoint.type";
+import type {
+  TabConfig,
+  CountryType,
+  CheckpointForm,
+} from "@/types/checkpoint.type";
 
 export const TABS_CONFIG: TabConfig[] = [
   { key: "1", label: "ພາສາລາວ", slotName: "tab1", lang: "lo" },
@@ -7,7 +11,8 @@ export const TABS_CONFIG: TabConfig[] = [
 ];
 
 export const COUNTRIES: Array<{ value: CountryType; label: string }> = [
-  { value: "laos", label: "ລາວ" },
+  { value: "", label: "ເລືອກຊາຍແດນປະເທດ" },
+  { value: "myanmar", label: "ມຽນມ້າ" },
   { value: "thailand", label: "ໄທ" },
   { value: "vietnam", label: "ຫວຽດນາມ" },
   { value: "cambodia", label: "ກຳປູເຈຍ" },
@@ -17,7 +22,7 @@ export const COUNTRIES: Array<{ value: CountryType; label: string }> = [
 export const DEFAULT_FORM_VALUES: CheckpointForm = {
   category_id: 0,
   province_id: 0,
-  country: "laos",
+  country: "",
   image: null,
   link_map: "",
   phone_number: "",

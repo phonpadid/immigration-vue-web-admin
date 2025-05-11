@@ -8,7 +8,8 @@ export type SupportedLanguage = "lo" | "en" | "zh_cn";
 
 // ประเภทประเทศที่รองรับ
 export type CountryType =
-  | "laos"
+  | ""
+  | "myanmar"
   | "thailand"
   | "vietnam"
   | "cambodia"

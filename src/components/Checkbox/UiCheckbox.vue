@@ -47,6 +47,8 @@ const props = withDefaults(
     disabled?: boolean;
     // เพิ่ม props สำหรับ single checkbox
     checked?: boolean;
+    // เพิ่ม prop label
+    label?: string;
   }>(),
   {
     modelValue: () => [],
@@ -86,7 +88,8 @@ const isSingleCheckbox = computed(() => "checked" in props);
     v-model:checked="isChecked"
     :disabled="disabled"
   >
-    <slot></slot>
+    <template v-if="label">{{ label }}</template>
+    <slot v-else></slot>
   </a-checkbox>
 
   <!-- สำหรับ checkbox group -->

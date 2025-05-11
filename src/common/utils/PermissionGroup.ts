@@ -105,19 +105,86 @@ export const ALL_REMOVE_PERMISSIONS = [
   SERVICE_REMOVE,
 ];
 
+// เพิ่มต่อท้ายไฟล์ PermissionGroup.ts
+/**
+ * ฟังก์ชันสำหรับตรวจสอบว่า permissions ที่ได้จาก API ตรงกับค่าคงที่ที่กำหนดหรือไม่
+ * เพื่อใช้ในการ debug การแสดงเมนู
+ */
+export function validateUserPermissions(userPermissions: string[]) {
+  // กลุ่มตาม permission type (read, write, remove)
+  const readPerms = userPermissions.filter((p) => p.includes(":read"));
+  const writePerms = userPermissions.filter((p) => p.includes(":write"));
+  const removePerms = userPermissions.filter((p) => p.includes(":remove"));
+
+  // console.log("========= Permission Validation ===========");
+  // console.log("User permissions:", userPermissions);
+
+  // ตรวจสอบ READ permissions
+  // console.log("READ permissions:");
+  ALL_READ_PERMISSIONS.forEach((perm) => {
+    const isMatched = userPermissions.includes(perm);
+    // console.log(`${perm}: ${isMatched ? "✓" : "✗"}`);
+  });
+
+  // ตรวจสอบ WRITE permissions
+  // console.log("WRITE permissions:");
+  ALL_WRITE_PERMISSIONS.forEach((perm) => {
+    const isMatched = userPermissions.includes(perm);
+    // console.log(`${perm}: ${isMatched ? "✓" : "✗"}`);
+  });
+  // ตรวจสอบ REMOVE permissions
+  // console.log("REMOVE permissions:");
+  ALL_REMOVE_PERMISSIONS.forEach((perm) => {
+    const isMatched = userPermissions.includes(perm);
+    // console.log(`${perm}: ${isMatched ? "✓" : "✗"}`);
+  });
+  // ตรวจสอบว่ามีค่าใดที่ไม่ตรงกันบ้าง
+  const allSystemPerms = new Set(ALL_PERMISSIONS);
+  const unknownPerms = userPermissions.filter(
+    (perm) => !allSystemPerms.has(perm)
+  );
+  if (unknownPerms.length > 0) {
+    console.warn("Unknown permissions from API:", unknownPerms);
+  }
+
+  return {
+    valid: unknownPerms.length === 0,
+    unknownPermissions: unknownPerms,
+    matchedPermissions: userPermissions.filter((perm) =>
+      allSystemPerms.has(perm)
+    ),
+  };
+}
+
 // กลุ่มของ permissions ตามโมดูล
 export const USER_PERMISSIONS = [USER_READ, USER_WRITE, USER_REMOVE];
 export const REGISTRATION_PERMISSIONS = [REGISTRATION_READ, REGISTRATION_WRITE];
 export const BANNER_PERMISSIONS = [BANNER_READ, BANNER_WRITE, BANNER_REMOVE];
-export const FEEDBACK_PERMISSIONS = [FEEDBACK_READ, FEEDBACK_WRITE, FEEDBACK_REMOVE];
+export const FEEDBACK_PERMISSIONS = [
+  FEEDBACK_READ,
+  FEEDBACK_WRITE,
+  FEEDBACK_REMOVE,
+];
 export const HOTEL_PERMISSIONS = [HOTEL_READ, HOTEL_WRITE, HOTEL_REMOVE];
 export const NEWS_PERMISSIONS = [NEWS_READ, NEWS_WRITE, NEWS_REMOVE];
 export const VISA_PERMISSIONS = [VISA_READ, VISA_WRITE, VISA_REMOVE];
 export const LAW_PERMISSIONS = [LAW_READ, LAW_WRITE, LAW_REMOVE];
-export const CHECKPOINT_PERMISSIONS = [CHECKPOINT_READ, CHECKPOINT_WRITE, CHECKPOINT_REMOVE];
+export const CHECKPOINT_PERMISSIONS = [
+  CHECKPOINT_READ,
+  CHECKPOINT_WRITE,
+  CHECKPOINT_REMOVE,
+];
 export const CONTACT_PERMISSIONS = [CONTACT_READ, CONTACT_REMOVE];
-export const COUNTRY_PERMISSIONS = [COUNTRY_READ, COUNTRY_WRITE, COUNTRY_REMOVE];
-export const SERVICE_PERMISSIONS = [SERVICE_READ, SERVICE_WRITE, SERVICE_REMOVE];
+export const COUNTRY_PERMISSIONS = [
+  COUNTRY_READ,
+  COUNTRY_WRITE,
+  COUNTRY_REMOVE,
+];
+export const SERVICE_PERMISSIONS = [
+  SERVICE_READ,
+  SERVICE_WRITE,
+  SERVICE_REMOVE,
+];
 
 // รวมทุก permissions
 export const ALL_PERMISSIONS = [

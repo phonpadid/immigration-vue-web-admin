@@ -21,7 +21,7 @@ const { push } = useRouter();
 // Local states
 const selectedProvinceId = ref<string | number | undefined>(undefined);
 const selectedCategoryId = ref<string | number | undefined>(undefined);
-const selectedLanguage = ref<string>("lo"); // Default language: Lao
+const selectedLanguage = ref<string>("lo");
 const currentPage = ref(1);
 const pageSize = ref(10);
 const menuOptions = ref([
@@ -29,31 +29,59 @@ const menuOptions = ref([
   { key: "2", label: "ແກ້ໄຂ" },
   { key: "3", label: "ລຶບ" },
 ]);
+
 // Computed properties
 const totalCheckpoints = computed(() => checkpointStore.checkpoints.total);
-// Helper function to extract `translates` by language
+
+// Pagination config
+const pagination = computed(() => ({
+  total: totalCheckpoints.value,
+  current: currentPage.value,
+  pageSize: pageSize.value,
+  showSizeChanger: true,
+}));
+
+// Handle table change
+const handleTableChange = (pag: any, filters: any, sorter: any) => {
+  currentPage.value = pag.current;
+  pageSize.value = pag.pageSize;
+  fetchData();
+};
+
+// Helper function for translations
 const mapTranslatesToOptions = (
   data: any[],
   lang: string,
   key: string = "title"
 ): { label: string; value: string | number }[] => {
-  return data.map((item) => {
-    const translate = item.translates.find((t: any) => t.lang === lang);
-    return {
-      label: translate?.[key] || "Unknown",
-      value: item.id,
-    };
+  return data.map((item) => ({
+    label:
+      item.translates.find((t: any) => t.lang === lang)?.[key] || "Unknown",
+    value: item.id,
+  }));
+};
+
+// Fetch data with params
+const fetchData = async () => {
+  await checkpointStore.getAllCheckpoints({
+    offset: (currentPage.value - 1) * pageSize.value,
+    limit: pageSize.value,
+    categoryId:
+      typeof selectedCategoryId.value === "string"
+        ? parseInt(selectedCategoryId.value, 10)
+        : selectedCategoryId.value || undefined,
+    provinceId:
+      typeof selectedProvinceId.value === "string"
+        ? parseInt(selectedProvinceId.value, 10)
+        : selectedProvinceId.value || undefined,
   });
 };
 
-const handleSelect = (key: string, record: any) => {
-  //   console.log("Selected:", key, "for record:", record);
+// Actions handlers
+const handleSelect = async (key: string, record: any) => {
   if (key === "1") {
-    // View details
     push({ name: "checkpoint_details", params: { id: record.id } });
-  }
-  if (key === "2") {
-    // View details
+  } else if (key === "2") {
     push({ name: "checkpoint_edit", params: { id: record.id } });
   } else if (key === "3") {
     Modal.confirm({
@@ -64,13 +92,10 @@ const handleSelect = (key: string, record: any) => {
       okType: "danger",
       onOk: async () => {
         try {
-          checkpointStore.isLoading = true;
           await checkpointStore.deleteCheckpoint(record.id);
-          alert("ລົບຂໍ້ມູນສຳເລັດ");
-        } catch (err) {
-          console.error("Error:", err);
-        } finally {
-          checkpointStore.isLoading = false;
+          await fetchData(); // Refresh data after delete
+        } catch (error) {
+          console.error("Error deleting checkpoint:", error);
         }
       },
     });
@@ -81,35 +106,20 @@ const addCheckpoint = () => {
   push({ name: "checkpoint_add" });
 };
 
-const fetchData = async () => {
-  await checkpointStore.getAllCheckpoints(
-    (currentPage.value - 1) * pageSize.value,
-    pageSize.value,
-    typeof selectedCategoryId.value === "string"
-      ? parseInt(selectedCategoryId.value, 10)
-      : selectedCategoryId.value,
-    typeof selectedProvinceId.value === "string"
-      ? parseInt(selectedProvinceId.value, 10)
-      : selectedProvinceId.value
-  );
-};
-
-const fetchProvinces = async () => {
-  await provinceStore.getAllCheckpointProvine(1, 100); // ดึงข้อมูลทั้งหมด
-};
-
-const fetchCategories = async () => {
-  await categoryStore.getAllCheckpointCategories();
-};
-
+// Initial data fetch
 onMounted(async () => {
-  await Promise.all([fetchData(), fetchProvinces(), fetchCategories()]);
+  await Promise.all([
+    fetchData(),
+    provinceStore.getAllCheckpointProvine(1, 100),
+    categoryStore.getAllCheckpointCategories(),
+  ]);
 });
 
-watch(
-  [selectedProvinceId, selectedCategoryId, currentPage, selectedLanguage],
-  fetchData
-);
+// Watch for filter changes
+watch([selectedProvinceId, selectedCategoryId, selectedLanguage], () => {
+  currentPage.value = 1; // Reset to first page
+  fetchData();
+});
 </script>
 
 <template>
@@ -125,7 +135,7 @@ watch(
       <div
         class="flex items-center justify-end flex-col sm:flex-row gap-2 w-full sm:w-fit"
       >
-        <!-- Province Select -->
+        <!-- Filters -->
         <InputSelect
           v-model="selectedProvinceId"
           placeholder="ເລືອກແຂວງ"
@@ -139,7 +149,6 @@ watch(
           "
         />
 
-        <!-- Category Select -->
         <InputSelect
           v-model="selectedCategoryId"
           size="large"
@@ -152,20 +161,27 @@ watch(
             )
           "
         />
+
         <UiButton
           type="primary"
           size="large"
           colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
           icon="ant-design:plus-outlined"
           @click="addCheckpoint"
-          >ເພີ່ມຂໍ້ມູນ</UiButton
         >
+          ເພີ່ມຂໍ້ມູນ
+        </UiButton>
       </div>
     </div>
 
     <!-- Table Section -->
-
-    <Table :columns="columns" :dataSource="checkpointStore.checkpoints.data">
+    <Table
+      :columns="columns"
+      :dataSource="checkpointStore.checkpoints.data"
+      :loading="checkpointStore.isLoading"
+      :pagination="pagination"
+      @change="handleTableChange"
+    >
       <template #image="{ record }">
         <div class="flex items-center">
           <img
@@ -177,6 +193,7 @@ watch(
           <span v-else>ບໍ່ມີຮູບ</span>
         </div>
       </template>
+
       <template #translates="{ record }">
         <span>
           {{
@@ -185,6 +202,7 @@ watch(
           }}
         </span>
       </template>
+
       <template #action="{ record }">
         <Dropdown
           :options="menuOptions"
@@ -195,26 +213,9 @@ watch(
             size="small"
             colorClass="!bg-white text-gray-900 flex items-center hover:!bg-gray-200 hover:!text-gray-900 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white"
             icon="ic:baseline-more-horiz"
-          ></UiButton>
+          />
         </Dropdown>
       </template>
     </Table>
   </div>
 </template>
-
-<style scoped>
-:deep(.ant-select-dropdown) {
-  max-width: 500px; /* กำหนดความกว้างสูงสุด */
-}
-
-:deep(.ant-select-item-option-content) {
-  white-space: nowrap; /* ไม่ให้ข้อความยืดเกิน */
-  overflow: hidden; /* ซ่อนข้อความที่ยาวเกิน */
-  text-overflow: ellipsis; /* เพิ่ม ... เมื่อข้อความยาวเกิน */
-}
-
-:deep(.ant-select-item-option-content:hover) {
-  white-space: normal; /* เมื่อ hover ให้แสดงข้อความเต็ม */
-  word-break: break-word; /* ตัดข้อความเมื่อเกิน */
-}
-</style>

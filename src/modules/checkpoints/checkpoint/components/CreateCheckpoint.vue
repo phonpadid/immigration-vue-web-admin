@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed } from "vue";
+import { reactive, ref, onMounted, computed, type Ref } from "vue";
 import { useRouter } from "vue-router";
 import { message } from "ant-design-vue";
 import { storeToRefs } from "pinia";
@@ -18,10 +18,6 @@ import {
   COUNTRIES,
   DEFAULT_FORM_VALUES,
 } from "../interface/checkpoint.constan";
-import {
-  validationRules,
-  validateTranslations,
-} from "../validation/checkpoint.validation";
 import { formatContentForSubmit } from "@/utils/formatContent";
 import { useCheckpointStore } from "../store/checkpoint.store";
 import { useCheckpointProvinceStore } from "@/modules/checkpoints/province/store/province.store";
@@ -38,13 +34,89 @@ import UiButton from "@/components/button/UiButton.vue";
 import UploadDragger from "@/components/Upload/UploadDragger.vue";
 import UiCheckbox from "@/components/Checkbox/UiCheckbox.vue";
 
-// Router และ Store
+// Define type for tab languages
+type TabLanguage = "lo" | "en" | "zh_cn";
+
+// Define content type for editor
+interface EditorContent {
+  type: string;
+  content: Array<{
+    type: string;
+    attrs?: {
+      textAlign?: string;
+      [key: string]: any;
+    };
+    content?: Array<{
+      type: string;
+      text?: string;
+      [key: string]: any;
+    }>;
+    [key: string]: any;
+  }>;
+  [key: string]: any;
+}
+
+// Category and Province interfaces
+interface CategoryItem {
+  id: number;
+  translates: Array<{
+    lang: string;
+    title: string;
+  }>;
+  lo?: {
+    title: string;
+    description: string;
+  };
+  en?: {
+    title: string;
+    description: string;
+  };
+  zh_cn?: {
+    title: string;
+    description: string;
+  };
+}
+
+interface CategoryResponse {
+  data: CategoryItem[];
+  total: number;
+}
+
+interface ProvinceItem {
+  id: number;
+  translates: Array<{
+    lang: string;
+    name: string;
+  }>;
+  lo?: {
+    name: string;
+  };
+  en?: {
+    name: string;
+  };
+  zh_cn?: {
+    name: string;
+  };
+}
+
+interface ProvinceResponse {
+  data: ProvinceItem[];
+  total: number;
+}
+
+// Router and Store setup
 const router = useRouter();
 const checkpointStore = useCheckpointStore();
 const provinceStore = useCheckpointProvinceStore();
 const categoryStore = useCheckpointcategoriesStore();
-const { checkpointCategories } = storeToRefs(categoryStore);
-const { checkpointProvince } = storeToRefs(provinceStore);
+
+// Type-safe store references
+const { checkpointCategories } = storeToRefs(categoryStore) as unknown as {
+  checkpointCategories: Ref<CategoryResponse>;
+};
+const { checkpointProvince } = storeToRefs(provinceStore) as unknown as {
+  checkpointProvince: Ref<ProvinceResponse>;
+};
 
 // Local states
 const activeTab = ref<string>("1");
@@ -53,12 +125,28 @@ const formRef = ref<InstanceType<typeof UiForm>>();
 const uploadedFile = ref<File | null>(null);
 const imageError = ref<string>("");
 
-// Form state
+// Form state with proper type casting to ensure content field is handled correctly
 const checkpointForm = reactive<CheckpointForm>({
   ...DEFAULT_FORM_VALUES,
 });
 
-// Computed properties
+// Ensure the content field is treated properly for editor
+const getFormattedContent = (content: any): string => {
+  if (!content) return "";
+
+  if (typeof content === "string") {
+    return content;
+  }
+
+  try {
+    return JSON.stringify(content);
+  } catch (e) {
+    console.error("Error formatting content for editor:", e);
+    return "";
+  }
+};
+
+// Computed properties for options
 const categoryOptions = computed(() => {
   const options = [{ value: 0, label: "ກະລຸນາເລືອກປະເພດດ່ານ" }];
 
@@ -98,38 +186,32 @@ const handleFileSelect = (file: File) => {
   checkpointForm.image = file;
 };
 
-const validateForm = async (): Promise<boolean> => {
-  try {
-    // Validate form fields
-    await formRef.value?.submitForm();
-
-    // Validate image
-    if (!uploadedFile.value && !checkpointForm.image) {
-      imageError.value = "ກະລຸນາອັບໂຫລດຮູບພາບ";
-      message.error("ກະລຸນາອັບໂຫລດຮູບພາບ");
-      return false;
-    }
-
-    // Validate translations
-    const translationErrors = validateTranslations(checkpointForm.translates);
-    if (translationErrors.length > 0) {
-      message.error(translationErrors[0]);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Form validation failed:", error);
-    return false;
-  }
-};
-
 const handleSubmit = async () => {
   try {
     isLoading.value = true;
 
-    const isValid = await validateForm();
-    if (!isValid) {
+    // Validate required fields
+    if (checkpointForm.category_id === 0) {
+      message.error("ກະລຸນາເລືອກປະເພດດ່ານ");
+      isLoading.value = false;
+      return;
+    }
+
+    if (checkpointForm.province_id === 0) {
+      message.error("ກະລຸນາເລືອກແຂວງ");
+      isLoading.value = false;
+      return;
+    }
+
+    if (!checkpointForm.country) {
+      message.error("ກະລຸນາເລືອກປະເທດ");
+      isLoading.value = false;
+      return;
+    }
+
+    if (!uploadedFile.value) {
+      imageError.value = "ກະລຸນາອັບໂຫລດຮູບພາບ";
+      isLoading.value = false;
       return;
     }
 
@@ -142,26 +224,38 @@ const handleSubmit = async () => {
     formData.append("link_map", checkpointForm.link_map);
     formData.append("phone_number", checkpointForm.phone_number);
     formData.append("email", checkpointForm.email);
-    formData.append("visa", checkpointForm.visa.toString());
-    formData.append("e_visa", checkpointForm.e_visa.toString());
+    formData.append("visa", checkpointForm.visa ? "1" : "0");
+    formData.append("e_visa", checkpointForm.e_visa ? "1" : "0");
 
     // Add image if exists
     if (uploadedFile.value) {
       formData.append("image", uploadedFile.value);
     }
 
-    // Process translations
+    // Process translations with proper content formatting
     Object.entries(checkpointForm.translates).forEach(([lang, data]) => {
+      // Format content for submission
+      let contentValue = data.content;
+      if (typeof contentValue !== "string") {
+        contentValue = JSON.stringify(contentValue);
+      }
+
       formData.append(
         lang,
         JSON.stringify({
           name: data.name,
           time_operation: data.time_operation,
           address: data.address,
-          content: formatContentForSubmit(data.content),
+          content: contentValue,
         })
       );
     });
+
+    // Log FormData for debugging
+    console.log("Form data being submitted:");
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}: ${value instanceof File ? value.name : value}`);
+    }
 
     const result = await checkpointStore.createCheckpoint(formData);
     if (result) {
@@ -169,6 +263,7 @@ const handleSubmit = async () => {
       router.push("/checkpoint");
     }
   } catch (error: any) {
+    console.error("Error creating checkpoint:", error);
     message.error(error?.message || "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກຂໍ້ມູນ");
   } finally {
     isLoading.value = false;
@@ -180,7 +275,7 @@ onMounted(async () => {
   try {
     await Promise.all([
       categoryStore.getAllCheckpointCategories(),
-      provinceStore.getAllCheckpointProvine(),
+      provinceStore.getAllProvinces(),
     ]);
   } catch (error) {
     console.error("Failed to load initial data:", error);
@@ -195,8 +290,87 @@ onMounted(async () => {
       ເພີ່ມຂໍ້ມູນດ່ານ
     </h2>
 
-    <UiForm ref="formRef" :model="checkpointForm" :rules="validationRules">
-      <!-- Image Upload Section -->
+    <UiForm ref="formRef" :model="checkpointForm">
+      <!-- Tab Content -->
+      <Tab v-model:activeKey="activeTab" :tabs="TABS_CONFIG">
+        <template v-for="tab in TABS_CONFIG" :key="tab.key" #[tab.slotName]>
+          <UiFormItem :name="`translates.${tab.lang}.name`" label="ຊື່ດ່ານ">
+            <UiInput
+              v-model="checkpointForm.translates[tab.lang as TabLanguage].name"
+              placeholder="ປ້ອນຊື່ດ່ານ"
+              size="large"
+            />
+          </UiFormItem>
+
+          <UiFormItem
+            :name="`translates.${tab.lang}.time_operation`"
+            label="ເວລາເປີດ-ປິດ"
+          >
+            <UiInput
+              v-model="checkpointForm.translates[tab.lang as TabLanguage].time_operation"
+              placeholder="ປ້ອນເວລາເປີດ-ປິດ"
+              size="large"
+            />
+          </UiFormItem>
+
+          <UiFormItem :name="`translates.${tab.lang}.address`" label="ທີ່ຢູ່">
+            <Textarea
+              v-model="checkpointForm.translates[tab.lang as TabLanguage].address"
+              placeholder="ບ້ານ:...,ເມືອງ....,ແຂວງ:..."
+              :rows="3"
+              size="large"
+            />
+          </UiFormItem>
+
+          <UiFormItem :name="`translates.${tab.lang}.content`" label="ເນື້ອຫາ">
+            <QuillEditorComponent
+              v-model="checkpointForm.translates[tab.lang as TabLanguage].content as unknown as string"
+              placeholder="ປ້ອນເນື້ອຫາ..."
+            />
+          </UiFormItem>
+        </template>
+      </Tab>
+
+      <!-- Basic Information Section -->
+      <div class="my-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <UiFormItem label="ເລືອກປະເພດດ່ານ" name="category_id" required>
+          <InputSelect
+            v-model:value="checkpointForm.category_id"
+            :options="categoryOptions"
+            placeholder="ເລືອກປະເພດດ່ານ"
+            size="large"
+          />
+        </UiFormItem>
+
+        <UiFormItem label="ເລືອກແຂວງທີຢູ່ຂອງດ່ານ" name="province_id" required>
+          <InputSelect
+            v-model:value="checkpointForm.province_id"
+            :options="provinceOptions"
+            placeholder="ເລືອກແຂວງ"
+            size="large"
+          />
+        </UiFormItem>
+
+        <div>
+          <UiFormItem label="ເລືອກຊາຍແດນປະເທດ" name="country" required>
+            <InputSelect
+              v-model:value="checkpointForm.country"
+              :options="COUNTRIES"
+              placeholder="ເລືອກປະເທດ"
+              size="large"
+            />
+          </UiFormItem>
+        </div>
+        <div class="flex items-center h-full mb-4">
+          <UiCheckbox v-model:checked="checkpointForm.visa" label="ຮັບ Visa" />
+          <UiCheckbox
+            v-model:checked="checkpointForm.e_visa"
+            label="ຮັບ E-Visa"
+          />
+        </div>
+      </div>
+
+      <!-- Image Upload -->
       <div class="mb-6">
         <label
           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -214,105 +388,22 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- Basic Information Section -->
-      <div class="grid gap-6 mb-6 md:grid-cols-2">
-        <UiFormItem label="ເລືອກປະເພດດ່ານ" name="category_id" required>
-          <InputSelect
-            v-model:value="checkpointForm.category_id"
-            :options="categoryOptions"
-            placeholder="ເລືອກປະເພດດ່ານ"
-            size="large"
-          />
-        </UiFormItem>
+      <!-- Contact Information -->
+      <UiFormItem label="ເບີໂທຕິດຕໍ່" name="phone_number">
+        <UiInput
+          v-model="checkpointForm.phone_number"
+          placeholder="ປ້ອນເບີໂທຕິດຕໍ່"
+          size="large"
+        />
+      </UiFormItem>
 
-        <UiFormItem label="ເລືອກແຂວງ" name="province_id" required>
-          <InputSelect
-            v-model:value="checkpointForm.province_id"
-            :options="provinceOptions"
-            placeholder="ເລືອກແຂວງ"
-            size="large"
-          />
-        </UiFormItem>
-
-        <UiFormItem label="ປະເທດ" name="country" required>
-          <InputSelect
-            v-model:value="checkpointForm.country"
-            :options="COUNTRIES"
-            placeholder="ເລືອກປະເທດ"
-            size="large"
-          />
-        </UiFormItem>
-
-        <UiFormItem label="ເບີໂທຕິດຕໍ່" name="phone_number">
-          <UiInput
-            v-model="checkpointForm.phone_number"
-            placeholder="ປ້ອນເບີໂທຕິດຕໍ່"
-            size="large"
-          />
-        </UiFormItem>
-
-        <UiFormItem label="ອີເມວຕິດຕໍ່" name="email">
-          <UiInput
-            v-model="checkpointForm.email"
-            placeholder="ປ້ອນອີເມວຕິດຕໍ່"
-            size="large"
-          />
-        </UiFormItem>
-      </div>
-
-      <!-- Visa Options -->
-      <div class="flex gap-6 mb-6">
-        <UiCheckbox v-model:checked="checkpointForm.visa">
-          ຮັບ Visa
-        </UiCheckbox>
-        <UiCheckbox v-model:checked="checkpointForm.e_visa">
-          ຮັບ E-Visa
-        </UiCheckbox>
-      </div>
-
-      <!-- Tab Content -->
-      <Tab v-model:activeKey="activeTab" :tabs="TABS_CONFIG">
-        <template v-for="tab in TABS_CONFIG" :key="tab.key" #[tab.slotName]>
-          <UiFormItem
-            :name="`translates.${tab.lang}.name`"
-            label="ຊື່ດ່ານ"
-            required
-          >
-            <UiInput
-              v-model="checkpointForm.translates[tab.lang].name"
-              placeholder="ປ້ອນຊື່ດ່ານ"
-              size="large"
-            />
-          </UiFormItem>
-
-          <UiFormItem
-            :name="`translates.${tab.lang}.time_operation`"
-            label="ເວລາເປີດ-ປິດ"
-          >
-            <UiInput
-              v-model="checkpointForm.translates[tab.lang].time_operation"
-              placeholder="ປ້ອນເວລາເປີດ-ປິດ"
-              size="large"
-            />
-          </UiFormItem>
-
-          <UiFormItem :name="`translates.${tab.lang}.address`" label="ທີ່ຢູ່">
-            <Textarea
-              v-model="checkpointForm.translates[tab.lang].address"
-              placeholder="ປ້ອນທີ່ຢູ່"
-              :rows="3"
-              size="large"
-            />
-          </UiFormItem>
-
-          <UiFormItem :name="`translates.${tab.lang}.content`" label="ເນື້ອຫາ">
-            <QuillEditorComponent
-              v-model="checkpointForm.translates[tab.lang].content"
-              placeholder="ປ້ອນເນື້ອຫາ..."
-            />
-          </UiFormItem>
-        </template>
-      </Tab>
+      <UiFormItem label="ອີເມວຕິດຕໍ່" name="email">
+        <UiInput
+          v-model="checkpointForm.email"
+          placeholder="ປ້ອນອີເມວຕິດຕໍ່"
+          size="large"
+        />
+      </UiFormItem>
 
       <!-- Map Link -->
       <UiFormItem label="ລິ້ງແຜນທີ່" name="link_map">
@@ -329,6 +420,7 @@ onMounted(async () => {
         <UiButton
           type="primary"
           size="large"
+          colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
           :loading="isLoading"
           @click="handleSubmit"
         >
@@ -340,43 +432,5 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* Editor Styles */
-:deep(.quill-editor) {
-  height: 200px;
-  margin-bottom: 1rem;
-}
-
-:deep(.ql-container) {
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-}
-
-:deep(.ql-toolbar) {
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-}
-
-/* Form Styles */
-:deep(.ant-form-item) {
-  margin-bottom: 1.5rem;
-}
-
-:deep(.ant-input),
-:deep(.ant-select-selector) {
-  border-radius: 4px;
-}
-
-/* Dark Mode Support */
-:deep(.dark) {
-  .ant-form-item-label > label {
-    color: var(--text-light);
-  }
-
-  .ant-input,
-  .ant-select-selector {
-    background-color: var(--bg-dark);
-    border-color: var(--border-dark);
-    color: var(--text-light);
-  }
-}
+/* ...existing styles... */
 </style>

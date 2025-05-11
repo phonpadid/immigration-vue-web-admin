@@ -1,29 +1,70 @@
+<!-- filepath: e:\immigration-web-admin-vue\immigration-vue-web-admin\src\components\Header\HeaderBar.vue -->
 <script setup lang="ts">
 import { Icon } from "@iconify/vue";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { UserOutlined } from "@ant-design/icons-vue";
-import { useAuthStore } from "@/modules/Admin/authentication/store/auth.store";
+import { useAuthStore } from "@/lib/stores/auth.store";
 import { Dropdown, Menu } from "ant-design-vue";
-import { useRouter, useRoute } from "vue-router";
+import { useRouter } from "vue-router";
 
 const emit = defineEmits<{ toggle: [] }>();
-const { getProfile, logout } = useAuthStore();
-const userProfile = ref<{
-  id?: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-} | null>(null);
-
+const authStore = useAuthStore();
+const { getProfile } = authStore;
 const { push } = useRouter();
-const { params } = useRoute();
 const isDarkMode = ref(false);
+const isLoading = ref(false);
 
+// ใช้ computed property แทน ref เพื่อแสดงข้อมูลผู้ใช้ปัจจุบัน
+const userProfile = computed(() => {
+  const currentUser = authStore.user;
+  if (!currentUser || !currentUser.profile) return null;
+
+  return {
+    id: currentUser.profile.id,
+    first_name: currentUser.profile.first_name || "N/A",
+    last_name: currentUser.profile.last_name || "N/A",
+    email: currentUser.email || "N/A",
+  };
+});
+
+async function logout() {
+  const authStore = useAuthStore();
+
+  try {
+    // เรียกใช้ API logout ก่อน (ถ้ามี)
+    if (localStorage.getItem("access_token")) {
+      try {
+        await authStore.logout();
+      } catch (error) {
+        console.error("[LOGOUT] Error calling logout API:", error);
+      }
+    }
+    // ล้างข้อมูลใน authStore (ไม่ว่าจะเรียก API สำเร็จหรือไม่)
+    authStore.resetAuth();
+    // ล้าง localStorage
+    localStorage.clear();
+
+    push({
+      name: "login",
+    }).catch((err) => {
+      console.error("[LOGOUT] Error navigating to login:", err);
+    });
+  } catch (error) {
+    console.error("[LOGOUT] Unexpected error during logout:", error);
+    localStorage.clear();
+    authStore.resetAuth();
+
+    push({
+      name: "login",
+    }).catch(() => {});
+  }
+}
 const toggleDarkMode = () => {
   isDarkMode.value = !isDarkMode.value;
   document.documentElement.classList.toggle("dark", isDarkMode.value);
   localStorage.setItem("theme", isDarkMode.value ? "dark" : "light");
 };
+
 /******************************************************* */
 const gotoDetailsUser = (id: number) => {
   push({
@@ -36,21 +77,25 @@ const gotoDetailsUser = (id: number) => {
 
 onMounted(async () => {
   try {
-    const profileData = await getProfile();
-
-    if (!profileData || !profileData.profile) {
-      console.error("❌ Profile Data is null or undefined!");
-      return;
+    // ตรวจสอบว่ามีข้อมูลผู้ใช้แล้วหรือไม่
+    if (!authStore.isLoading) {
+      console.log("[HEADER] User not loaded, fetching profile");
+      isLoading.value = true;
+      await getProfile(); // เรียกใช้ getProfile ที่จะตรวจสอบการแคชเอง
+      isLoading.value = false;
+    } else {
+      console.log("[HEADER] User already loaded, using cached data");
     }
-
-    userProfile.value = {
-      id: profileData.profile.id ?? undefined,
-      first_name: profileData.profile.first_name ?? "N/A",
-      last_name: profileData.profile.last_name ?? "N/A",
-      email: profileData.email ?? "N/A",
-    };
   } catch (error) {
-    console.error("❌ Error fetching profile:", error);
+    console.error("[HEADER] Error fetching profile:", error);
+    isLoading.value = false;
+  }
+
+  // ตรวจสอบโหมด dark mode จาก localStorage
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme) {
+    isDarkMode.value = savedTheme === "dark";
+    document.documentElement.classList.toggle("dark", isDarkMode.value);
   }
 });
 </script>
@@ -79,11 +124,19 @@ onMounted(async () => {
         <template #overlay>
           <Menu>
             <Menu.Item>
-              <div class="">
+              <div v-if="isLoading" class="p-2">
+                <p>กำลังโหลดข้อมูล...</p>
+              </div>
+              <div v-else-if="userProfile" class="">
                 <p class="font-semibold">
-                  {{ userProfile?.first_name }} {{ userProfile?.last_name }}
+                  {{ userProfile.first_name }} {{ userProfile.last_name }}
                 </p>
-                <p class="text-sm text-gray-500">{{ userProfile?.email }}</p>
+                <p class="text-sm text-gray-500">{{ userProfile.email }}</p>
+              </div>
+              <div v-else class="">
+                <p class="text-sm text-gray-500">
+                  ບໍ່ພົບຂໍ້ມູນຜູ້ໃຊ້ກະລານາລ໋ອກອິນໃຫມ່
+                </p>
               </div>
             </Menu.Item>
             <Menu.Divider />
