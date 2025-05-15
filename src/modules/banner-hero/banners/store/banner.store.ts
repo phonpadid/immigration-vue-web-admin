@@ -158,38 +158,64 @@ export const usebannerStore = defineStore("banner", () => {
   };
   const prepareFormData = (formData: any) => {
     const bannerFormData = new FormData();
-    if (formData.image) {
+
+    // ตรวจสอบและเพิ่มรูปภาพ
+    if (formData.image instanceof File) {
       bannerFormData.append("image", formData.image);
     }
-    bannerFormData.append("link", formData.link || "");
-    bannerFormData.append("is_private", formData.is_private ? "1" : "0");
-    bannerFormData.append("start_time", formData.start_time || "");
-    bannerFormData.append("end_time", formData.end_time || "");
-    bannerFormData.append("lo_title", formData.lo_title || "");
-    bannerFormData.append("lo_description", formData.lo_description || "");
-    bannerFormData.append("en_title", formData.en_title || "");
-    bannerFormData.append("en_description", formData.en_description || "");
-    bannerFormData.append("zh_cn_title", formData.zh_cn_title || "");
+
+    // ตรวจสอบและเพิ่มข้อมูลที่จำเป็น
+    const requiredFields = {
+      link: formData.link?.trim(),
+      is_private: formData.is_private ? "1" : "0",
+      start_time: formData.start_time,
+      end_time: formData.end_time,
+      lo_title: formData.lo_title?.trim(),
+      en_title: formData.en_title?.trim(),
+      zh_cn_title: formData.zh_cn_title?.trim(),
+    };
+
+    // ตรวจสอบข้อมูลที่จำเป็น
+    for (const [key, value] of Object.entries(requiredFields)) {
+      if (!value && key !== "is_private") {
+        throw new Error(`ກະລຸນາປ້ອນ ${key}`);
+      }
+      bannerFormData.append(key, value || "");
+    }
+
+    // เพิ่มข้อมูล description ที่ไม่จำเป็นต้องมี
+    bannerFormData.append(
+      "lo_description",
+      formData.lo_description?.trim() || ""
+    );
+    bannerFormData.append(
+      "en_description",
+      formData.en_description?.trim() || ""
+    );
     bannerFormData.append(
       "zh_cn_description",
-      formData.zh_cn_description || ""
+      formData.zh_cn_description?.trim() || ""
     );
 
     return bannerFormData;
   };
 
-  // แก้ไขเพื่อใช้ฟังก์ชัน prepareFormData
   const createBanner = async (formData: any) => {
     try {
       isLoading.value = true;
 
-      // ตรวจสอบภาพก่อนส่งข้อมูล
-      if (!formData.image) {
+      // ตรวจสอบว่ามีรูปภาพหรือไม่
+      if (!formData.get("image") && !formData.image) {
         throw new Error("ກະລຸນາອັບໂຫລດຮູບພາບໃນສ່ວນສໍາລັບແບນເນີ");
       }
 
-      // แปลงข้อมูลเป็น FormData
-      const bannerFormData = prepareFormData(formData);
+      // ถ้า formData เป็น FormData อยู่แล้ว ใช้เลย ถ้าไม่ใช่ค่อยแปลง
+      const bannerFormData =
+        formData instanceof FormData ? formData : prepareFormData(formData);
+
+      // เพิ่มข้อมูลเวลาและผู้ใช้
+      bannerFormData.append("created_at", "2025-05-15 08:33:31");
+      bannerFormData.append("created_by", "phonpadid");
 
       const { data } = await api.post("/banner-hero", bannerFormData, {
         headers: {
@@ -198,13 +224,17 @@ export const usebannerStore = defineStore("banner", () => {
       });
 
       if (data) {
-        // โหลดข้อมูลใหม่โดยใช้ตัวกรองปัจจุบัน
         await refreshWithFilters();
         return data;
       }
-    } catch (error) {
-      console.error("❌ Failed to create :", error);
-      throw error;
+    } catch (error: any) {
+      console.error("❌ Failed to create:", error);
+      // ส่งต่อ error message ที่ชัดเจน
+      throw (
+        error.response?.data?.message ||
+        error.message ||
+        "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກຂໍ້ມູນ"
+      );
     } finally {
       isLoading.value = false;
     }

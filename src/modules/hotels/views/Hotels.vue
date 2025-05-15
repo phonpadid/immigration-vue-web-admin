@@ -15,6 +15,7 @@ import { getFileUrl } from "@/utils/ConfigPathImage";
 import { formatDateTime } from "@/utils/FormatDataTime";
 import { Modal } from "ant-design-vue";
 import UiButton from "@/components/button/UiButton.vue";
+import UibuttonDropdown from "@/components/button/UibuttonDropdown.vue";
 import InputSelect from "@/components/Input/InputSelect.vue";
 import Table from "@/components/table/Table.vue";
 import Switch from "@/components/Switch/Switch.vue";
@@ -157,12 +158,10 @@ const fetchData = async () => {
 };
 
 onMounted(async () => {
-  // ตรวจสอบสิทธิ์ก่อนดึงข้อมูล
   if (canReadHotel.value) {
     await fetchData();
   } else {
     message.error("ທ່ານບໍ່ມີສິດເຂົ້າເຖິງຂໍ້ມູນໂຮງແຮມ");
-    // อาจต้องเปลี่ยนเส้นทางหรือแสดงหน้าข้อความแจ้งว่าไม่มีสิทธิ์
   }
 });
 </script>
@@ -186,7 +185,6 @@ onMounted(async () => {
           size="large"
           @change="handleStatusChange"
         />
-
         <!-- ใช้ HasPermission สำหรับปุ่มเพิ่มข้อมูล -->
         <HasPermission :permission="HOTEL_WRITE">
           <UiButton
@@ -280,19 +278,19 @@ onMounted(async () => {
             :options="menuOptions"
             @select="(key) => handleSelect(key, record)"
           >
-            <UiButton
+            <UibuttonDropdown
               type="primary"
               size="small"
               colorClass="!bg-white text-gray-900 flex items-center hover:!bg-gray-200 hover:!text-gray-900 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white"
               icon="ic:baseline-more-horiz"
-            ></UiButton>
+            ></UibuttonDropdown>
           </Dropdown>
         </template>
       </Table>
     </div>
   </HasPermission>
 
-  <!-- แสดงข้อความเมื่อไม่มีสิทธิ์เข้าถึง -->
+  <!-- ສະແດງຂໍ້ຄວາມເມືອບໍ່ມີສິດເຂົ້າເຖິງ -->
   <HasPermission :permission="HOTEL_READ" :not="true">
     <div class="flex flex-col items-center justify-center p-8 mt-12">
       <div class="text-6xl text-gray-400 mb-4">

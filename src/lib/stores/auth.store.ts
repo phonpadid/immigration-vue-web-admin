@@ -46,13 +46,13 @@ export const useAuthStore = defineStore("auth", () => {
   const getProfile = async () => {
     // ถ้ามีข้อมูลผู้ใช้อยู่แล้ว ให้ส่งคืนทันที
     if (user.value && isUserLoaded.value) {
-      console.log("[AUTH] Using cached user data for profile");
+      // console.log("[AUTH] Using cached user data for profile");
       return user.value;
     }
 
     // ถ้ากำลังโหลดข้อมูลอยู่ ให้รอ Promise เดิม
     if (loadUserPromise) {
-      console.log("[AUTH] Already loading user data, waiting for completion");
+      // console.log("[AUTH] Already loading user data, waiting for completion");
       return loadUserPromise;
     }
 
@@ -65,7 +65,7 @@ export const useAuthStore = defineStore("auth", () => {
   const hasPermission = (permissionName: any) => {
     // ถ้าผู้ใช้ไม่มีข้อมูล ปฏิเสธสิทธิ์
     if (!user.value) {
-      console.log(`No user data, denying: ${permissionName}`);
+      // console.log(`No user data, denying: ${permissionName}`);
       return false;
     }
 
@@ -76,25 +76,25 @@ export const useAuthStore = defineStore("auth", () => {
 
     // ถ้าเป็น dev ให้มีสิทธิ์ทุกอย่าง
     if (roles.includes("dev")) {
-      console.log(`Permission granted (dev role): ${permissionName}`);
+      // console.log(`Permission granted (dev role): ${permissionName}`);
       return true;
     }
 
     if (user.value.permissions && Array.isArray(user.value.permissions)) {
       const hasUserPerm = user.value.permissions.includes(permissionName);
-      console.log(`Permission ${permissionName} direct check: ${hasUserPerm}`);
+      // console.log(`Permission ${permissionName} direct check: ${hasUserPerm}`);
       if (hasUserPerm) return true;
     }
 
     // ถ้าไม่พบใน user.permissions ให้ตรวจสอบจาก permissionStore
     const storePermissions = permissions.value || [];
     if (storePermissions.length === 0) {
-      console.log(`No permissions available, denying: ${permissionName}`);
+      // console.log(`No permissions available, denying: ${permissionName}`);
       return false;
     }
 
     const result = storePermissions.some((p: any) => p.name === permissionName);
-    console.log(`Permission store check for ${permissionName}: ${result}`);
+    // console.log(`Permission store check for ${permissionName}: ${result}`);
     return result;
   };
 
@@ -159,8 +159,6 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       // เก็บอ้างอิงของ Promise เพื่อป้องกันการเรียกซ้ำซ้อน
       loadUserPromise = (async () => {
-        console.log("[AUTH] Calling /auth/me API...");
-
         // เรียกใช้ API เพื่อดึงข้อมูลผู้ใช้
         const response = await api.get("/auth/me", {
           headers: {
@@ -169,7 +167,6 @@ export const useAuthStore = defineStore("auth", () => {
         });
 
         user.value = response.data;
-        console.log("[AUTH] User data loaded successfully");
 
         // โหลด permissions เฉพาะเมื่อผู้ใช้ไม่ใช่ dev และไม่มี permissions ในข้อมูลผู้ใช้
         const roles = user.value?.roles || [];

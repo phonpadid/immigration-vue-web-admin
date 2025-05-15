@@ -177,6 +177,7 @@ onMounted(async () => {
       class="mt-4"
       @change="handleTableChange"
     >
+      <!-- filepath: e:\immigration-web-admin-vue\immigration-vue-web-admin\src\modules\registration\registration_arrival\views\Arrival.vue -->
       <template #passport_and_visa="{ record }">
         <div class="flex flex-col">
           <div>
@@ -185,7 +186,7 @@ onMounted(async () => {
               record.passport_information.number
             }}</span>
           </div>
-          <div>
+          <div v-if="record.visa_information && record.visa_information.number">
             Visa:
             <span class="font-bold">{{ record.visa_information.number }}</span>
           </div>

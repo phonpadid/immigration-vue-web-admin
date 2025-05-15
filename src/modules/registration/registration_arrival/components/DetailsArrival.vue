@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 import { formatDatePicker, formatDateTime } from "@/utils/FormatDataTime";
 import { UserOutlined, CheckCircleOutlined } from "@ant-design/icons-vue";
 import { useArrivalStore } from "../store/arrival.store";
+import { Modal } from "ant-design-vue";
 import UiButton from "@/components/button/UiButton.vue";
 import IconArrivalDetails from "@/components/Icon/IconArrivalDetails.vue";
 import QRCode from "qrcode";
@@ -50,7 +51,25 @@ const generateQRCode = async (codeValue: string) => {
 
 // Handle verification
 const handleVerification = async () => {
-  await arrivalStore.verifyArrival(arrivalId);
+  Modal.confirm({
+    title: "ຢືນຢັນ",
+    content: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການຢືນຢັນຂໍ້ມູນການລົງທະບຽນນີ້?",
+    okText: "ແມ່ນແລ້ວ,ຂ້ອຍແນ່ໃຈ",
+    cancelText: "ບໍ່,ຍົກເລີກ",
+    okType: "danger",
+    async onOk() {
+      try {
+        await arrivalStore.verifyArrival(arrivalId);
+        // Reset QR code generation flag and regenerate QR code
+        qrCodeGenerated.value = false;
+        if (arrivalStore.currentArrival?.verification_code) {
+          await generateQRCode(arrivalStore.currentArrival.verification_code);
+        }
+      } catch (error) {
+        console.error("Verification failed:", error);
+      }
+    },
+  });
 };
 
 // Get image URL - safely handle URL construction
@@ -78,15 +97,18 @@ onMounted(async () => {
   }
 });
 
-// ปรับปรุง watch ให้ทำงานเฉพาะเมื่อจำเป็น
 watch(
-  () => arrivalStore.currentArrival?.verification_code,
-  async (newValue) => {
-    if (newValue && !qrCodeGenerated.value) {
-      await generateQRCode(newValue);
+  [
+    () => arrivalStore.currentArrival?.verification_code,
+    () => arrivalStore.currentArrival?.verified_at,
+  ],
+  async ([newCode, newVerifiedAt]) => {
+    if (newCode && (!qrCodeGenerated.value || newVerifiedAt)) {
+      qrCodeGenerated.value = false;
+      await generateQRCode(newCode);
     }
   },
-  { immediate: false } // ไม่ต้องเรียกทันทีเมื่อ component ถูกสร้าง
+  { immediate: false }
 );
 </script>
 
@@ -511,7 +533,17 @@ watch(
         </dl>
       </div>
 
-      <div class="mb-6 border-b pb-4">
+      <div
+        v-if="
+          arrivalStore.currentArrival.visa_information &&
+          (arrivalStore.currentArrival.visa_information.image ||
+            arrivalStore.currentArrival.visa_information.number ||
+            arrivalStore.currentArrival.visa_information.visaCategory ||
+            arrivalStore.currentArrival.visa_information.date_issue ||
+            arrivalStore.currentArrival.visa_information.place_issue)
+        "
+        class="mb-6 border-b pb-4"
+      >
         <h2
           class="mb-4 text-xl font-semibold leading-none text-gray-900 md:text-2xl dark:text-white"
         >
@@ -520,17 +552,26 @@ watch(
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <img
+            v-if="arrivalStore.currentArrival.visa_information.image"
             :src="
               getImageUrl(arrivalStore.currentArrival.visa_information.image)
             "
             alt="visa image"
             class="w-full rounded-lg border"
           />
+          <div
+            v-else
+            class="w-full rounded-lg border flex items-center justify-center h-48 bg-gray-100 dark:bg-gray-800"
+          >
+            <span class="text-gray-400">ບໍ່ມີຮູບພາບວີຊາ</span>
+          </div>
 
           <dl
             class="ms-0 md:ms-4 flex flex-row md:flex-col justify-between md:justify-start"
           >
-            <div>
+            <div
+              v-if="arrivalStore.currentArrival.visa_information.visaCategory"
+            >
               <dt
                 class="text-gray-900 dark:text-white leading-4 font-normal mb-2"
               >
@@ -543,7 +584,7 @@ watch(
               </dd>
             </div>
 
-            <div>
+            <div v-if="arrivalStore.currentArrival.visa_information.number">
               <dt
                 class="text-gray-900 dark:text-white leading-4 font-normal mb-2"
               >
@@ -556,7 +597,7 @@ watch(
               </dd>
             </div>
 
-            <div>
+            <div v-if="arrivalStore.currentArrival.visa_information.date_issue">
               <dt
                 class="text-gray-900 dark:text-white leading-4 font-normal mb-2"
               >
@@ -573,7 +614,9 @@ watch(
               </dd>
             </div>
 
-            <div>
+            <div
+              v-if="arrivalStore.currentArrival.visa_information.place_issue"
+            >
               <dt
                 class="text-gray-900 dark:text-white leading-4 font-normal mb-2"
               >

@@ -344,6 +344,7 @@ onMounted(async () => {
       <div class="p-4 flex items-center gap-4">
         <UiButton
           @click="handleSubmit"
+          icon="material-symbols:edit-square"
           type="submit"
           size="large"
           :loading="isLoading"
@@ -354,11 +355,12 @@ onMounted(async () => {
         <UiButton
           @click="removeBanner"
           type="submit"
+          icon="material-symbols:delete-outline"
           size="large"
           :loading="isLoading"
           colorClass="!bg-red-700 hover:!bg-red-900 text-white flex items-center"
         >
-          ອັບເດດ
+          ລຶບ
         </UiButton>
       </div>
     </UiForm>

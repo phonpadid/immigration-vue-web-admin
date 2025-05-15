@@ -15,6 +15,7 @@ import type {
   QuillDelta,
   QuillContent,
 } from "@/components/editor/editor.types";
+import type { ValidateMessages } from "ant-design-vue/es/form/interface";
 import UiInput from "@/components/Input/UiInput.vue";
 import UiButton from "@/components/button/UiButton.vue";
 import UiFormItem from "@/components/Form/UiFormItem.vue";
@@ -23,7 +24,7 @@ import QuillEditorComponent from "@/components/editor/QuillEditorComponent.vue";
 
 // Store and Router
 const store = useVisaStore();
-const { isLoading, error } = storeToRefs(store);
+const { error } = storeToRefs(store);
 const router = useRouter();
 
 // Form state
@@ -36,26 +37,13 @@ const formState = reactive<VisaFormState>({
   zh_cn: { name: "", content: "" },
 });
 
-// Validation rules
-const rules = {
-  "lo.name": [
-    { required: true, message: "ກະລຸນາປ້ອນຊື່ພາສາລາວ", trigger: "blur" },
-  ],
-  "en.name": [
-    { required: true, message: "ກະລຸນາປ້ອນຊື່ພາສາລາວ", trigger: "blur" },
-  ],
-  "zh_cn.name": [
-    { required: true, message: "ກະລຸນາປ້ອນຊື່ພາສາລາວ", trigger: "blur" },
-  ],
-};
-
 // Tab configuration
 const tabsConfig: TabConfig[] = [
   { key: "1", label: "ພາສາລາວ", slotName: "tab1", lang: "lo" },
   { key: "2", label: "ພາສາອັງກິດ", slotName: "tab2", lang: "en" },
   { key: "3", label: "ພາສາຈີນ", slotName: "tab3", lang: "zh_cn" },
 ];
-// ปรับปรุงฟังก์ชัน handleSubmit
+
 const formatContentForSubmit = (
   content: string | QuillDelta | QuillContent
 ): string => {
@@ -116,44 +104,98 @@ const formatContentForSubmit = (
     });
   }
 };
+const validateMessages: ValidateMessages = {
+  default: "ກະລຸນາກວດສອບຂໍ້ມູນ ${label}",
+  required: "ຈະຕ້ອງບໍ່ຫວ່າງເປົ່າ.",
+  string: {
+    min: "${label} ຕ້ອງມີຢ່າງໜ້ອຍ ${min} ຕົວອັກສອນ",
+  },
+};
 
+// เพิ่มฟังก์ชัน validateForm
+const validateForm = async (): Promise<boolean> => {
+  try {
+    if (!formRef.value) {
+      throw new Error("ບໍ່ພົບຂໍ້ມູນແບບຟອມ");
+    }
+
+    // validate ทั้งฟอร์ม
+    await formRef.value.validate();
+
+    // ตรวจสอบว่าข้อมูลถูก trim แล้วไม่เป็นค่าว่าง
+    if (!formState.lo.name.trim()) {
+      message.error("ກະລຸນາປ້ອນຊື່ປະເພດວີຊາພາສາລາວ");
+      activeTab.value = "1";
+      return false;
+    }
+
+    return true;
+  } catch (errors: any) {
+    console.error("Form validation errors:", errors);
+
+    if (errors?.errorFields?.length > 0) {
+      const firstError = errors.errorFields[0];
+
+      // เปลี่ยน tab ไปยังภาษาที่มีข้อผิดพลาด
+      const fieldPath = firstError.name[0];
+      const lang =
+        typeof fieldPath === "string" ? fieldPath.split(".")[0] : fieldPath;
+
+      switch (lang) {
+        case "lo":
+          activeTab.value = "1";
+          break;
+        case "en":
+          activeTab.value = "2";
+          break;
+        case "zh_cn":
+          activeTab.value = "3";
+          break;
+      }
+    } else {
+      message.error("ກະລຸນາກວດສອບຂໍ້ມູນທີ່ປ້ອນ");
+    }
+
+    return false;
+  }
+};
+
+// ปรับปรุงฟังก์ชัน handleSubmit
 const handleSubmit = async () => {
   if (submitting.value) return;
 
   try {
     submitting.value = true;
-    await formRef.value?.submitForm();
+    const isValid = await validateForm();
+    if (!isValid) {
+      submitting.value = false;
+      return;
+    }
 
     const currentDate = new Date().toISOString().slice(0, 19).replace("T", " ");
     const userLogin = "phonpadid";
 
     const submitData = Object.entries(formState).reduce((acc, [lang, data]) => {
       acc[lang as LanguageKey] = {
-        name: data.name || "",
+        name: data.name.trim(),
         content: formatContentForSubmit(data.content),
         date: currentDate,
         userLogin: userLogin,
       };
-
       return acc;
     }, {} as Record<LanguageKey, VisaLanguageContent>);
-
-    // console.log("Final Submit Data:", JSON.stringify(submitData, null, 2));
 
     await store.createVisa(submitData);
     message.success("ບັນທຶກຂໍ້ມູນສຳເລັດ");
     router.push("/visa-category");
   } catch (err: any) {
     console.error("Submit error:", err);
-    message.error(
-      error.value || err.response?.data?.message || "ເກີດຂໍ້ຜິດພາດ"
-    );
   } finally {
     submitting.value = false;
   }
 };
+
 const debugEditorContent = (lang: string, content: any) => {
-  // console.group(`Editor Content Change - ${lang}`);
   try {
     const parsedContent =
       typeof content === "string" ? JSON.parse(content) : content;
@@ -167,61 +209,28 @@ const debugEditorContent = (lang: string, content: any) => {
   }
   console.groupEnd();
 };
-// Watchers
-watch(error, (newError) => {
-  if (newError) {
-    message.error(newError);
-  }
-});
 </script>
 <template>
   <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white mt-12">
     ເພີ່ມຂໍ້ມູນປະເພດວີຊາ
   </h2>
-  <UiForm ref="formRef" :model="formState" :rules="rules">
+  <UiForm
+    ref="formRef"
+    :model="formState"
+    :validate-messages="validateMessages"
+  >
     <Tab v-model:activeKey="activeTab" :tabs="tabsConfig">
       <template v-for="tab in tabsConfig" :key="tab.key" #[tab.slotName]>
-        <UiFormItem
-          :name="[tab.lang, 'name']"
-          :label="
-            tab.lang === 'lo'
-              ? 'ຊື່ປະເພດວີຊາ'
-              : tab.lang === 'en'
-              ? 'ຊື່ປະເພດວີຊາ'
-              : 'ຊື່ປະເພດວີຊາ'
-          "
-          :required="tab.lang === 'lo'"
-        >
+        <UiFormItem :name="[tab.lang, 'name']" :label="'ຊື່ປະເພດວີຊາ'" required>
           <UiInput
             v-model="formState[tab.lang].name"
-            :placeholder="
-              tab.lang === 'lo'
-                ? 'ປ້ອນຊື່ປະເພດວີຊາ'
-                : tab.lang === 'en'
-                ? 'ປ້ອນຊື່ປະເພດວີຊາ'
-                : 'ປ້ອນຊື່ປະເພດວີຊາ'
-            "
+            :placeholder="'ປ້ອນຊື່ປະເພດວີຊາ'"
           />
         </UiFormItem>
-        <UiFormItem
-          :name="[tab.lang, 'content']"
-          :label="
-            tab.lang === 'lo'
-              ? 'ເນື້ອຫາ'
-              : tab.lang === 'en'
-              ? 'ເນື້ອຫາ'
-              : 'ເນື້ອຫາ'
-          "
-        >
+        <UiFormItem :name="[tab.lang, 'content']" :label="'ເນື້ອຫາ'">
           <QuillEditorComponent
             v-model="formState[tab.lang].content"
-            :placeholder="
-              tab.lang === 'lo'
-                ? 'ປ້ອນເນື້ອຫາ...'
-                : tab.lang === 'en'
-                ? 'ປ້ອນເນື້ອຫາ...'
-                : 'ປ້ອນເນື້ອຫາ...'
-            "
+            :placeholder="'ປ້ອນເນື້ອຫາ...'"
             @update:modelValue="(val) => debugEditorContent(tab.lang, val)"
           />
         </UiFormItem>

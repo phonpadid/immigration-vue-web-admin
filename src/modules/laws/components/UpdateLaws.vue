@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { reactive, ref, onMounted } from "vue";
+import { reactive, ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { LawForm } from "../interface/laws.interface";
 import { useLawStore } from "../store/laws.store";
 import { useNotification } from "@/utils/notificationService";
 import { rulesLaws } from "../validation/law.validation";
 import { Modal } from "ant-design-vue";
+import { LAW_WRITE, LAW_REMOVE } from "@/common/utils/PermissionGroup";
+import { useAuthStore } from "@/lib/stores/auth.store";
+import HasPermission from "@/components/CheckPermission/HasPermission.vue";
 import UploadFIlePDF from "@/components/Upload/UploadFIlePDF.vue";
 import UiForm from "@/components/Form/UiForm.vue";
 import UiFormItem from "@/components/Form/UiFormItem.vue";
@@ -21,6 +24,11 @@ const lawStore = useLawStore();
 const isSubmitting = ref(false);
 const isLoading = ref(true);
 const formRef = ref();
+const authStore = useAuthStore();
+/********************************************************************* */
+const canWriteLaws = computed(() => authStore.hasPermission(LAW_WRITE));
+const canDeleteLaws = computed(() => authStore.hasPermission(LAW_REMOVE));
+
 /********************************************************************* */
 
 // Initialize the form data
@@ -33,6 +41,11 @@ const formLaws = reactive<LawForm>({
 
 // Handle form submission for update
 const handleUpdate = async () => {
+  if (!canWriteLaws.value) {
+    openNotification("error", "ຂໍ້ຜິດພາດ", "ທ່ານບໍ່ມີສິດແກ້ໄຂຂໍ້ມູນ");
+    return;
+  }
+
   try {
     const valid = await formRef.value?.submitForm();
     if (!valid) return;
@@ -64,6 +77,10 @@ const handleUpdate = async () => {
 };
 /********************************************************************* */
 const handleRemoveLaws = (id: number) => {
+  if (!canDeleteLaws.value) {
+    openNotification("error", "ຂໍ້ຜິດພາດ", "ທ່ານບໍ່ມີສິດລຶບຂໍ້ມູນ");
+    return;
+  }
   Modal.confirm({
     title: "ຢືນຢັນການລົບ",
     content: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້??",
@@ -105,60 +122,65 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div v-if="isLoading" class="flex justify-center items-center h-64">
-    <div
-      class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-700"
-    ></div>
-  </div>
-
-  <UiForm v-else ref="formRef" :model="formLaws" :rules="rulesLaws">
-    <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white mt-12">
-      ອັບເດດ
-    </h2>
-
-    <UiFormItem label="ອັບໂຫລດໄຟລ໌" name="file">
+  <HasPermission :permission="LAW_WRITE">
+    <div v-if="isLoading" class="flex justify-center items-center h-64">
       <div
-        v-if="typeof formLaws.file === 'string' && formLaws.file"
-        class="mb-2 text-sm text-gray-600"
-      >
-        ໄຟລ໌ປະຈຸບັນ: {{ formLaws.file.split("/").pop() }}
-      </div>
-      <UploadFIlePDF v-model="formLaws.file" />
-    </UiFormItem>
+        class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-700"
+      ></div>
+    </div>
 
-    <div class="grid gap-4 mb-4 sm:mb-8 md:grid-cols-2 md:gap-6">
-      <UiFormItem label="ຊື່" name="name">
-        <UiInput
-          v-model="formLaws.name"
-          placeholder="ຊື່"
-          allowClear
-          size="large"
-        />
+    <UiForm v-else ref="formRef" :model="formLaws" :rules="rulesLaws">
+      <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white mt-12">
+        ອັບເດດ
+      </h2>
+
+      <UiFormItem label="ອັບໂຫລດໄຟລ໌" name="file">
+        <div
+          v-if="typeof formLaws.file === 'string' && formLaws.file"
+          class="mb-2 text-sm text-gray-600"
+        >
+          ໄຟລ໌ປະຈຸບັນ: {{ formLaws.file.split("/").pop() }}
+        </div>
+        <UploadFIlePDF v-model="formLaws.file" />
       </UiFormItem>
-    </div>
 
-    <div class="flex gap-4">
-      <UiButton
-        @click="handleUpdate"
-        type="submit"
-        size="large"
-        :loading="isSubmitting || lawStore.isLoading"
-        colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
-      >
-        {{
-          isSubmitting || lawStore.isLoading ? "ກຳລັງບັນທຶກ..." : "ອັບເດດກົດໝາຍ"
-        }}
-      </UiButton>
+      <div class="grid gap-4 mb-4 sm:mb-8 md:grid-cols-2 md:gap-6">
+        <UiFormItem label="ຊື່" name="name">
+          <UiInput
+            v-model="formLaws.name"
+            placeholder="ຊື່"
+            allowClear
+            size="large"
+          />
+        </UiFormItem>
+      </div>
 
-      <UiButton
-        @click="handleRemoveLaws"
-        type="button"
-        size="large"
-        icon="material-symbols:delete-outline-sharp"
-        colorClass="!bg-red-500 hover:!bg-red-700 text-white flex items-center"
-      >
-        ລຶບ
-      </UiButton>
-    </div>
-  </UiForm>
+      <div class="flex gap-4">
+        <UiButton
+          @click="handleUpdate"
+          type="submit"
+          size="large"
+          :loading="isSubmitting || lawStore.isLoading"
+          colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
+        >
+          {{
+            isSubmitting || lawStore.isLoading
+              ? "ກຳລັງອັບເດດ..."
+              : "ອັບເດດກົດໝາຍ"
+          }}
+        </UiButton>
+        <HasPermission :permission="LAW_REMOVE">
+          <UiButton
+            @click="handleRemoveLaws"
+            type="button"
+            size="large"
+            icon="material-symbols:delete-outline-sharp"
+            colorClass="!bg-red-500 hover:!bg-red-700 text-white flex items-center"
+          >
+            ລຶບ
+          </UiButton>
+        </HasPermission>
+      </div>
+    </UiForm>
+  </HasPermission>
 </template>

@@ -7,6 +7,8 @@ import { useNotification } from "@/utils/notificationService";
 import type { HotelForm } from "../interface/hotels.interface";
 import { updateValidationSchema } from "../validation/hotel.validation";
 import { imageBaseUrl } from "@/utils/ConfigPathImage";
+import { HOTEL_WRITE, HOTEL_REMOVE } from "@/common/utils/PermissionGroup";
+import { Modal } from "ant-design-vue";
 import LoadingSpinner from "@/components/loading/LoadingSpinner.vue";
 import * as Yup from "yup";
 import UiForm from "@/components/Form/UiForm.vue";
@@ -17,16 +19,10 @@ import UiButton from "@/components/button/UiButton.vue";
 import UploadDragger from "@/components/Upload/UploadDragger.vue";
 import Switch from "@/components/Switch/Switch.vue";
 import HasPermission from "@/components/CheckPermission/HasPermission.vue";
-import {
-  HOTEL_READ,
-  HOTEL_WRITE,
-  HOTEL_REMOVE,
-} from "@/common/utils/PermissionGroup";
-import { Modal } from "ant-design-vue";
 
 // Store and router setup
 const hotelsStore = useHotelsStore();
-const authStore = useAuthStore(); // เพิ่ม AuthStore
+const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 const { openNotification } = useNotification();
@@ -40,7 +36,6 @@ const originalImageUrl = ref<string>("");
 const validationSchema = updateValidationSchema(hasUserAccess.value);
 
 // คอมพิวเต็ดพร็อพเพอร์ตี้สำหรับตรวจสอบสิทธิ์
-const canReadHotel = computed(() => authStore.hasPermission(HOTEL_READ));
 const canWriteHotel = computed(() => authStore.hasPermission(HOTEL_WRITE));
 const canDeleteHotel = computed(() => authStore.hasPermission(HOTEL_REMOVE));
 
@@ -80,7 +75,6 @@ const formData = reactive({
 
 // Load hotel data on component mount
 onMounted(async () => {
-  // ตรวจสอบสิทธิ์การเข้าถึงฟอร์มแก้ไข
   if (!canWriteHotel.value) {
     openNotification("error", "ຂໍ້ຜິດພາດ", "ທ່ານບໍ່ມີສິດແກ້ໄຂຂໍ້ມູນໂຮງແຮມ");
     router.push({ name: "hotels" });

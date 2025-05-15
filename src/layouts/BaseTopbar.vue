@@ -1,20 +1,20 @@
-<!-- filepath: e:\immigration-web-admin-vue\immigration-vue-web-admin\src\components\Header\HeaderBar.vue -->
 <script setup lang="ts">
 import { Icon } from "@iconify/vue";
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, getCurrentInstance } from "vue";
 import { UserOutlined } from "@ant-design/icons-vue";
 import { useAuthStore } from "@/lib/stores/auth.store";
 import { Dropdown, Menu } from "ant-design-vue";
 import { useRouter } from "vue-router";
+import { getFileUrl } from "@/utils/ConfigPathImage";
 
-const emit = defineEmits<{ toggle: [] }>();
+const emit = defineEmits<{ (e: "toggle"): void }>();
 const authStore = useAuthStore();
 const { getProfile } = authStore;
 const { push } = useRouter();
 const isDarkMode = ref(false);
 const isLoading = ref(false);
 
-// ใช้ computed property แทน ref เพื่อแสดงข้อมูลผู้ใช้ปัจจุบัน
+// เพิ่มข้อมูลรูปภาพในโปรไฟล์
 const userProfile = computed(() => {
   const currentUser = authStore.user;
   if (!currentUser || !currentUser.profile) return null;
@@ -24,8 +24,28 @@ const userProfile = computed(() => {
     first_name: currentUser.profile.first_name || "N/A",
     last_name: currentUser.profile.last_name || "N/A",
     email: currentUser.email || "N/A",
+    image: currentUser.profile.image || null, // เพิ่มข้อมูลรูปภาพ
   };
 });
+
+// ใช้ getFileUrl เพื่อรับ URL รูปโปรไฟล์
+const profileImageUrl = computed(() => {
+  if (userProfile.value?.image) {
+    return getFileUrl(userProfile.value.image);
+  }
+  return null;
+});
+
+// จัดการเมื่อรูปภาพโหลดไม่สำเร็จ
+const handleImageError = (e: Event) => {
+  const target = e.target as HTMLImageElement;
+  target.style.display = "none"; // ซ่อนรูปภาพ
+};
+
+// สร้างฟังก์ชันสำหรับ getPopupContainer เพื่อหลีกเลี่ยงปัญหา document is not defined
+const getPopupContainer = () => {
+  return document.body;
+};
 
 async function logout() {
   const authStore = useAuthStore();
@@ -39,9 +59,7 @@ async function logout() {
         console.error("[LOGOUT] Error calling logout API:", error);
       }
     }
-    // ล้างข้อมูลใน authStore (ไม่ว่าจะเรียก API สำเร็จหรือไม่)
     authStore.resetAuth();
-    // ล้าง localStorage
     localStorage.clear();
 
     push({
@@ -59,6 +77,7 @@ async function logout() {
     }).catch(() => {});
   }
 }
+
 const toggleDarkMode = () => {
   isDarkMode.value = !isDarkMode.value;
   document.documentElement.classList.toggle("dark", isDarkMode.value);
@@ -74,14 +93,11 @@ const gotoDetailsUser = (id: number) => {
 };
 
 /******************************************************* */
-
 onMounted(async () => {
   try {
-    // ตรวจสอบว่ามีข้อมูลผู้ใช้แล้วหรือไม่
     if (!authStore.isLoading) {
-      console.log("[HEADER] User not loaded, fetching profile");
       isLoading.value = true;
-      await getProfile(); // เรียกใช้ getProfile ที่จะตรวจสอบการแคชเอง
+      await getProfile();
       isLoading.value = false;
     } else {
       console.log("[HEADER] User already loaded, using cached data");
@@ -91,7 +107,6 @@ onMounted(async () => {
     isLoading.value = false;
   }
 
-  // ตรวจสอบโหมด dark mode จาก localStorage
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme) {
     isDarkMode.value = savedTheme === "dark";
@@ -102,7 +117,7 @@ onMounted(async () => {
 
 <template>
   <header
-    class="fixed top-0 z-10 flex items-center justify-start w-full h-16 px-4 bg-white dark:bg-gray-900 dark:text-white shadow-sm"
+    class="fixed top-0 z-50 flex items-center justify-start w-full h-16 px-4 bg-white dark:bg-gray-900 dark:text-white shadow-sm"
   >
     <Icon
       icon="lucide-align-justify"
@@ -120,31 +135,38 @@ onMounted(async () => {
           height="24"
         />
       </button>
-      <Dropdown>
+      <Dropdown placement="bottomRight" :getPopupContainer="getPopupContainer">
         <template #overlay>
-          <Menu>
+          <Menu class="profile-dropdown-menu">
             <Menu.Item>
-              <div v-if="isLoading" class="p-2">
-                <p>กำลังโหลดข้อมูล...</p>
-              </div>
-              <div v-else-if="userProfile" class="">
-                <p class="font-semibold">
-                  {{ userProfile.first_name }} {{ userProfile.last_name }}
-                </p>
-                <p class="text-sm text-gray-500">{{ userProfile.email }}</p>
-              </div>
-              <div v-else class="">
-                <p class="text-sm text-gray-500">
-                  ບໍ່ພົບຂໍ້ມູນຜູ້ໃຊ້ກະລານາລ໋ອກອິນໃຫມ່
-                </p>
-              </div>
+              <template v-if="isLoading">
+                <div class="p-2">
+                  <p>ກຳລັງໂຫລດຂໍ້ມູນ...</p>
+                </div>
+              </template>
+              <template v-else-if="userProfile">
+                <div class="">
+                  <p class="font-semibold dark:text-white">
+                    {{ userProfile.first_name }} {{ userProfile.last_name }}
+                  </p>
+                  <p class="text-sm text-gray-500 dark:text-gray-300">
+                    {{ userProfile.email }}
+                  </p>
+                </div>
+              </template>
+              <template v-else>
+                <div class="">
+                  <p class="text-sm text-gray-500 dark:text-gray-300">
+                    ບໍ່ພົບຂໍ້ມູນຜູ້ໃຊ້ກະລານາລ໋ອກອິນໃຫມ່
+                  </p>
+                </div>
+              </template>
             </Menu.Item>
             <Menu.Divider />
-            <Menu.Item>
+            <Menu.Item v-if="userProfile?.id">
               <a
-                v-if="userProfile?.id"
                 @click="gotoDetailsUser(userProfile.id)"
-                class="block px-4 py-2"
+                class="block px-4 py-2 dark:text-white"
                 >ໂປຣໄຟລ໌ຂອງຂ້ອຍ</a
               >
             </Menu.Item>
@@ -156,10 +178,55 @@ onMounted(async () => {
           </Menu>
         </template>
 
-        <a-avatar size="large" class="cursor-pointer">
-          <template #icon><UserOutlined /></template>
+        <a-avatar
+          :size="48"
+          class="cursor-pointer flex items-center justify-center"
+        >
+          <template v-if="profileImageUrl">
+            <img
+              :src="profileImageUrl"
+              alt="Profile"
+              @error="handleImageError"
+              class="w-full h-full object-cover rounded-full"
+            />
+          </template>
+          <template v-else>
+            <UserOutlined style="font-size: 24px" />
+          </template>
         </a-avatar>
       </Dropdown>
     </div>
   </header>
 </template>
+
+<style>
+/* ปรับ z-index ให้สูง และกำหนดตำแหน่งใหม่สำหรับ dropdown */
+.ant-dropdown {
+  position: fixed !important;
+  z-index: 2000 !important;
+}
+
+.profile-dropdown-menu.ant-dropdown-menu {
+  min-width: 200px;
+}
+
+/* สำหรับโหมดกลางคืน */
+.dark .ant-dropdown-menu {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+}
+
+.dark .ant-dropdown-menu-item,
+.dark .ant-dropdown-menu-submenu-title {
+  color: #e5e7eb !important;
+}
+
+.dark .ant-dropdown-menu-item:hover,
+.dark .ant-dropdown-menu-submenu-title:hover {
+  background-color: #374151 !important;
+}
+
+.dark .ant-dropdown-menu-item-divider {
+  background-color: #374151 !important;
+}
+</style>

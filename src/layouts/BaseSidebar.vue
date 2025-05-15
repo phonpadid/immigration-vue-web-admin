@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watchEffect, computed } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { menuItems } from "./menu";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/lib/stores/auth.store";
@@ -171,9 +171,128 @@ function handleClick({ key, keyPath }: { key: string; keyPath: string[] }) {
         v-model:selectedKeys="selectedKeys"
         mode="inline"
         :items="menuItems"
-        class="dark:bg-gray-800 dark:text-white"
+        class="custom-menu dark:bg-gray-800 dark:text-white"
         @click="handleClick"
       />
     </div>
   </nav>
 </template>
+<style>
+/* Dark mode styles for menu */
+.dark .ant-menu.ant-menu-inline.custom-menu {
+  background-color: #1f2937 !important; /* gray.800 */
+  color: #e5e7eb !important; /* gray.200 */
+  border-right: none !important;
+}
+
+/* Menu item styles for dark mode */
+.dark .ant-menu.ant-menu-inline.custom-menu .ant-menu-item {
+  color: #e5e7eb !important; /* gray.200 */
+}
+
+/* Menu item hover effect for dark mode */
+.dark .ant-menu.ant-menu-inline.custom-menu .ant-menu-item:hover {
+  background-color: #374151 !important; /* gray.700 */
+  color: #ffffff !important;
+}
+
+/* Selected menu item - เปลี่ยนจากสีฟ้าเป็นสี primary */
+.dark .ant-menu.ant-menu-inline.custom-menu .ant-menu-item-selected {
+  background-color: #466d1d !important; /* primary-700 */
+  color: #ffffff !important;
+}
+
+/* SubMenu title for dark mode */
+.dark .ant-menu.ant-menu-inline.custom-menu .ant-menu-submenu-title {
+  color: #e5e7eb !important; /* gray.200 */
+}
+
+/* SubMenu title hover effect for dark mode */
+.dark .ant-menu.ant-menu-inline.custom-menu .ant-menu-submenu-title:hover {
+  background-color: #374151 !important; /* gray.700 */
+  color: #ffffff !important;
+}
+
+/* Active submenu title - เปลี่ยนจากสีฟ้าเป็นสี primary */
+.dark
+  .ant-menu.ant-menu-inline.custom-menu
+  .ant-menu-submenu-active
+  > .ant-menu-submenu-title {
+  color: #77b42e !important; /* primary-500 */
+}
+
+/* Submenu arrow for dark mode */
+.dark .ant-menu.ant-menu-inline.custom-menu .ant-menu-submenu-arrow {
+  color: #9ca3af !important; /* gray.400 */
+}
+
+/* Hover effect for submenu arrow */
+.dark
+  .ant-menu.ant-menu-inline.custom-menu
+  .ant-menu-submenu-title:hover
+  .ant-menu-submenu-arrow {
+  color: #ffffff !important;
+}
+
+/* Add specificity to ensure styles are applied */
+html.dark .ant-menu.ant-menu-inline.custom-menu .ant-menu-item:hover,
+body.dark .ant-menu.ant-menu-inline.custom-menu .ant-menu-item:hover {
+  background-color: #374151 !important; /* gray.700 */
+  color: #ffffff !important;
+}
+
+/* Fix borders in dark mode - เปลี่ยนจากสีฟ้าเป็นสี primary */
+.dark .ant-menu.ant-menu-inline.custom-menu .ant-menu-item::after {
+  border-right-color: #77b42e !important; /* primary-500 */
+}
+
+.dark .ant-menu-submenu-inline > .ant-menu-submenu-title:after {
+  border-right: none !important;
+}
+
+/* ปรับแต่งเพิ่มเติมเพื่อให้ใช้สี primary ในส่วนอื่นๆ */
+.dark
+  .ant-menu.ant-menu-inline.custom-menu
+  .ant-menu-submenu-selected
+  .ant-menu-submenu-title {
+  color: #77b42e !important; /* primary-500 */
+}
+
+.dark
+  .ant-menu.ant-menu-inline.custom-menu
+  .ant-menu-submenu-open
+  .ant-menu-submenu-title {
+  color: #77b42e !important; /* primary-500 */
+}
+
+/* สำหรับเมนูย่อยที่เลือก */
+.dark
+  .ant-menu.ant-menu-inline.custom-menu
+  .ant-menu-submenu
+  .ant-menu-item-selected {
+  background-color: #466d1d !important; /* primary-700 */
+  color: #ffffff !important;
+}
+
+/* Target specifically ant-menu-item-group-title which contains menu group labels */
+.dark .ant-menu-item-group > .ant-menu-item-group-title {
+  color: #e5e7eb !important; /* gray.200 */
+}
+
+/* เพิ่มความเฉพาะเจาะจงเพื่อให้แน่ใจว่าจะ override ทุกสไตล์ */
+html.dark .ant-menu-item-group > .ant-menu-item-group-title,
+body.dark .ant-menu-item-group > .ant-menu-item-group-title {
+  color: #e5e7eb !important; /* gray.200 */
+}
+
+/* เพิ่มสไตล์ที่มีความเฉพาะเจาะจงมากขึ้นสำหรับเมนูกลุ่ม */
+.dark .ant-menu-vertical .ant-menu-item-group-list .ant-menu-item-group-title,
+.dark .ant-menu-vertical-left .ant-menu-item-group-list .ant-menu-item-group-title,
+.dark .ant-menu-vertical-right .ant-menu-item-group-list .ant-menu-item-group-title,
+.dark .ant-menu-inline .ant-menu-item-group-list .ant-menu-item-group-title {
+  color: #e5e7eb !important; /* gray.200 */
+  padding-left: 16px !important;
+}
+
+
+</style>

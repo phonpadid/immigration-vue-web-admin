@@ -8,6 +8,7 @@ import { useRouter } from "vue-router";
 import { Modal } from "ant-design-vue";
 import { getFileUrl } from "@/utils/ConfigPathImage";
 import UiButton from "@/components/button/UiButton.vue";
+import UibuttonDropdown from "@/components/button/UibuttonDropdown.vue";
 import Table from "@/components/table/Table.vue";
 import InputSelect from "@/components/Input/InputSelect.vue";
 import Dropdown from "@/components/Dropdown/Dropdown.vue";
@@ -208,7 +209,7 @@ watch([selectedProvinceId, selectedCategoryId, selectedLanguage], () => {
           :options="menuOptions"
           @select="(key) => handleSelect(key, record)"
         >
-          <UiButton
+          <UibuttonDropdown
             type="primary"
             size="small"
             colorClass="!bg-white text-gray-900 flex items-center hover:!bg-gray-200 hover:!text-gray-900 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white"

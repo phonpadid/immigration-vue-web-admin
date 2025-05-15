@@ -1,5 +1,7 @@
 import type { RouteRecordRaw } from "vue-router";
 import Middlewares from "@/lib/middlewares";
+import permission from "@/lib/middlewares/permission";
+import { LAW_READ, LAW_WRITE } from "@/common/utils/PermissionGroup";
 
 export const lawsRoute: RouteRecordRaw[] = [
   {
@@ -7,7 +9,7 @@ export const lawsRoute: RouteRecordRaw[] = [
     name: "laws",
     component: () => import("../views/Laws.vue"),
     meta: {
-      middleware: [Middlewares.guest],
+      middleware: [Middlewares.guest, permission(LAW_READ)],
     },
   },
   {
@@ -15,7 +17,7 @@ export const lawsRoute: RouteRecordRaw[] = [
     name: "laws_add",
     component: () => import("../components/CreateLaws.vue"),
     meta: {
-      middleware: [Middlewares.guest],
+      middleware: [Middlewares.guest, permission(LAW_WRITE)],
     },
   },
   {
@@ -23,7 +25,7 @@ export const lawsRoute: RouteRecordRaw[] = [
     name: "laws_edit",
     component: () => import("../components/UpdateLaws.vue"),
     meta: {
-      middleware: [Middlewares.guest],
+      middleware: [Middlewares.guest, permission(LAW_WRITE)],
     },
   },
   {
@@ -31,8 +33,7 @@ export const lawsRoute: RouteRecordRaw[] = [
     name: "laws_details",
     component: () => import("../components/DetailsLaws.vue"),
     meta: {
-      middleware: [Middlewares.guest],
-    
+      middleware: [Middlewares.guest, permission(LAW_READ)],
     },
   },
 ];

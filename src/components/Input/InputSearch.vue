@@ -52,6 +52,7 @@ const handleClear = () => {
     :size="size"
     allow-clear
     :enter-button="false"
+    class="custom-input-search"
   >
     <template #prefix>
       <SearchOutlined />
@@ -59,7 +60,41 @@ const handleClear = () => {
   </a-input-search>
 </template>
 
+<style>
+/* ย้ายออกจาก scoped เพื่อให้มีความสำคัญมากขึ้น */
+.dark .ant-input-search .ant-input,
+.dark .ant-input-search .ant-input-affix-wrapper,
+.dark .ant-input-affix-wrapper > input.ant-input {
+  background-color: #1f2937 !important; /* gray.800 hardcoded */
+  color: #ffffff !important; /* white hardcoded */
+  border-color: #4b5563 !important; /* gray.600 hardcoded */
+}
+
+.dark .ant-input-search .ant-input-affix-wrapper:hover,
+.dark .ant-input-search .ant-input-affix-wrapper-focused {
+  border-color: #3b82f6 !important; /* blue.500 hardcoded */
+}
+
+.dark .ant-input-search .ant-input-affix-wrapper-focused {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+.dark .ant-input-search .anticon {
+  color: #9ca3af !important; /* gray.400 hardcoded */
+}
+
+.dark .ant-input-search .ant-input-affix-wrapper:hover .anticon,
+.dark .ant-input-search .ant-input-affix-wrapper-focused .anticon {
+  color: #3b82f6 !important; /* blue.500 hardcoded */
+}
+
+.dark .ant-input-search input::placeholder {
+  color: #6b7280 !important; /* gray.500 hardcoded */
+}
+</style>
+
 <style scoped>
+/* เก็บ style อื่นๆ ไว้เหมือนเดิม */
 :deep(.ant-input-search) {
   width: 100%;
 }

@@ -20,42 +20,6 @@ import {
   validateUserPermissions,
 } from "@/common/utils/PermissionGroup";
 
-// async function logout() {
-//   const authStore = useAuthStore();
-
-//   try {
-//     // เรียกใช้ API logout ก่อน (ถ้ามี)
-//     if (localStorage.getItem("access_token")) {
-//       try {
-//         await authStore.logout();
-//       } catch (error) {
-//         console.error("[LOGOUT] Error calling logout API:", error);
-//       }
-//     }
-//     // ล้างข้อมูลใน authStore (ไม่ว่าจะเรียก API สำเร็จหรือไม่)
-//     authStore.resetAuth();
-//     // ล้าง localStorage
-//     localStorage.clear();
-
-//     router
-//       .push({
-//         name: "login",
-//       })
-//       .catch((err) => {
-//         console.error("[LOGOUT] Error navigating to login:", err);
-//       });
-//   } catch (error) {
-//     console.error("[LOGOUT] Unexpected error during logout:", error);
-//     localStorage.clear();
-//     authStore.resetAuth();
-
-//     router
-//       .push({
-//         name: "login",
-//       })
-//       .catch(() => {});
-//   }
-// }
 function hasPermission(permission: any) {
   const authStore = useAuthStore();
   if (!authStore.user) {
@@ -70,7 +34,6 @@ function hasPermission(permission: any) {
     ? authStore.user.roles
     : [authStore.user.roles];
   if (roles.includes("dev")) {
-    console.log(`[MENU] Permission granted for dev: ${permission}`);
     return true;
   }
   // สำหรับผู้ใช้อื่นๆ (รวมถึง SuperAdmin) ตรวจสอบตาม permissions
@@ -89,7 +52,6 @@ function hasPermission(permission: any) {
   }
   // ถ้าไม่มี permissions ก็ไม่มีสิทธิ์
   if (permissionList.length === 0) {
-    console.log("[MENU] No permissions available");
     return false;
   }
   // console.log(`[MENU] User permissions:`, permissionList);
@@ -435,3 +397,4 @@ function filterMenuItemsByPermission(items: any) {
 
   return filteredItems;
 }
+

@@ -9,6 +9,7 @@ import InputSelect from "@/components/Input/InputSelect.vue";
 import Switch from "@/components/Switch/Switch.vue";
 import Table from "@/components/table/Table.vue";
 import UiButton from "@/components/button/UiButton.vue";
+import UibuttonDropdown from "@/components/button/UibuttonDropdown.vue";
 import Dropdown from "@/components/Dropdown/Dropdown.vue";
 import LoadingSpinner from "@/components/loading/LoadingSpinner.vue";
 
@@ -224,12 +225,12 @@ onMounted(async () => {
           :options="menuOptions"
           @select="(key) => handleSelect(key, record)"
         >
-          <UiButton
+          <UibuttonDropdown
             type="primary"
             size="small"
             colorClass="!bg-white text-gray-900 flex items-center hover:!bg-gray-200 hover:!text-gray-900 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white"
             icon="ic:baseline-more-horiz"
-          ></UiButton>
+          ></UibuttonDropdown>
         </Dropdown>
       </template>
     </Table>

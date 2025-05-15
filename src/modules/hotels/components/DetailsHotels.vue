@@ -24,7 +24,7 @@ import {
 
 // Store, router และ notification
 const hotelsStore = useHotelsStore();
-const authStore = useAuthStore(); // เพิ่ม AuthStore
+const authStore = useAuthStore();
 const route = useRoute();
 const router = useRouter();
 const { openNotification } = useNotification();
@@ -70,6 +70,7 @@ const fullImageUrl = computed<string>(() => {
   }
   return `${imageBaseUrl}/${String(hotel.image).replace(/^\//, "")}`;
 });
+
 const getPublishStatus = computed<boolean>(() => {
   if (typeof hotel.is_published === "string") {
     return hotel.is_published === "1";
@@ -77,7 +78,7 @@ const getPublishStatus = computed<boolean>(() => {
   return !!hotel.is_published;
 });
 onMounted(async (): Promise<void> => {
-  // ตรวจสอบสิทธิ์การอ่านข้อมูลก่อนดำเนินการใดๆ
+  
   if (!canReadHotel.value) {
     openNotification("error", "ຂໍ້ຜິດພາດ", "ທ່ານບໍ່ມີສິດເຂົ້າເຖິງຂໍ້ມູນນີ້");
     router.push({ name: "hotels" });
