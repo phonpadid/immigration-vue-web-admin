@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const permissionsRoute: RouteRecordRaw[] = [
   {
-    path: "/permissions",
+    path: "/admin/permissions",
     name: "permissions",
     component: () => import("../views/ListPermission.vue"),
     // meta: {

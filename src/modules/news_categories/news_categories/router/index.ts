@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const newsCategoriessRoute: RouteRecordRaw[] = [
   {
-    path: "/newsCategoriess",
+    path: "/admin/newsCategoriess",
     name: "newsCategoriess",
     component: () => import("../views/NewCategories.vue"),
     // meta: {
@@ -11,7 +11,7 @@ export const newsCategoriessRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/newsCategoriess/add",
+    path: "/admin/newsCategoriess/add",
     name: "newsCategoriess_add",
     component: () => import("../components/CreateNewsCategories.vue"),
     // meta: {
@@ -19,7 +19,7 @@ export const newsCategoriessRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/newsCategoriess/edit/:id",
+    path: "/admin/newsCategoriess/edit/:id",
     name: "newsCategoriess_edit",
     component: () => import("../components/UpdateNewsCategories.vue"),
     // meta: {

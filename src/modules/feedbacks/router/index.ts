@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const feedbacksRoute: RouteRecordRaw[] = [
   {
-    path: "/feedbacks",
+    path: "/admin/feedbacks",
     name: "feedbacks",
     component: () => import("../views/Feedbacks.vue"),
     // meta: {
@@ -11,7 +11,7 @@ export const feedbacksRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/feedbacks/details/:id",
+    path: "/admin/feedbacks/details/:id",
     name: "feedbacks_details",
     component: () => import("../components/DetailsFeedback.vue"),
     // meta: {

@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const servicesRoute: RouteRecordRaw[] = [
   {
-    path: "/services",
+    path: "/admin/services",
     name: "services",
     component: () => import("../views/ServiceView.vue"),
     // meta: {
@@ -11,7 +11,7 @@ export const servicesRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/services/add",
+    path: "/admin/services/add",
     name: "services_add",
     component: () => import("../components/CreateService.vue"),
     // meta: {
@@ -19,7 +19,7 @@ export const servicesRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/services/edit/:id",
+    path: "/admin/services/edit/:id",
     name: "services_edit",
     component: () => import("../components/UpdateService.vue"),
     // meta: {

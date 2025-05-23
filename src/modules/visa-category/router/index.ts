@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const visaRoute: RouteRecordRaw[] = [
   {
-    path: "/visa-category",
+    path: "/admin/visa-category",
     name: "visa_category",
     component: () => import("../views/Visa.vue"),
     // meta: {
@@ -11,7 +11,7 @@ export const visaRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/visa-category/add",
+    path: "/admin/visa-category/add",
     name: "visa_category_add",
     component: () => import("../components/CreateVisa.vue"),
     // meta: {
@@ -19,7 +19,7 @@ export const visaRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/visa-category/edit/:id",
+    path: "/admin/visa-category/edit/:id",
     name: "visa_category_edit",
     component: () => import("../components/UpdateVisa.vue"),
     // meta: {

@@ -11,8 +11,10 @@ const formRef = ref<InstanceType<typeof UiForm>>();
 const { login } = useAuthStore();
 
 const formState = reactive({
-  email: "dev@gmail.com",
-  password: "DevAdm1n@2024",
+  email: "",
+  password: "",
+  // email: "dev@gmail.com",
+  // password: "DevAdm1n@2024",
 });
 
 const rules = {

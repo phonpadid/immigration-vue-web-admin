@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const newsRoute: RouteRecordRaw[] = [
   {
-    path: "/news",
+    path: "/admin/news",
     name: "news",
     component: () => import("../views/News.vue"),
     // meta: {
@@ -11,7 +11,7 @@ export const newsRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/news/add",
+    path: "/admin/news/add",
     name: "news_add",
     component: () => import("../components/CreateNews.vue"),
     // meta: {
@@ -19,7 +19,7 @@ export const newsRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/news/edit/:id",
+    path: "/admin/news/edit/:id",
     name: "news_edit",
     component: () => import("../components/UpdateNews.vue"),
     // meta: {
@@ -27,7 +27,7 @@ export const newsRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/news/details/:id",
+    path: "/admin/news/details/:id",
     name: "news_details",
     component: () => import("../components/DetailsNews.vue"),
     // meta: {

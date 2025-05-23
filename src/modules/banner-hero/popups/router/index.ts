@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const popupsRoute: RouteRecordRaw[] = [
   {
-    path: "/popups",
+    path: "/admin/popups",
     name: "popups",
     component: () => import("../views/Popup.vue"),
     // meta: {
@@ -11,7 +11,7 @@ export const popupsRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/popups/add",
+    path: "/admin/popups/add",
     name: "popups_add",
     component: () => import("../components/CreatePopup.vue"),
     // meta: {
@@ -19,7 +19,7 @@ export const popupsRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/popups/edit/:id",
+    path: "/admin/popups/edit/:id",
     name: "popups_edit",
     component: () => import("../components/UpdatePopup.vue"),
     // meta: {
@@ -27,7 +27,7 @@ export const popupsRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/popups/details/:id",
+    path: "/admin/popups/details/:id",
     name: "popups_details",
     component: () => import("../components/DetailsPopup.vue"),
     // meta: {

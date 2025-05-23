@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const provinceRoute: RouteRecordRaw[] = [
   {
-    path: "/provinces",
+    path: "/admin/provinces",
     name: "provinces",
     component: () => import("../views/Province.vue"),
     // meta: {
@@ -11,7 +11,7 @@ export const provinceRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/provinces/add",
+    path: "/admin/provinces/add",
     name: "provinces_add",
     component: () => import("../components/CreateProvince.vue"),
     // meta: {
@@ -19,7 +19,7 @@ export const provinceRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/provinces/edit/:id",
+    path: "/admin/provinces/edit/:id",
     name: "provinces_edit",
     component: () => import("../components/UpdateProvince.vue"),
     // meta: {
@@ -27,7 +27,7 @@ export const provinceRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/provinces/details/:id",
+    path: "/admin/provinces/details/:id",
     name: "provinces_details",
     component: () => import("../components/DetailsProvince.vue"),
     // meta: {
