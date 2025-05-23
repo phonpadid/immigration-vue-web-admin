@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const departureRoute: RouteRecordRaw[] = [
   {
-    path: "/departure",
+    path: "/admin/departure",
     name: "registrations_departure",
     component: () => import("../views/Departure.vue"),
     // meta: {
@@ -11,7 +11,7 @@ export const departureRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/departure/details/:id",
+    path: "/admin/departure/details/:id",
     name: "departure_details",
     component: () => import("../components/DepartureDetails.vue"),
     // meta: {

@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const contactsRoute: RouteRecordRaw[] = [
   {
-    path: "/contacts",
+    path: "/admin/contacts",
     name: "contacts",
     component: () => import("../views/Contacts.vue"),
     // meta: {
@@ -11,7 +11,7 @@ export const contactsRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/contacts/details/:id",
+    path: "/admin/contacts/details/:id",
     name: "contacts_details",
     component: () => import("../components/DetailsContacts.vue"),
     // meta: {

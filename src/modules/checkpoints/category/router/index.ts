@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const checkpointCategoriesRoute: RouteRecordRaw[] = [
   {
-    path: "/checkpointCategories",
+    path: "/admin/checkpointCategories",
     name: "checkpointCategories",
     component: () => import("../views/CheckpointCategories.vue"),
     // meta: {
@@ -11,7 +11,7 @@ export const checkpointCategoriesRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/checkpointCategories/add",
+    path: "/admin/checkpointCategories/add",
     name: "checkpointCategories_add",
     component: () => import("../components/CreateCheckpointCategories.vue"),
     // meta: {
@@ -19,7 +19,7 @@ export const checkpointCategoriesRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/checkpointCategories/edit/:id",
+    path: "/admin/checkpointCategories/edit/:id",
     name: "checkpointCategories_edit",
     component: () => import("../components/UpdateCheckpointCategories.vue"),
     // meta: {
@@ -27,7 +27,7 @@ export const checkpointCategoriesRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/checkpointCategories/details/:id",
+    path: "/admin/checkpointCategories/details/:id",
     name: "checkpointCategories_details",
     component: () => import("../components/DetailsCheckpointCategories.vue"),
     // meta: {

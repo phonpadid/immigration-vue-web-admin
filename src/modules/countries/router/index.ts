@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const countryRoute: RouteRecordRaw[] = [
   {
-    path: "/countries",
+    path: "/admin/countries",
     name: "countries",
     component: () => import("../views/Country.vue"),
     // meta: {
@@ -11,7 +11,7 @@ export const countryRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/countries/add",
+    path: "/admin/countries/add",
     name: "countries_add",
     component: () => import("../components/CreateCountry.vue"),
     // meta: {
@@ -19,7 +19,7 @@ export const countryRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/countries/edit/:id",
+    path: "/admin/countries/edit/:id",
     name: "countries_edit",
     component: () => import("../components/UpdateCountry.vue"),
     // meta: {
@@ -27,7 +27,7 @@ export const countryRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/countries/details/:id",
+    path: "/admin/countries/details/:id",
     name: "countries_details",
     component: () => import("../components/DetailsCountry.vue"),
     // meta: {

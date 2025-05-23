@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const bannerRoute: RouteRecordRaw[] = [
   {
-    path: "/banners",
+    path: "/admin/banners",
     name: "banners",
     component: () => import("../views/Banner.vue"),
     // meta: {
@@ -11,7 +11,7 @@ export const bannerRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/banners/add",
+    path: "/admin/banners/add",
     name: "banners_add",
     component: () => import("../components/Createbanner.vue"),
     // meta: {
@@ -19,7 +19,7 @@ export const bannerRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/banners/edit/:id",
+    path: "/admin/banners/edit/:id",
     name: "banners_edit",
     component: () => import("../components/Updatebanner.vue"),
     // meta: {
@@ -27,7 +27,7 @@ export const bannerRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/banners/details/:id",
+    path: "/admin/banners/details/:id",
     name: "banners_details",
     component: () => import("../components/Detailsbanner.vue"),
     // meta: {

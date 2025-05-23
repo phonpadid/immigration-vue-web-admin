@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const usersRoute: RouteRecordRaw[] = [
   {
-    path: "/users",
+    path: "/admin/users",
     name: "users",
     component: () => import("../views/User.vue"),
     // meta: {
@@ -11,7 +11,7 @@ export const usersRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/users/add",
+    path: "/admin/users/add",
     name: "users_add",
     component: () => import("../components/CreateUser.vue"),
     // meta: {
@@ -19,7 +19,7 @@ export const usersRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/users/edit/:id",
+    path: "/admin/users/edit/:id",
     name: "users_edit",
     component: () => import("../components/UpdateUser.vue"),
     // meta: {
@@ -27,7 +27,7 @@ export const usersRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/users/details/:id",
+    path: "/admin/users/details/:id",
     name: "users_details",
     component: () => import("../components/DetailsUser.vue"),
     // meta: {

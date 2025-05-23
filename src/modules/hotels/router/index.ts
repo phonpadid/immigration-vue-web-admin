@@ -5,7 +5,7 @@ import { HOTEL_READ, HOTEL_WRITE } from "@/common/utils/PermissionGroup";
 
 export const hotelsRoute: RouteRecordRaw[] = [
   {
-    path: "/hotels",
+    path: "/admin/hotels",
     name: "hotels",
     component: () => import("../views/Hotels.vue"),
     meta: {
@@ -13,7 +13,7 @@ export const hotelsRoute: RouteRecordRaw[] = [
     },
   },
   {
-    path: "/hotels/add",
+    path: "/admin/hotels/add",
     name: "hotels_add",
     component: () => import("../components/CreateHotels.vue"),
     meta: {
@@ -21,7 +21,7 @@ export const hotelsRoute: RouteRecordRaw[] = [
     },
   },
   {
-    path: "/hotels/edit/:id",
+    path: "/admin/hotels/edit/:id",
     name: "hotels_edit",
     component: () => import("../components/UpdateHotels.vue"),
     meta: {
@@ -29,7 +29,7 @@ export const hotelsRoute: RouteRecordRaw[] = [
     },
   },
   {
-    path: "/hotels/details/:id",
+    path: "/admin/hotels/details/:id",
     name: "hotels_details",
     component: () => import("../components/DetailsHotels.vue"),
     meta: {

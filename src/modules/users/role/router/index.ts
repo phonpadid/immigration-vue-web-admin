@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 
 export const roleRoute: RouteRecordRaw[] = [
   {
-    path: "/roles",
+    path: "/admin/roles",
     name: "roles",
     component: () => import("../views/Role.vue"),
     // meta: {
@@ -11,7 +11,7 @@ export const roleRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/roles/add",
+    path: "/admin/roles/add",
     name: "roles_add",
     component: () => import("../components/CreateRole.vue"),
     // meta: {
@@ -19,7 +19,7 @@ export const roleRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/roles/edit/:id",
+    path: "/admin/roles/edit/:id",
     name: "roles_edit",
     component: () => import("../components/UpdateRole.vue"),
     // meta: {
@@ -27,7 +27,7 @@ export const roleRoute: RouteRecordRaw[] = [
     // },
   },
   {
-    path: "/roles/details/:id",
+    path: "/admin/roles/details/:id",
     name: "roles_deatils",
     component: () => import("../components/DetailRole.vue"),
     // meta: {
