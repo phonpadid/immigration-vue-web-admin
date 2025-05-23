@@ -26,40 +26,38 @@ import { arrivalRoute } from "@/modules/registration/registration_arrival/router
 import { departureRoute } from "@/modules/registration/registration_departure/router";
 import { checkpointRoute } from "@/modules/checkpoints/checkpoint/router";
 
-const routes: RouteRecordRaw[] = [
-  {
-    path: "/admin",
-    component: () => import("../layouts/BaseLayout.vue"),
-    children: [
-      ...dashboardRoute,
-      ...permissionsRoute,
-      ...roleRoute,
-      ...usersRoute,
-      ...feedbacksRoute,
-      ...contactsRoute,
-      ...lawsRoute,
-      ...newsCategoriessRoute,
-      ...newsRoute,
-      ...checkpointCategoriesRoute,
-      ...provinceRoute,
-      ...countryRoute,
-      ...bannerRoute,
-      ...popupsRoute,
-      ...visaRoute,
-      ...numberRoute,
-      ...servicesRoute,
-      ...hotelsRoute,
-      ...arrivalRoute,
-      ...departureRoute,
-      ...checkpointRoute,
-    ],
-  },
-  ...authRoute,
-];
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: routes,
+  routes: [
+    {
+      path: "/admin",
+      component: () => import("../layouts/BaseLayout.vue"),
+      children: [
+        ...dashboardRoute,
+        ...permissionsRoute,
+        ...roleRoute,
+        ...usersRoute,
+        ...feedbacksRoute,
+        ...contactsRoute,
+        ...lawsRoute,
+        ...newsCategoriessRoute,
+        ...newsRoute,
+        ...checkpointCategoriesRoute,
+        ...provinceRoute,
+        ...countryRoute,
+        ...bannerRoute,
+        ...popupsRoute,
+        ...visaRoute,
+        ...numberRoute,
+        ...servicesRoute,
+        ...hotelsRoute,
+        ...arrivalRoute,
+        ...departureRoute,
+        ...checkpointRoute,
+      ],
+    },
+    ...authRoute,
+  ],
 });
 
 export default router;
