@@ -7,6 +7,7 @@ import type { Panel } from "@/components/Collapse/Collapse.vue";
 import Tab from "@/components/Tab/Tab.vue";
 import Collapse from "@/components/Collapse/Collapse.vue";
 import UiButton from "@/components/button/UiButton.vue";
+import UibuttonDropdown from "@/components/button/UibuttonDropdown.vue";
 
 // Store and router initialization
 const store = useVisaStore();

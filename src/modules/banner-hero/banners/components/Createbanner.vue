@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { reactive, ref } from "vue";
+import { useNotification } from "@/utils/notificationService";
 import { usebannerStore } from "../store/banner.store";
+import { useRouter } from "vue-router";
+import type { ValidateMessages } from "ant-design-vue/es/form/interface";
 import UiButton from "@/components/button/UiButton.vue";
 import UiForm from "@/components/Form/UiForm.vue";
 import UiFormItem from "@/components/Form/UiFormItem.vue";
@@ -12,12 +15,17 @@ import UploadDragger from "@/components/Upload/UploadDragger.vue";
 import DatePicker from "@/components/Datepicker/DatePicker.vue";
 
 const bannerStore = usebannerStore();
+const { openNotification } = useNotification();
+const router = useRouter();
+const formRef = ref<InstanceType<typeof UiForm>>();
 const activeTab = ref("1");
-const isLoading = ref(false);
-const selectedImage = ref<File | null>(null);
+const selectedImage = ref<FileItem | null>(null);
 const startDate = ref<string | null>(null);
 const endDate = ref<string | null>(null);
-
+const validationErrors = ref<string[]>([]);
+interface FileItem {
+  file: File;
+}
 const formData = reactive({
   image: null as File | null,
   link: "",
@@ -38,10 +46,22 @@ const tabsConfig = [
   { key: "3", label: "ພາສາຈີນ", slotName: "tab3" },
 ];
 
-// ฟังก์ชันเมื่อมีการอัปโหลดไฟล์
+const hasUploadedImage = ref(false);
+
 const handleFileUpload = (file: File) => {
-  selectedImage.value = file;
+  selectedImage.value = { file };
   formData.image = file;
+  hasUploadedImage.value = true;
+};
+const validateMessages: ValidateMessages = {
+  default: "ກະລຸນາກວດສອບຂໍ້ມູນ",
+  required: "${label} ຈະຕ້ອງບໍ່ຫວ່າງເປົ່າ.",
+  string: {
+    min: "${label} ຕ້ອງມີຢ່າງໜ້ອຍ ${min} ຕົວອັກສອນ",
+  },
+  types: {
+    url: "ກະລຸນາປ້ອນລິ້ງໃຫ້ຖືກຕ້ອງ",
+  },
 };
 
 // ฟังก์ชันเมื่อมีการเลือกวันที่
@@ -55,48 +75,90 @@ const handleDateChange = (dateRange: {
   formData.end_time = dateRange.endDate;
 };
 
-// ฟังก์ชันสำหรับการบันทึกข้อมูล
-const handleSubmit = async () => {
+const isSubmitting = ref(false);
+const validateForm = async (): Promise<boolean> => {
   try {
-    isLoading.value = true;
+    validationErrors.value = [];
+    let isValid = true;
 
-    // สร้าง FormData สำหรับส่งข้อมูล
-    const bannerFormData = new FormData();
-
-    // เพิ่มข้อมูลทั้งหมดลงใน FormData
-    if (formData.image) {
-      bannerFormData.append("image", formData.image);
-    } else {
-      // ตรวจสอบว่าจำเป็นต้องมีรูปภาพหรือไม่
-      alert("ກະລຸເລືອກຮູບກ່ອນ");
-      isLoading.value = false;
-      return;
+    if (!formRef.value) {
+      throw new Error("ບໍ່ພົບຂໍ້ມູນແບບຟອມ");
     }
-    bannerFormData.append("link", formData.link);
-    bannerFormData.append("is_private", formData.is_private ? "1" : "0");
-    bannerFormData.append("start_time", formData.start_time);
-    bannerFormData.append("end_time", formData.end_time);
-    bannerFormData.append("lo_title", formData.lo_title);
-    bannerFormData.append("lo_description", formData.lo_description);
-    bannerFormData.append("en_title", formData.en_title);
-    bannerFormData.append("en_description", formData.en_description);
-    bannerFormData.append("zh_cn_title", formData.zh_cn_title);
-    bannerFormData.append("zh_cn_description", formData.zh_cn_description);
 
-    // ทำการบันทึกข้อมูล
-    await bannerStore.createBanner(bannerFormData);
-    alert("บันทึกข้อมูลสำเร็จ");
+    // ตรวจสอบรูปภาพด้วย selectedImage แทน formData.image
+    if (!selectedImage.value && !hasUploadedImage.value) {
+      validationErrors.value.push("ກະລຸນາເລືອກຮູບພາບ");
 
-    // รีเซ็ตฟอร์ม
-    resetForm();
-  } catch (error) {
-    console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
-    alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
-  } finally {
-    isLoading.value = false;
+      isValid = false;
+    }
+
+    if (!formData.start_time || !formData.end_time) {
+      validationErrors.value.push("ກະລຸນາເລືອກວັນທີເລີ່ມຕົ້ນ ແລະ ວັນທີສິ້ນສຸດ");
+      isValid = false;
+    }
+
+    try {
+      await formRef.value.validate();
+    } catch (formError: any) {
+      isValid = false;
+    }
+
+    return isValid;
+  } catch (error: any) {
+    console.error("Form validation errors:", error);
+
+    return false;
   }
 };
 
+const handleSubmit = async () => {
+  if (isSubmitting.value) return;
+
+  try {
+    isSubmitting.value = true;
+
+    const isValid = await validateForm();
+    if (!isValid) {
+      isSubmitting.value = false;
+      return;
+    }
+    const bannerFormData = new FormData();
+    if (selectedImage.value?.file) {
+      bannerFormData.append("image", selectedImage.value.file);
+    } else {
+      throw new Error("ກະລຸນາອັບໂຫລດຮູບພາບໃນສ່ວນສໍາລັບແບນເນີ");
+    }
+    bannerFormData.append("link", formData.link?.trim() || "");
+    bannerFormData.append("is_private", formData.is_private ? "1" : "0");
+    bannerFormData.append("start_time", formData.start_time);
+    bannerFormData.append("end_time", formData.end_time);
+    bannerFormData.append("lo_title", formData.lo_title?.trim() || "");
+    bannerFormData.append(
+      "lo_description",
+      formData.lo_description?.trim() || ""
+    );
+    bannerFormData.append("en_title", formData.en_title?.trim() || "");
+    bannerFormData.append(
+      "en_description",
+      formData.en_description?.trim() || ""
+    );
+    bannerFormData.append("zh_cn_title", formData.zh_cn_title?.trim() || "");
+    bannerFormData.append(
+      "zh_cn_description",
+      formData.zh_cn_description?.trim() || ""
+    );
+
+    await bannerStore.createBanner(bannerFormData);
+    router.push({ name: "banners" });
+    openNotification("success", "ສໍາເລັດ", "ບັນທຶກຂໍ້ມູນແລ້ວ");
+    resetForm();
+  } catch (error: any) {
+    console.error("ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກຂໍ້ມູນ:", error);
+    openNotification("error", "ແຈ້ງເຕືອນ", error);
+  } finally {
+    isSubmitting.value = false;
+  }
+};
 const resetForm = () => {
   formData.image = null;
   formData.link = "";
@@ -111,6 +173,7 @@ const resetForm = () => {
   formData.zh_cn_description = "";
   startDate.value = null;
   endDate.value = null;
+  hasUploadedImage.value = false;
 };
 </script>
 
@@ -120,10 +183,14 @@ const resetForm = () => {
       ເພີ່ມຂໍ້ມູນປ້າຍໂຄສະນາ
     </h2>
 
-    <UiForm :model="formData">
+    <UiForm
+      ref="formRef"
+      :model="formData"
+      :validate-messages="validateMessages"
+    >
       <Tab v-model="activeTab" :tabs="tabsConfig">
         <template #tab1>
-          <UiFormItem label="ຫົວຂໍ້" name="lo_title">
+          <UiFormItem label="ຫົວຂໍ້" name="lo_title" required>
             <UiInput
               v-model="formData.lo_title"
               placeholder="ປ້ອນຫົວຂ້ໍ້"
@@ -140,7 +207,7 @@ const resetForm = () => {
           </UiFormItem>
         </template>
         <template #tab2>
-          <UiFormItem label="ຫົວຂໍ້" name="en_name">
+          <UiFormItem label="ຫົວຂໍ້" name="en_title" required>
             <UiInput
               v-model="formData.en_title"
               placeholder="ປ້ອນຫົວຂໍ້"
@@ -157,7 +224,7 @@ const resetForm = () => {
           </UiFormItem>
         </template>
         <template #tab3>
-          <UiFormItem label="ຫົວຂໍ້" name="zh_cn_title">
+          <UiFormItem label="ຫົວຂໍ້" name="zh_cn_title" required>
             <UiInput
               v-model="formData.zh_cn_title"
               placeholder="ປ້ອນຫົວຂໍ້"
@@ -195,11 +262,12 @@ const resetForm = () => {
         </div>
         <div class="grid gap-4 my-4 md:grid-cols-2 md:gap-6">
           <div class="col-span-2">
-            <DatePicker
-              v-model:modelValueStart="startDate"
-              v-model:modelValueEnd="endDate"
-              @change="handleDateChange"
-            />
+            <UiFormItem label="ເວລາເລີມຕົ້ນ ແລະ ເວລາສິນສຸດ" required
+              ><DatePicker
+                v-model:modelValueStart="startDate"
+                v-model:modelValueEnd="endDate"
+                @change="handleDateChange"
+            /></UiFormItem>
           </div>
         </div>
       </div>
@@ -208,10 +276,11 @@ const resetForm = () => {
         @click="handleSubmit"
         type="submit"
         size="large"
-        :loading="isLoading"
+        :loading="isSubmitting"
+        :disabled="isSubmitting"
         colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
       >
-        ເພີ່ມຂໍ້ມູນ
+        {{ isSubmitting ? "ກຳລັງບັນທຶກ..." : "ບັນທຶກ" }}
       </UiButton>
     </UiForm>
   </div>

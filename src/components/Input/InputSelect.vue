@@ -5,7 +5,7 @@ import type { PropType } from "vue";
 defineProps({
   modelValue: {
     type: [String, Number] as PropType<string | number>,
-    default: "",
+    default: null, // Default value set to null
   },
   options: {
     type: Array as PropType<{ label: string; value: string | number }[]>,
@@ -17,11 +17,11 @@ defineProps({
   },
   width: {
     type: String,
-    default: "100%", // เปลี่ยนเป็น 100% เพื่อให้ตัว select กว้างเต็มพื้นที่ parent
+    default: "100%",
   },
   size: {
     type: String as PropType<"large" | "middle" | "small">,
-    default: "middle", // ค่าเริ่มต้นเป็น middle ตามมาตรฐาน Ant Design
+    default: "middle",
   },
 });
 
@@ -29,7 +29,7 @@ const emit = defineEmits(["update:modelValue", "change"]);
 
 function onChange(value: string | number) {
   emit("update:modelValue", value);
-  emit("change", value); // เพิ่ม emit event change เพื่อให้สามารถใช้ @change ได้
+  emit("change", value);
 }
 </script>
 
@@ -41,11 +41,14 @@ function onChange(value: string | number) {
     :style="{ width }"
     :size="size"
     allow-clear
+    :dropdown-match-select-width="false"
+    class="custom-select"
   >
     <a-select-option
       v-for="option in options"
       :key="option.value"
       :value="option.value"
+      :title="option.label"
     >
       {{ option.label }}
     </a-select-option>
@@ -53,14 +56,131 @@ function onChange(value: string | number) {
 </template>
 
 <style scoped>
-/* เพิ่ม CSS เพื่อให้มั่นใจว่า placeholder แสดงผลถูกต้อง */
-:deep(.ant-select-selection-placeholder) {
-  opacity: 0.6;
-  color: #888;
+/* ปรับแต่ง dropdown ให้กว้างขึ้น และรองรับข้อความยาว */
+:deep(.ant-select-dropdown) {
+  min-width: 200px !important;
+  max-width: 400px !important;
 }
 
-/* ปรับขนาดตาม size */
-:deep(.ant-select-lg) {
-  font-size: 16px;
+/* ปรับแต่งตัวเลือกให้แสดงข้อความยาวได้ */
+:deep(.ant-select-item) {
+  white-space: normal !important;
+  height: auto !important;
+  padding: 8px 12px !important;
+}
+
+:deep(.ant-select-item-option-content) {
+  white-space: normal !important;
+  word-break: break-word !important;
+  line-height: 1.4 !important;
+}
+
+/* สำหรับตัว select เมื่อเลือกแล้ว */
+:deep(.ant-select-selection-item) {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* เพิ่ม hover effect */
+:deep(.ant-select-item:hover) {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* ปรับความสูงของแต่ละ option ให้พอดีกับเนื้อหา */
+:deep(.ant-select-item-option) {
+  min-height: 32px;
+  height: auto !important;
+}
+</style>
+<style>
+/* Dark Mode Styles สำหรับ Select */
+.dark .ant-select-selector {
+  background-color: #1f2937 !important; /* gray.800 */
+  border-color: #4b5563 !important; /* gray.600 */
+  color: #ffffff !important;
+}
+
+.dark .ant-select-selection-placeholder {
+  color: #6b7280 !important; /* gray.500 */
+}
+
+.dark .ant-select-arrow {
+  color: #9ca3af !important; /* gray.400 */
+}
+
+.dark .ant-select-focused .ant-select-selector,
+.dark .ant-select-selector:hover {
+  border-color: #3b82f6 !important; /* blue.500 */
+}
+
+.dark .ant-select-focused .ant-select-selector {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+.dark .ant-select-dropdown {
+  background-color: #1f2937 !important; /* gray.800 */
+  border-color: #4b5563 !important; /* gray.600 */
+}
+
+.dark .ant-select-item {
+  color: #ffffff !important;
+}
+
+.dark .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: #374151 !important; /* gray.700 */
+}
+
+.dark .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: #3b82f6 !important; /* blue.500 */
+  color: #ffffff !important;
+}
+
+.dark .ant-select-item-option:hover:not(.ant-select-item-option-disabled) {
+  background-color: #374151 !important; /* gray.700 */
+}
+
+.dark .ant-select-clear {
+  background-color: #1f2937 !important; /* gray.800 */
+  color: #9ca3af !important; /* gray.400 */
+}
+</style>
+
+<style scoped>
+/* ปรับแต่ง dropdown ให้กว้างขึ้น และรองรับข้อความยาว */
+:deep(.ant-select-dropdown) {
+  min-width: 200px !important;
+  max-width: 400px !important;
+}
+
+/* ปรับแต่งตัวเลือกให้แสดงข้อความยาวได้ */
+:deep(.ant-select-item) {
+  white-space: normal !important;
+  height: auto !important;
+  padding: 8px 12px !important;
+}
+
+:deep(.ant-select-item-option-content) {
+  white-space: normal !important;
+  word-break: break-word !important;
+  line-height: 1.4 !important;
+}
+
+/* สำหรับตัว select เมื่อเลือกแล้ว */
+:deep(.ant-select-selection-item) {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* เพิ่ม hover effect */
+:deep(.ant-select-item:hover) {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* ปรับความสูงของแต่ละ option ให้พอดีกับเนื้อหา */
+:deep(.ant-select-item-option) {
+  min-height: 32px;
+  height: auto !important;
 }
 </style>

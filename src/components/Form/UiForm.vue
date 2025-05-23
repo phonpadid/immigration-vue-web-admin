@@ -9,19 +9,51 @@ const props = defineProps<{
 
 const formRef = ref<FormInstance>();
 
-// ฟังก์ชัน Submit Form
-// ฟังก์ชัน Submit Form
-const submitForm = async () => {
+// ปรับปรุงฟังก์ชัน validate ให้สมบูรณ์และตรวจจับข้อผิดพลาดได้ดีขึ้น
+const validate = async (nameList?: string | string[]) => {
   try {
-    await formRef.value?.validate();
-    return true; // คืนค่า true เมื่อ Validate สำเร็จ
-  } catch (error) {
-    return false; // คืนค่า false เมื่อ Validate ไม่ผ่าน
+    if (nameList) {
+      return await formRef.value?.validateFields(nameList);
+    } else {
+      return await formRef.value?.validate();
+    }
+  } catch (errors) {
+    console.error("Validation errors:", errors);
+    throw errors;
   }
 };
 
-// ให้ Parent Component เรียกใช้ submitForm()
-defineExpose({ submitForm });
+// แก้ไขฟังก์ชัน Submit Form ให้รองรับการ validate แบบมีเงื่อนไข
+const submitForm = async (nameList?: string | string[]) => {
+  try {
+    if (formRef.value) {
+      if (nameList) {
+        await formRef.value.validateFields(nameList);
+      } else {
+        await formRef.value.validate();
+      }
+      return true;
+    }
+    return false;
+  } catch (errors) {
+    console.error("Form validation failed:", errors);
+    // ส่งคืนข้อผิดพลาดเพื่อให้ parent component จัดการได้
+    throw errors;
+  }
+};
+
+// เพิ่มฟังก์ชันสำหรับรีเซ็ตฟอร์ม
+const resetFields = () => {
+  formRef.value?.resetFields();
+};
+
+// ให้ Parent Component เรียกใช้ฟังก์ชันได้
+defineExpose({
+  submitForm,
+  validate,
+  resetFields,
+  formRef,
+});
 </script>
 
 <template>

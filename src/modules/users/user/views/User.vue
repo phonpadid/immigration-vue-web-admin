@@ -8,6 +8,7 @@ import { getImageUrl } from "@/utils/ConfigPathImage";
 import { Icon } from "@iconify/vue";
 import Table from "@/components/table/Table.vue";
 import UiButton from "@/components/button/UiButton.vue";
+import UibuttonDropdown from "@/components/button/UibuttonDropdown.vue";
 import Dropdown from "@/components/Dropdown/Dropdown.vue";
 import LoadingSpinner from "@/components/loading/LoadingSpinner.vue";
 
@@ -35,9 +36,9 @@ const handleSelect = (key: string, record: any) => {
     push({ name: "users_edit", params: { id: record.id } });
   } else if (key === "3") {
     // Delete - perhaps show confirmation dialog
-    const confirmDelete = confirm("Are you sure you want to delete this role?");
+    const confirmDelete = confirm("Are you sure you want to delete this user?");
     if (confirmDelete) {
-      deleteUser(record.id); // Call deleteRole with the id of the role to delete
+      deleteUser(record.id); // Call deleteUser with the id of the user to delete
     }
   }
 };
@@ -46,7 +47,7 @@ onMounted(async () => {
   try {
     await getAlluser();
   } catch (error) {
-    console.error("Failed to load roles:", error);
+    console.error("Failed to load users:", error);
     // Add error handling here
   }
 });
@@ -83,17 +84,17 @@ onMounted(async () => {
       <template #profile="{ record }">
         <div class="flex items-center space-x-3">
           <a-avatar
-            v-if="record.profile.image"
+            v-if="record.profile && record.profile.image"
             :src="getImageUrl(record.profile.image)"
             alt="Avatar"
           />
           <a-avatar v-else class="bg-gray-300">
             <Icon icon="ic:baseline-person" class="text-gray-500 text-4xl" />
           </a-avatar>
-          <span
-            >{{ record.profile.first_name }}
-            {{ record.profile.last_name }}</span
-          >
+          <span>
+            {{ record.profile ? record.profile.first_name : "N/A" }}
+            {{ record.profile ? record.profile.last_name : "" }}
+          </span>
         </div>
       </template>
 
@@ -105,12 +106,12 @@ onMounted(async () => {
           :options="menuOptions"
           @select="(key) => handleSelect(key, record)"
         >
-          <UiButton
+          <UibuttonDropdown
             type="primary"
             size="small"
             colorClass="!bg-white text-gray-900 flex items-center hover:!bg-gray-200 hover:!text-gray-900 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white"
             icon="ic:baseline-more-horiz"
-          ></UiButton>
+          ></UibuttonDropdown>
         </Dropdown>
       </template>
     </Table>

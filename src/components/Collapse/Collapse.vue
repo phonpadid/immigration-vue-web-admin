@@ -1,5 +1,5 @@
 <template>
-  <a-collapse v-model:activeKey="activeKeys">
+  <a-collapse v-model:activeKey="activeKeys" class="custom-collapse">
     <a-collapse-panel
       v-for="(panel, index) in panels"
       :key="panel.key"
@@ -147,6 +147,79 @@ const handleDelete = (panel: Panel) => {
   emit("delete", panel);
 };
 </script>
+<style>
+/* Dark Mode styles for Collapse */
+.dark .ant-collapse {
+  background-color: #1f2937 !important; /* gray.800 */
+  border-color: #374151 !important; /* gray.700 */
+}
+
+.dark .ant-collapse-content {
+  background-color: #1f2937 !important; /* gray.800 */
+  color: #e5e7eb !important; /* gray.200 */
+  border-top-color: #374151 !important; /* gray.700 */
+}
+
+.dark .ant-collapse-header {
+  background-color: #1f2937 !important; /* gray.800 */
+  color: #e5e7eb !important; /* gray.200 */
+}
+
+.dark .ant-collapse-header:hover {
+  background-color: #263449 !important; /* Slightly lighter than gray.800 */
+}
+
+.dark .ant-collapse-arrow {
+  color: #9ca3af !important; /* gray.400 */
+}
+
+/* Panel styles for dark mode */
+.dark .ant-collapse-item {
+  border-color: #374151 !important; /* gray.700 */
+}
+
+/* Override Ant Design Table styles in dark mode */
+.dark .ant-collapse .ant-table {
+  background-color: #1f2937 !important; /* gray.800 */
+  color: #e5e7eb !important; /* gray.200 */
+}
+
+.dark .ant-collapse .ant-table-thead > tr > th {
+  background-color: #111827 !important; /* gray.900 */
+  color: #e5e7eb !important; /* gray.200 */
+  border-color: #4b5563 !important; /* gray.600 */
+}
+
+.dark .ant-collapse .ant-table-tbody > tr > td {
+  border-color: #374151 !important; /* gray.700 */
+}
+
+.dark .ant-collapse .ant-table-tbody > tr:hover > td {
+  background-color: #374151 !important; /* gray.700 */
+}
+
+/* Action buttons in dark mode */
+.dark .ant-collapse .action-button {
+  color: #e5e7eb !important; /* gray.200 */
+}
+
+.dark .ant-collapse .action-button:hover {
+  background-color: #374151 !important; /* gray.700 */
+}
+
+/* Form in dark mode */
+.dark .ant-collapse .default-form {
+  background-color: #111827 !important; /* gray.900 */
+  color: #e5e7eb !important; /* gray.200 */
+}
+
+/* Tooltip in dark mode */
+.dark .ant-tooltip .ant-tooltip-inner {
+  background-color: #111827 !important; /* gray.900 */
+  color: #e5e7eb !important; /* gray.200 */
+}
+</style>
+
 <style scoped>
 .panel-content {
   display: flex;
@@ -173,6 +246,10 @@ const handleDelete = (panel: Panel) => {
   border-radius: 4px;
 }
 
+.dark .action-button:hover {
+  background-color: #374151; /* gray.700 */
+}
+
 .action-button.delete:hover {
   color: #ff4d4f;
 }
@@ -188,7 +265,16 @@ const handleDelete = (panel: Panel) => {
   border-radius: 4px;
 }
 
+.dark .default-form {
+  background: #111827; /* gray.900 */
+  color: #e5e7eb; /* gray.200 */
+}
+
 .default-content {
   padding: 8px 0;
+}
+
+.dark .default-content {
+  color: #e5e7eb; /* gray.200 */
 }
 </style>

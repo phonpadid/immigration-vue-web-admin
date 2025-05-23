@@ -11,14 +11,21 @@ export const useScannerStore = defineStore("scanner", () => {
 
   // ฟังก์ชันสำหรับตั้งค่าประเภทการสแกน
   const setScannerType = (type: ScannerType) => {
+    console.log(
+      "Changing scanner type from",
+      currentScanType.value,
+      "to",
+      type
+    );
     currentScanType.value = type;
+    console.log("Scanner type is now:", currentScanType.value);
   };
 
   // ฟังก์ชันสำหรับสแกน QR code
   const scanCode = async (verification_code: string) => {
     try {
       isLoading.value = true;
-
+      console.log("Current scan type:", currentScanType.value);
       // เลือก endpoint ตามประเภทการสแกน
       const endpoint =
         currentScanType.value === "arrival"

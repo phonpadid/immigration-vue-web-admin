@@ -21,12 +21,11 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["update:modelValue", "input", "search", "clear"]);
+const emit = defineEmits(["update:modelValue", "input", "search"]);
 
 const handleInput = (e: Event) => {
   const value = (e.target as HTMLInputElement).value;
   emit("update:modelValue", value);
-  emit("input", value);
 };
 
 const handleKeyDown = (e: KeyboardEvent) => {
@@ -35,27 +34,88 @@ const handleKeyDown = (e: KeyboardEvent) => {
   }
 };
 
-// เพิ่มฟังก์ชันสำหรับจัดการการ clear
 const handleClear = () => {
   emit("update:modelValue", "");
-  emit("clear");
-  emit("search", ""); // ส่ง empty string เพื่อ reset การค้นหา
+  emit("search", "");
 };
 </script>
 
 <template>
-  <a-input
+  <a-input-search
     :value="modelValue"
     @input="handleInput"
     @keydown="handleKeyDown"
     @clear="handleClear"
+    @search="(value:any) => emit('search', value)"
     :placeholder="placeholder"
     :style="{ width }"
     :size="size"
     allow-clear
+    :enter-button="false"
+    class="custom-input-search"
   >
     <template #prefix>
       <SearchOutlined />
     </template>
-  </a-input>
+  </a-input-search>
 </template>
+
+<style>
+/* ย้ายออกจาก scoped เพื่อให้มีความสำคัญมากขึ้น */
+.dark .ant-input-search .ant-input,
+.dark .ant-input-search .ant-input-affix-wrapper,
+.dark .ant-input-affix-wrapper > input.ant-input {
+  background-color: #1f2937 !important; /* gray.800 hardcoded */
+  color: #ffffff !important; /* white hardcoded */
+  border-color: #4b5563 !important; /* gray.600 hardcoded */
+}
+
+.dark .ant-input-search .ant-input-affix-wrapper:hover,
+.dark .ant-input-search .ant-input-affix-wrapper-focused {
+  border-color: #3b82f6 !important; /* blue.500 hardcoded */
+}
+
+.dark .ant-input-search .ant-input-affix-wrapper-focused {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+.dark .ant-input-search .anticon {
+  color: #9ca3af !important; /* gray.400 hardcoded */
+}
+
+.dark .ant-input-search .ant-input-affix-wrapper:hover .anticon,
+.dark .ant-input-search .ant-input-affix-wrapper-focused .anticon {
+  color: #3b82f6 !important; /* blue.500 hardcoded */
+}
+
+.dark .ant-input-search input::placeholder {
+  color: #6b7280 !important; /* gray.500 hardcoded */
+}
+</style>
+
+<style scoped>
+/* เก็บ style อื่นๆ ไว้เหมือนเดิม */
+:deep(.ant-input-search) {
+  width: 100%;
+}
+
+:deep(.ant-input-affix-wrapper) {
+  border-radius: 6px;
+}
+
+:deep(.ant-input-search-button) {
+  display: none; /* ซ่อนปุ่มค้นหา */
+}
+
+:deep(.anticon) {
+  color: #bfbfbf;
+}
+
+:deep(.ant-input-affix-wrapper:hover .anticon) {
+  color: var(--ant-primary-color);
+}
+
+:deep(.ant-input-affix-wrapper-focused .anticon) {
+  color: var(--ant-primary-color);
+}
+</style>

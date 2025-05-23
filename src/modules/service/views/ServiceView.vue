@@ -8,6 +8,7 @@ import { columns } from "../interface/column";
 import type { LanguageKey, ApiLangKey } from "../interface/service.interface";
 import Tab from "@/components/Tab/Tab.vue";
 import UiButton from "@/components/button/UiButton.vue";
+import UiButtonDropdown from "@/components/button/UibuttonDropdown.vue";
 import Table from "@/components/table/Table.vue";
 import Dropdown from "@/components/Dropdown/Dropdown.vue";
 
@@ -164,12 +165,12 @@ onMounted(loadData);
               :options="menuOptions"
               @select="(key) => handleSelect(key, record)"
             >
-              <UiButton
+              <UiButtonDropdown
                 type="primary"
                 size="small"
                 colorClass="!bg-white text-gray-900 flex items-center hover:!bg-gray-200 hover:!text-gray-900 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white"
                 icon="ic:baseline-more-horiz"
-              ></UiButton>
+              ></UiButtonDropdown>
             </Dropdown>
           </template>
         </Table>

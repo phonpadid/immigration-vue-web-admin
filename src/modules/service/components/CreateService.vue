@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { useServiceStore } from "../store/service.store";
 import type { TabLanguage, TabConfig } from "../interface/service.interface";
 import { storeToRefs } from "pinia";
+import type { ValidateMessages } from "ant-design-vue/es/form/interface";
 import type {
   QuillDelta,
   QuillContent,
@@ -26,6 +27,7 @@ const router = useRouter();
 const activeTab = ref("1");
 const formRef = ref<InstanceType<typeof UiForm>>();
 const submitting = ref(false);
+const validationError = ref("");
 const formState = reactive<
   Record<TabLanguage, { title: string; content: string; description: string }>
 >({
@@ -34,42 +36,116 @@ const formState = reactive<
   zh_cn: { title: "", content: "", description: "" },
 });
 
-// Validation rules
-const rules = {
-  "lo.title": [
-    { required: true, message: "ກະລຸນາປ້ອນຊື່ບໍລິການພາສາລາວ", trigger: "blur" },
-  ],
-  "en.title": [
-    {
-      required: true,
-      message: "ກະລຸນາປ້ອນຊື່ບໍລິການພາສາອັງກິດ",
-      trigger: "blur",
-    },
-  ],
-  "zh_cn.title": [
-    { required: true, message: "ກະລຸນາປ້ອນຊື່ບໍລິການພາສາຈີນ", trigger: "blur" },
-  ],
-  "lo.description": [
-    { required: true, message: "ກະລຸນາປ້ອນຄຳອະທິບາຍພາສາລາວ", trigger: "blur" },
-  ],
+const validateMessages: ValidateMessages = {
+  required: "ຈະຕ້ອງບໍ່ຫວ່າງເປົ່າ.",
+  types: {
+    string: "${label} ຕ້ອງເປັນຂໍ້ຄວາມ",
+    number: "${label} ຕ້ອງເປັນຕົວເລກ",
+    array: "${label} ຕ້ອງເປັນ Array",
+  },
+  string: {
+    min: "${label} ຕ້ອງມີຢ່າງໜ້ອຍ ${min} ຕົວອັກສອນ",
+    max: "${label} ຕ້ອງມີບໍ່ເກີນ ${max} ຕົວອັກສອນ",
+    range: "${label} ຕ້ອງມີລະຫວ່າງ ${min}-${max} ຕົວອັກສອນ",
+  },
+  number: {
+    min: "${label} ຕ້ອງມີຄ່າຢ່າງໜ້ອຍ ${min}",
+    max: "${label} ຕ້ອງມີຄ່າບໍ່ເກີນ ${max}",
+  },
+  array: {
+    min: "${label} ຕ້ອງມີຢ່າງໜ້ອຍ ${min} ລາຍການ",
+    max: "${label} ຕ້ອງມີບໍ່ເກີນ ${max} ລາຍການ",
+  },
+  pattern: {
+    mismatch: "${label} ບໍ່ຖືກຕ້ອງຕາມຮູບແບບທີ່ກຳນົດ",
+  },
 };
-
 // Tab configuration with proper typing
 const tabsConfig: TabConfig[] = [
   { key: "1", label: "ພາສາລາວ", slotName: "tab1", lang: "lo" },
   { key: "2", label: "ພາສາອັງກິດ", slotName: "tab2", lang: "en" },
   { key: "3", label: "ພາສາຈີນ", slotName: "tab3", lang: "zh_cn" },
 ];
+const validateForm = async (): Promise<boolean> => {
+  try {
+    validationError.value = "";
 
-// ฟังก์ชันสำหรับแปลงข้อมูล Editor ให้อยู่ในรูปแบบที่ต้องการ
+    if (!formRef.value) {
+      throw new Error("ບໍ່ພົບຂໍ້ມູນແບບຟອມ");
+    }
+    await formRef.value.validate();
+
+    return true;
+  } catch (errors: any) {
+    if (errors?.errorFields?.length > 0) {
+      const firstError = errors.errorFields[0];
+      validationError.value = firstError.errors[0];
+
+      const fieldPath = firstError.name[0];
+      const lang =
+        typeof fieldPath === "string" ? fieldPath.split(".")[0] : fieldPath;
+
+      switch (lang) {
+        case "lo":
+          activeTab.value = "1";
+          break;
+        case "en":
+          activeTab.value = "2";
+          break;
+        case "zh_cn":
+          activeTab.value = "3";
+          break;
+      }
+    } else {
+      validationError.value = "ກະລຸນາກວດສອບຂໍ້ມູນທີ່ປ້ອນ";
+    }
+
+    return false;
+  }
+};
+
+// ปรับปรุงฟังก์ชัน handleSubmit
+const handleSubmit = async () => {
+  if (submitting.value) return;
+
+  try {
+    submitting.value = true;
+    validationError.value = "";
+
+    // เรียกใช้ validateForm และรอผลลัพธ์
+    const isValid = await validateForm();
+
+    if (!isValid) {
+      submitting.value = false;
+      return;
+    }
+
+    // ถ้าผ่านการ validate แล้วค่อยสร้าง submitData
+    const submitData = Object.entries(formState).reduce((acc, [lang, data]) => {
+      acc[lang as TabLanguage] = {
+        title: data.title.trim(),
+        description: data.description.trim(),
+        content: formatContentForSubmit(data.content),
+      };
+      return acc;
+    }, {} as Record<TabLanguage, any>);
+
+    // ส่งข้อมูลไปยัง backend
+    await store.createService(submitData);
+    message.success("ບັນທຶກຂໍ້ມູນສຳເລັດ");
+    router.push("/services");
+  } catch (err: any) {
+    console.error("Submit error:", err);
+  } finally {
+    submitting.value = false;
+  }
+};
 const formatContentForSubmit = (
   content: string | QuillDelta | QuillContent
 ): string => {
   try {
     const parsedContent =
       typeof content === "string" ? JSON.parse(content) : content;
-
-    // ถ้าเป็น QuillDelta
     if (parsedContent.ops && Array.isArray(parsedContent.ops)) {
       const formattedContent: QuillContent = {
         type: "doc",
@@ -107,8 +183,6 @@ const formatContentForSubmit = (
 
       return JSON.stringify(formattedContent);
     }
-
-    // ถ้าเป็น EditorContent อยู่แล้ว
     if (parsedContent.type === "doc") {
       return JSON.stringify(parsedContent);
     }
@@ -122,80 +196,32 @@ const formatContentForSubmit = (
     });
   }
 };
-
-// ฟังก์ชันสำหรับส่งข้อมูลฟอร์ม
-const handleSubmit = async () => {
-  if (submitting.value) return;
-
-  try {
-    submitting.value = true;
-    await formRef.value?.submitForm();
-
-    const submitData = Object.entries(formState).reduce((acc, [lang, data]) => {
-      acc[lang as TabLanguage] = {
-        title: data.title || "",
-        description: data.description || "",
-        content: formatContentForSubmit(data.content),
-      };
-
-      return acc;
-    }, {} as Record<TabLanguage, any>);
-
-    await store.createService(submitData);
-    message.success("ບັນທຶກຂໍ້ມູນສຳເລັດ");
-    router.push("/services");
-  } catch (err: any) {
-    console.error("Submit error:", err);
-    message.error(
-      error.value || err.response?.data?.message || "ເກີດຂໍ້ຜິດພາດ"
-    );
-  } finally {
-    submitting.value = false;
-  }
-};
-
-// Watchers
-watch(error, (newError) => {
-  if (newError) {
-    message.error(newError);
-  }
-});
 </script>
 
 <template>
   <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white mt-12">
     ເພີ່ມຂໍ້ມູນບໍລິການ
   </h2>
-
-  <UiForm ref="formRef" :model="formState" :rules="rules">
+  <UiForm
+    ref="formRef"
+    :model="formState"
+    :validate-messages="validateMessages"
+  >
     <Tab v-model:activeKey="activeTab" :tabs="tabsConfig">
       <template v-for="tab in tabsConfig" :key="tab.key" #[tab.slotName]>
-        <!-- ชื่อบริการ -->
-        <UiFormItem
-          :name="[tab.lang, 'title']"
-          label="ຊື່ບໍລິການ"
-          :required="tab.lang === 'lo'"
-        >
+        <UiFormItem :name="[tab.lang, 'title']" label="ຫົວຂໍ້" required>
           <UiInput
             v-model="formState[tab.lang as TabLanguage].title"
             placeholder="ປ້ອນຊື່ບໍລິການ"
           />
         </UiFormItem>
-
-        <!-- คำอธิบาย -->
-        <UiFormItem
-          :name="[tab.lang, 'description']"
-          label="ຄຳອະທິບາຍ"
-          :required="tab.lang === 'lo'"
-        >
+        <UiFormItem :name="[tab.lang, 'description']" label="ຄຳອະທິບາຍ">
           <Textarea
             v-model="formState[tab.lang as TabLanguage].description"
             placeholder="ປ້ອນຄຳອະທິບາຍ"
             :rows="3"
           />
         </UiFormItem>
-
-        <!-- เนื้อหา -->
         <UiFormItem :name="[tab.lang, 'content']" label="ເນື້ອຫາ">
           <QuillEditorComponent
             v-model="formState[tab.lang as TabLanguage].content"

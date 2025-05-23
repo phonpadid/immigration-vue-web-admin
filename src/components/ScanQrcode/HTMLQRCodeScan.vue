@@ -29,7 +29,6 @@
               </h3>
               <button class="close-button" @click="closeModal">×</button>
             </div>
-
             <!-- Scanner -->
             <div
               v-show="showModal"
@@ -529,7 +528,34 @@ const stopScanning = async (): Promise<void> => {
   return Promise.resolve();
 };
 
-// Improved scan image file with better error messaging
+// แก้ไขฟังก์ชัน handleScanSuccess
+const handleScanSuccess = async (result: string) => {
+  try {
+    scanStatus.value = `ກຳລັງກວດສອບ QR Code...`;
+
+    // ใช้ scannerStore แทน arrivalStore
+    const scanResult = await scannerStore.scanCode(result);
+
+    if (scanResult?.id) {
+      // ปิด Modal
+      await closeModal();
+
+      // นำทางไปยังหน้า details ตามประเภท
+      const routeName =
+        scanResult.type === "arrival" ? "arrival_details" : "departure_details";
+
+      await router.push({
+        name: routeName,
+        params: { id: scanResult.id.toString() },
+      });
+    }
+  } catch (error) {
+    console.error("Scan processing error:", error);
+    scanStatus.value = "ເກີດຂໍ້ຜິດພາດໃນການປະມວນຜົນ QR Code";
+  }
+};
+
+// แก้ไขฟังก์ชัน scanImageFile
 const scanImageFile = () => {
   const fileInput = document.createElement("input");
   fileInput.type = "file";
@@ -548,7 +574,7 @@ const scanImageFile = () => {
           scanner.value = new Html5Qrcode("reader", { verbose: false });
         } catch (error) {
           logDebugInfo("Error creating scanner for file:", error);
-          scanStatus.value = "ไม่สามารถสร้างสแกนเนอร์ได้ กรุณาลองใหม่";
+          scanStatus.value = "ບໍ່ສາມາດສ້າງເຄື່ອງສະແກນໄດ້ ກະລຸນາລອງໃໝ່";
           return;
         }
       }
@@ -556,45 +582,34 @@ const scanImageFile = () => {
       try {
         scanStatus.value = "ກຳລັງອ່ານ QR code ຈາກຮູບພາບ...";
 
-        // Try different scanning modes with better error handling
+        // ลองสแกนในโหมดต่างๆ
         try {
-          // First try with enhanced mode - this helps with custom QR codes
-          const result = await scanner.value.scanFile(
-            file,
-            /* verbose= */ true
-          );
-          handleScanSuccess(result);
+          // โหมดแรก - สำหรับ QR code ที่ซับซ้อน
+          const result = await scanner.value.scanFile(file, true);
+          await handleScanSuccess(result);
         } catch (firstError) {
           logDebugInfo(
             "First scan attempt failed, trying compatibility mode",
             firstError
           );
+
           try {
-            // If failed, try with compatibility mode
-            const result = await scanner.value.scanFile(
-              file,
-              /* verbose= */ false
-            );
-            handleScanSuccess(result);
+            // โหมดที่สอง - โหมด compatibility
+            const result = await scanner.value.scanFile(file, false);
+            await handleScanSuccess(result);
           } catch (secondError) {
-            // Try one more time with different parameters for custom QR codes
             logDebugInfo(
               "Second scan attempt failed, trying with different parameters",
               secondError
             );
 
-            // Create a temporary image to get dimensions
+            // สร้างภาพชั่วคราวเพื่อดูขนาด
             const img = new Image();
             img.onload = async () => {
               try {
-                // For custom QRs, try again with advanced settings
                 if (scanner.value) {
-                  // Use scanFile with verbose mode enabled
-                  const result = await scanner.value.scanFile(
-                    file,
-                    /* verbose= */ true
-                  );
-                  handleScanSuccess(result);
+                  const result = await scanner.value.scanFile(file, true);
+                  await handleScanSuccess(result);
                 }
               } catch (thirdError) {
                 handleScanFailure();
@@ -615,30 +630,7 @@ const scanImageFile = () => {
   fileInput.click();
 };
 
-// Handle successful scan from file
-const handleScanSuccess = async (result: string) => {
-  try {
-    scanStatus.value = `ກຳລັງກວດສອບ QR Code...`;
-
-    // เรียกใช้ scanArrival จาก store
-    const scanResult = await arrivalStore.scanArrival(result);
-
-    if (scanResult?.id) {
-      // ปิด Modal
-      await closeModal();
-
-      // นำทางไปยังหน้า details
-      await router.push({
-        name: "arrival_details",
-        params: { id: scanResult.id.toString() },
-      });
-    }
-  } catch (error) {
-    console.error("Scan processing error:", error);
-    scanStatus.value = "ເກີດຂໍ້ຜິດພາດໃນການປະມວນຜົນ QR Code";
-  }
-};
-// Handle failed scan from file
+// คงฟังก์ชัน handleScanFailure ไว้เหมือนเดิม
 const handleScanFailure = () => {
   scanSuccessful.value = false;
   scanStatus.value = "ບໍ່ພົບ QR code ໃນຮູບພາບ ຫຼື ຮູບພາບບໍ່ຊັດເຈນ";
@@ -646,32 +638,6 @@ const handleScanFailure = () => {
     alert("ບໍ່ພົບ QR code ໃນຮູບພາບ ກະລຸນາກວດສອບວ່າຮູບພາບຊັດເຈນແລະມີ QR code");
   }, 100);
 };
-
-// const onScanSuccess = async (decodedText: string) => {
-//   try {
-//     scanStatus.value = `ກຳລັງກວດສອບ QR Code...`;
-
-//     // เรียกใช้ scanArrival จาก store
-//     const result = await arrivalStore.scanArrival(decodedText);
-
-//     if (result?.id) {
-//       // หยุดการสแกน
-//       await stopScanning();
-
-//       // ปิด Modal
-//       await closeModal();
-
-//       // นำทางไปยังหน้า details
-//       await router.push({
-//         name: "arrival_details",
-//         params: { id: result.id.toString() },
-//       });
-//     }
-//   } catch (error) {
-//     console.error("Scan processing error:", error);
-//     scanStatus.value = "ເກີດຂໍ້ຜິດພາດໃນການປະມວນຜົນ QR Code";
-//   }
-// };
 
 // Enhanced error handling for scan error
 onMounted(() => {
@@ -878,17 +844,18 @@ button {
 /* Modal Content */
 .modal-content {
   background: white;
-  padding: 24px;
+  padding: 14px; /* ลดจาก 24px เป็น 16px เพื่อประหยัดพื้นที่ */
   border-radius: var(--border-radius-lg);
-  width: 90%;
-  max-width: 500px;
+  width: 85%;
+  max-width: 420px; /* ลดจาก 500px เป็น 450px */
   text-align: center;
   box-shadow: var(--shadow-lg);
   z-index: 1001;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   transform: translateY(0);
+  max-height: 90vh; /* เพิ่มความสูงสูงสุดเป็น 90% ของความสูงหน้าจอ */
+  overflow-y: auto; /* เพิ่ม scrollbar เมื่อเนื้อหายาวเกินไป */
 }
-
 .modal-scanning {
   box-shadow: 0 0 0 2px var(--primary-color), var(--shadow-lg);
 }
@@ -898,13 +865,13 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
+  margin-bottom: 2px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--gray-medium);
 }
 
 .modal-header h3 {
-  font-size: 20px;
+  font-size: 18px;
   margin: 0;
   font-weight: 600;
   color: var(--text-dark);
@@ -929,10 +896,10 @@ button {
 
 /* Status message */
 .scan-status {
-  margin-bottom: 16px;
+  margin-bottom: 4px;
   padding: 10px 12px;
   border-radius: var(--border-radius-md);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.5;
   box-shadow: var(--shadow-sm);
 }
@@ -952,7 +919,7 @@ button {
 /* Custom dropdown */
 .select-wrapper {
   position: relative;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .camera-dropdown {
@@ -993,7 +960,7 @@ button {
 .modal-actions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 2px;
 }
 
 .action-button {
@@ -1314,7 +1281,7 @@ button {
 }
 
 .format-dropdown {
-  padding: 8px;
+  padding: 4px;
   border-radius: 4px;
   border: 1px solid #ddd;
   background-color: white;
@@ -1390,17 +1357,6 @@ button {
   justify-content: center;
   z-index: 1000;
 }
-
-/* .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 10px;
-} */
-
 @keyframes spin {
   0% {
     transform: rotate(0deg);

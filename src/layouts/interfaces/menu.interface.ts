@@ -5,6 +5,6 @@ export interface ItemType {
   children?: ItemType[];
   type?: string;
   role?: string[];
-  show?: () => boolean;
+  permission?: string;
   onClick?: () => void;
 }

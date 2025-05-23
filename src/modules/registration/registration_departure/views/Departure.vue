@@ -47,23 +47,42 @@ const blacklistOptions = [
 const navigateToDetails = (id: number) => {
   router.push(`/departure/details/${id}`);
 };
+const handleInputSearch = async (
+  field: keyof typeof searchState.value,
+  value: string
+) => {
+  // อัพเดทค่าใน searchState
+  searchState.value[field] = value;
 
-// Search handling
-const handleSearch = async () => {
+  // รีเซ็ต pagination
   pagination.value.current = 1;
-  const offset = (pagination.value.current - 1) * pagination.value.pageSize;
 
-  await departureStore.setFilters({
+  // สร้าง filters ใหม่
+  const filters = {
     departure_name: searchState.value.departure_name,
     passport_number: searchState.value.passport_number,
     verification_code: searchState.value.verification_code,
+    is_verified: searchState.value.is_verified,
     black_list: searchState.value.black_list,
-    offset,
+    offset: 0,
     limit: pagination.value.pageSize,
-  });
+  };
 
+  // อัพเดท filters และโหลดข้อมูล
+  await departureStore.setFilters(filters);
   await departureStore.getAllDeparture();
   pagination.value.total = departureStore.departure.total;
+};
+
+// แยกฟังก์ชันสำหรับจัดการ select
+const handleInputChange = async (
+  field: keyof typeof searchState.value,
+  value: string
+) => {
+  searchState.value[field] = value;
+  if (field === "is_verified" || field === "black_list") {
+    await handleInputSearch(field, value);
+  }
 };
 
 // Table change handler
@@ -79,14 +98,6 @@ const handleTableChange = async (paginationInfo: any) => {
   });
 
   await departureStore.getAllDeparture();
-};
-
-// Input change handler
-const handleInputChange = (
-  field: keyof typeof searchState.value,
-  value: string
-) => {
-  searchState.value[field] = value;
 };
 
 // Initial data load
@@ -119,20 +130,17 @@ onMounted(async () => {
       <InputSearch
         v-model="searchState.departure_name"
         placeholder="ຈຸດອອກ..."
-        @input="(value) => handleInputChange('departure_name', value)"
-        @search="handleSearch"
+        @search="(value) => handleInputSearch('departure_name', value)"
       />
       <InputSearch
         v-model="searchState.passport_number"
         placeholder="ເລກທີ່ passport..."
-        @input="(value) => handleInputChange('passport_number', value)"
-        @search="handleSearch"
+        @search="(value) => handleInputSearch('passport_number', value)"
       />
       <InputSearch
         v-model="searchState.verification_code"
         placeholder="ລະຫັດຢືນຢັນ..."
-        @input="(value) => handleInputChange('verification_code', value)"
-        @search="handleSearch"
+        @search="(value) => handleInputSearch('verification_code', value)"
       />
       <InputSelect
         v-model="searchState.is_verified"
