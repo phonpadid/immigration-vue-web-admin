@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
+    "deploy-pro": "scp -r dist/ ubuntu@157.119.183.230:/var/www/webadmin/",
     "deploy": "scp -r dist/ root@178.128.20.203:/var/www/dev-webadmin/"
   },
   "dependencies": {
