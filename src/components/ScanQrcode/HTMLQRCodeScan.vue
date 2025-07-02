@@ -199,7 +199,7 @@ const resetScanner = async () => {
 
     // สร้าง element div ใหม่
     const newScannerElement = document.createElement("div");
-    newScannerElement.id = `reader-${Date.now()}`; // สร้าง ID ใหม่ทุกครั้ง
+    newScannerElement.id = `reader-${Date.now()}`;
     scannerContainer.value.appendChild(newScannerElement);
 
     // สร้างสแกนเนอร์ใหม่
@@ -537,7 +537,6 @@ const handleScanSuccess = async (result: string) => {
     const scanResult = await scannerStore.scanCode(result);
 
     if (scanResult?.id) {
-      // ปิด Modal
       await closeModal();
 
       // นำทางไปยังหน้า details ตามประเภท
@@ -567,8 +566,6 @@ const scanImageFile = () => {
     const target = event.target as HTMLInputElement;
     if (target.files && target.files.length > 0) {
       const file = target.files[0];
-
-      // ถ้าไม่มี scanner หรือการสแกนล้มเหลว สร้าง scanner ใหม่
       if (!scanner.value) {
         try {
           scanner.value = new Html5Qrcode("reader", { verbose: false });
@@ -581,10 +578,7 @@ const scanImageFile = () => {
 
       try {
         scanStatus.value = "ກຳລັງອ່ານ QR code ຈາກຮູບພາບ...";
-
-        // ลองสแกนในโหมดต่างๆ
         try {
-          // โหมดแรก - สำหรับ QR code ที่ซับซ้อน
           const result = await scanner.value.scanFile(file, true);
           await handleScanSuccess(result);
         } catch (firstError) {
@@ -594,7 +588,6 @@ const scanImageFile = () => {
           );
 
           try {
-            // โหมดที่สอง - โหมด compatibility
             const result = await scanner.value.scanFile(file, false);
             await handleScanSuccess(result);
           } catch (secondError) {
@@ -602,8 +595,6 @@ const scanImageFile = () => {
               "Second scan attempt failed, trying with different parameters",
               secondError
             );
-
-            // สร้างภาพชั่วคราวเพื่อดูขนาด
             const img = new Image();
             img.onload = async () => {
               try {
@@ -652,13 +643,9 @@ const onScanSuccess = async (decodedText: string) => {
     const result = await scannerStore.scanCode(decodedText);
 
     if (result?.id) {
-      // หยุดการสแกน
       await stopScanning();
 
-      // ปิด Modal
       await closeModal();
-
-      // นำทางไปยังหน้า details ตามประเภท
       const routeName =
         result.type === "arrival" ? "arrival_details" : "departure_details";
 

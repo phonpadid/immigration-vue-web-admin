@@ -46,7 +46,7 @@ const blacklistOptions = [
 
 // Function to navigate to details page
 const navigateToDetails = (id: number) => {
-  router.push(`/arrival/details/${id}`);
+  router.push(`/admin/arrival/details/${id}`);
 };
 
 const handleInputSearch = async (
