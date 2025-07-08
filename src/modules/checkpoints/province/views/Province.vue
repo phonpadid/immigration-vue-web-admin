@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { columns } from "../interface/column";
 import { useCheckpointProvinceStore } from "../store/province.store";
 import { useRouter } from "vue-router";
@@ -24,16 +24,18 @@ const menuOptions = ref([
   { key: "2", label: "ແກ້ໄຂ" },
   { key: "3", label: "ລຶບ" },
 ]);
-const Loading = ref(false);
+const localLoading = ref(false);
 const addCheckpointProvince = () => {
   push({ name: "provinces_add" });
 };
 
-const pagination = ref({
+const pagination = reactive({
   current: 1,
   pageSize: 10,
   total: 0,
   showSizeChanger: true,
+  pageSizeOptions: ["10", "20", "50", "100"],
+  showTotal: (total: number) => `ທັງໝົດ ${total} ລາຍການ`,
 });
 
 /********************************************************************************* */
@@ -63,15 +65,14 @@ const getChineseName = (record: any) => {
 /********************************************************************************** */
 
 const handleSelect = (key: string, record: any) => {
-  //   console.log("Selected:", key, "for record:", record);
   if (key === "1") {
     // View details
     push({ name: "provinces_details", params: { id: record.id } });
-  }
-  if (key === "2") {
-    // View details
+  } else if (key === "2") {
+    // Edit
     push({ name: "provinces_edit", params: { id: record.id } });
   } else if (key === "3") {
+    // Delete with confirmation
     Modal.confirm({
       title: "ຢືນຢັນການລົບ",
       content: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້??",
@@ -80,13 +81,24 @@ const handleSelect = (key: string, record: any) => {
       okType: "danger",
       onOk: async () => {
         try {
-          Loading.value = true;
-          await deleteCheckpointProvinces(record.id);
-          alert("ລົບຂໍ້ມູນສຳເລັດ");
+          localLoading.value = true;
+          await deleteCheckpointProvinces(
+            record.id,
+            pagination.current,
+            pagination.pageSize
+          );
+          Modal.success({
+            title: "ສຳເລັດ",
+            content: "ລົບຂໍ້ມູນສຳເລັດ",
+          });
         } catch (err) {
           console.error("Error:", err);
+          Modal.error({
+            title: "ຜິດພາດ",
+            content: "ເກີດຂໍ້ຜິດພາດໃນການລົບຂໍ້ມູນ",
+          });
         } finally {
-          Loading.value = false;
+          localLoading.value = false;
         }
       },
     });
@@ -97,20 +109,27 @@ const handleSelect = (key: string, record: any) => {
 
 const loadCheckpointProvinces = async () => {
   try {
-    await getAllCheckpointProvine(
-      pagination.value.current,
-      pagination.value.pageSize
-    );
-    pagination.value.total = checkpointProvince.total;
+    await getAllCheckpointProvine(pagination.current, pagination.pageSize);
+    pagination.total = checkpointProvince.total;
   } catch (error) {
-    console.error("Failed to load:", error);
+    console.error("Failed to load provinces:", error);
+    Modal.error({
+      title: "ຜິດພາດ",
+      content: "ບໍ່ສາມາດໂຫຼດຂໍ້ມູນແຂວງໄດ້",
+    });
   }
 };
 
-const handleTableChange = (newPagination: any) => {
-  pagination.value = { ...pagination.value, ...newPagination };
+// จัดการกับการเปลี่ยนแปลงของตาราง รวมถึง pagination
+const handleTableChange = (pag: any, filters: any, sorter: any) => {
+  // อัพเดต pagination state
+  pagination.current = pag.current;
+  pagination.pageSize = pag.pageSize;
+
+  // โหลดข้อมูลใหม่ตามค่า pagination ที่เปลี่ยนไป
   loadCheckpointProvinces();
 };
+
 /********************************************************************************* */
 
 onMounted(() => {
@@ -120,7 +139,7 @@ onMounted(() => {
 
 <template>
   <LoadingSpinner
-    v-if="isLoading"
+    v-if="isLoading || localLoading"
     class="absolute inset-0 flex items-center justify-center z-10"
   />
 
@@ -144,9 +163,10 @@ onMounted(() => {
     <Table
       :columns="columns"
       :dataSource="checkpointProvince.data || []"
+      :pagination="pagination"
+      :loading="isLoading"
       class="dark:bg-gray-800 dark:text-white dark:border-gray-700"
-      v-model:pagination="pagination"
-      @update:pagination="handleTableChange"
+      @change="handleTableChange"
     >
       <template #name_lo="{ record }">
         {{ getLaoName(record) }}

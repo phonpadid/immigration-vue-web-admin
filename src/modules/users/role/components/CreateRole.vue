@@ -61,7 +61,6 @@ const handleSubmit = async () => {
   }
 };
 
-// Check if permissions are available in store
 const loadPermissions = async () => {
   try {
     isLoading.value = true;

@@ -15,6 +15,7 @@ export const useCheckpointProvinceStore = defineStore(
       total: 0,
     });
     const currentCheckpointProvince = ref<ProvinceForm | null>(null);
+
     const getAllCheckpointProvine = async (page = 1, pageSize = 10) => {
       try {
         isLoading.value = true;
@@ -28,7 +29,8 @@ export const useCheckpointProvinceStore = defineStore(
           checkpointProvince.total = data.total || 0; // เก็บค่า total
         }
       } catch (error) {
-        console.error("❌ Failed to fetch :", error);
+        console.error("❌ Failed to fetch provinces:", error);
+        throw error; // ส่ง error ต่อเพื่อให้สามารถจับได้ที่ component
       } finally {
         isLoading.value = false;
       }
@@ -44,7 +46,7 @@ export const useCheckpointProvinceStore = defineStore(
           return data;
         }
       } catch (error) {
-        console.error("❌ Failed to fetch by ID:", error);
+        console.error("❌ Failed to fetch province by ID:", error);
         throw error;
       } finally {
         isLoading.value = false;
@@ -57,11 +59,13 @@ export const useCheckpointProvinceStore = defineStore(
         const { data } = await api.post("/provinces", provinceData);
 
         if (data) {
+          // โหลดข้อมูลใหม่หลังจากสร้างข้อมูลสำเร็จ
           await getAllCheckpointProvine();
           return data;
         }
       } catch (error) {
-        console.error("❌ Failed to create :", error);
+        console.error("❌ Failed to create province:", error);
+        throw error;
       } finally {
         isLoading.value = false;
       }
@@ -76,25 +80,35 @@ export const useCheckpointProvinceStore = defineStore(
         const { data } = await api.put(`/provinces/${id}`, updatedData);
 
         if (data) {
+          // โหลดข้อมูลใหม่หลังจากอัพเดทข้อมูลสำเร็จ
           await getAllCheckpointProvine();
           return data;
         }
       } catch (error) {
-        console.error("❌ Failed to update :", error);
+        console.error("❌ Failed to update province:", error);
+        throw error;
       } finally {
         isLoading.value = false;
       }
     };
 
-    const deleteCheckpointProvinces = async (id: number) => {
+    // เพิ่มพารามิเตอร์ page และ pageSize เพื่อรักษาสถานะการแสดงผลหลังจากลบข้อมูล
+    const deleteCheckpointProvinces = async (
+      id: number,
+      page = 1,
+      pageSize = 10
+    ) => {
       try {
         isLoading.value = true;
         const res = await api.delete(`/provinces/${id}`);
         if (res) {
-          await getAllCheckpointProvine();
+          // โหลดข้อมูลใหม่โดยยังคงหน้าปัจจุบัน
+          await getAllCheckpointProvine(page, pageSize);
+          return res;
         }
       } catch (error) {
-        console.log(error);
+        console.error("❌ Failed to delete province:", error);
+        throw error;
       } finally {
         isLoading.value = false;
       }
@@ -103,7 +117,7 @@ export const useCheckpointProvinceStore = defineStore(
     const getAllProvinces = async () => {
       try {
         isLoading.value = true;
-        // ใช้ limit ที่มากพอสำหรับดึงข้อมูลทั้งหมด (เช่น 1000 หรือมากกว่า)
+        // ใช้ limit ที่มากพอสำหรับดึงข้อมูลทั้งหมด
         const { data } = await api.get("/provinces?offset=0&limit=1000");
 
         if (data?.data && Array.isArray(data.data)) {
@@ -117,6 +131,7 @@ export const useCheckpointProvinceStore = defineStore(
         isLoading.value = false;
       }
     };
+
     return {
       isLoading,
       checkpointProvince,

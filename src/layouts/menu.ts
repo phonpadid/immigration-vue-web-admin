@@ -33,7 +33,7 @@ function hasPermission(permission: any) {
   const roles = Array.isArray(authStore.user.roles)
     ? authStore.user.roles
     : [authStore.user.roles];
-  if (roles.includes("dev")) {
+  if (roles.includes("dev") || roles.includes("admin")) {
     return true;
   }
   // สำหรับผู้ใช้อื่นๆ (รวมถึง SuperAdmin) ตรวจสอบตาม permissions
@@ -397,4 +397,3 @@ function filterMenuItemsByPermission(items: any) {
 
   return filteredItems;
 }
-

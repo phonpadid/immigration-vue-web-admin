@@ -15,7 +15,7 @@ export const useFileManager = () => {
   const searchQuery = ref("");
 
   const apiBaseUrl =
-    import.meta.env.VITE_API_URL || "http://178.128.20.203:81/api";
+    import.meta.env.VITE_API_URL || "https://api.immigration.gov.la";
 
   const filteredFiles = computed(() => {
     if (!searchQuery.value) return files.value;
