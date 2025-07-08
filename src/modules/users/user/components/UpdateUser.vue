@@ -140,7 +140,7 @@ const submitData = async () => {
     if (result) {
       openNotification("success", "ອັບເດດຜູ້ໃຊ້", "ອັບເດດສຳເລັດ");
 
-      router.push("/users");
+      router.push("/admin/users");
     }
   } catch (error) {
     console.error("ການອັບເດດຂໍ້ມູນຜິດພາດ:", error);
@@ -334,7 +334,6 @@ onMounted(() => {
         type="submit"
         class="px-5 py-2.5 text-white bg-primary-700 hover:bg-primary-900 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm"
         :disabled="isSubmitting"
-        @click="router.push('/users')"
       >
         <span v-if="isSubmitting">ກຳລັງອັບເດດ...</span>
         <span v-else>ອັບເດດຜູ້ໃຊ້</span>

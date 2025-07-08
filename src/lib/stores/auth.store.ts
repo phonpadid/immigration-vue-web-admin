@@ -26,7 +26,7 @@ export const useAuthStore = defineStore("auth", () => {
     return permissionStore.permissions || [];
   });
 
-  // ตรวจสอบเฉพาะผู้ใช้ที่มีบทบาท dev
+  // ตรวจสอบเฉพาะผู้ใช้ที่มีบทบาท dev หรือ admin
   const isDevOrAdmin = computed(() => {
     if (!user.value || !user.value.roles) {
       return false;
@@ -37,9 +37,8 @@ export const useAuthStore = defineStore("auth", () => {
       ? user.value.roles
       : [user.value.roles];
 
-    // ตรวจสอบเฉพาะบทบาท "dev"
-    const isDev = roles.includes("dev");
-    return isDev;
+    // ตรวจสอบบทบาท "dev" หรือ "admin"
+    return roles.includes("dev") || roles.includes("admin");
   });
 
   // ฟังก์ชันสำหรับรับข้อมูลโปรไฟล์ของผู้ใช้
@@ -69,14 +68,14 @@ export const useAuthStore = defineStore("auth", () => {
       return false;
     }
 
-    // ตรวจสอบบทบาท dev โดยตรง เพื่อป้องกันปัญหา reactivity cycle
+    // ตรวจสอบบทบาท dev และ admin โดยตรง เพื่อป้องกันปัญหา reactivity cycle
     const roles = Array.isArray(user.value.roles)
       ? user.value.roles
       : [user.value.roles];
 
-    // ถ้าเป็น dev ให้มีสิทธิ์ทุกอย่าง
-    if (roles.includes("dev")) {
-      // console.log(`Permission granted (dev role): ${permissionName}`);
+    // ถ้าเป็น dev หรือ admin ให้มีสิทธิ์ทุกอย่าง
+    if (roles.includes("dev") || roles.includes("admin")) {
+      // console.log(`Permission granted (dev/admin role): ${permissionName}`);
       return true;
     }
 
@@ -100,13 +99,13 @@ export const useAuthStore = defineStore("auth", () => {
 
   // ฟังก์ชันตรวจสอบหลายสิทธิ์
   const hasAllPermissions = (permissionNames: any) => {
-    // ถ้าเป็น dev ให้ผ่านทุกสิทธิ์
+    // ถ้าเป็น dev หรือ admin ให้ผ่านทุกสิทธิ์
     const roles = user.value?.roles || [];
-    const isDev = Array.isArray(roles)
-      ? roles.includes("dev")
-      : roles === "dev";
+    const isDevOrAdminRole = Array.isArray(roles)
+      ? roles.includes("dev") || roles.includes("admin")
+      : roles === "dev" || roles === "admin";
 
-    if (isDev) {
+    if (isDevOrAdminRole) {
       return true;
     }
 
@@ -123,13 +122,13 @@ export const useAuthStore = defineStore("auth", () => {
   };
 
   const hasAnyPermission = (permissionNames: any) => {
-    // ถ้าเป็น dev ให้ผ่านทุกสิทธิ์
+    // ถ้าเป็น dev หรือ admin ให้ผ่านทุกสิทธิ์
     const roles = user.value?.roles || [];
-    const isDev = Array.isArray(roles)
-      ? roles.includes("dev")
-      : roles === "dev";
+    const isDevOrAdminRole = Array.isArray(roles)
+      ? roles.includes("dev") || roles.includes("admin")
+      : roles === "dev" || roles === "admin";
 
-    if (isDev) {
+    if (isDevOrAdminRole) {
       return true;
     }
 
@@ -168,18 +167,18 @@ export const useAuthStore = defineStore("auth", () => {
 
         user.value = response.data;
 
-        // โหลด permissions เฉพาะเมื่อผู้ใช้ไม่ใช่ dev และไม่มี permissions ในข้อมูลผู้ใช้
+        // โหลด permissions เฉพาะเมื่อผู้ใช้ไม่ใช่ dev หรือ admin และไม่มี permissions ในข้อมูลผู้ใช้
         const roles = user.value?.roles || [];
-        const isDev = Array.isArray(roles)
-          ? roles.includes("dev")
-          : roles === "dev";
+        const isDevOrAdminRole = Array.isArray(roles)
+          ? roles.includes("dev") || roles.includes("admin")
+          : roles === "dev" || roles === "admin";
 
         if (
-          !isDev &&
+          !isDevOrAdminRole &&
           (!user.value.permissions || user.value.permissions.length === 0)
         ) {
           console.log(
-            "[AUTH] User is not dev and has no permissions, loading from store..."
+            "[AUTH] User is not dev/admin and has no permissions, loading from store..."
           );
 
           // โหลดข้อมูล permissions จาก localStorage หรือเรียก API

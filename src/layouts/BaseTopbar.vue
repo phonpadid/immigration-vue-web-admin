@@ -117,7 +117,7 @@ onMounted(async () => {
 
 <template>
   <header
-    class="fixed top-0 z-50 flex items-center justify-start w-full h-16 px-4 bg-white dark:bg-gray-900 dark:text-white shadow-sm"
+    class="sticky top-0 z-50 flex items-center justify-start w-full h-16 px-4 bg-white dark:bg-gray-900 dark:text-white shadow-sm"
   >
     <Icon
       icon="lucide-align-justify"

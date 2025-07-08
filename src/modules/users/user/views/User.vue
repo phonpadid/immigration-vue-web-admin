@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { columns } from "../interface/column";
 import { useUserStore } from "../store/user.store";
 import { useRouter } from "vue-router";
@@ -15,6 +15,16 @@ import LoadingSpinner from "@/components/loading/LoadingSpinner.vue";
 const { getAlluser, user, isLoading, deleteUser } = useUserStore();
 const { push } = useRouter();
 
+// สถานะ pagination
+const pagination = reactive({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+  showSizeChanger: true,
+  pageSizeOptions: ["10", "20", "50", "100"],
+  showTotal: (total: number) => `ທັງໝົດ ${total} ລາຍການ`,
+});
+
 const menuOptions = ref([
   { key: "1", label: "ລາຍລະອຽດ" },
   { key: "2", label: "ແກ້ໄຂ" },
@@ -27,7 +37,7 @@ const addUser = () => {
 
 const handleSelect = (key: string, record: any) => {
   console.log("Selected:", key, "for record:", record);
-  // Add logic to handle different actions based on key
+
   if (key === "1") {
     // View details
     push({ name: "users_details", params: { id: record.id } });
@@ -35,20 +45,45 @@ const handleSelect = (key: string, record: any) => {
     // Edit
     push({ name: "users_edit", params: { id: record.id } });
   } else if (key === "3") {
-    // Delete - perhaps show confirmation dialog
+    // Delete
     const confirmDelete = confirm("Are you sure you want to delete this user?");
     if (confirmDelete) {
-      deleteUser(record.id); // Call deleteUser with the id of the user to delete
+      deleteUser(record.id);
     }
+  }
+};
+
+// แปลง page, pageSize เป็น offset, limit
+const calculateOffset = (page: number, pageSize: number) => {
+  return (page - 1) * pageSize;
+};
+
+// จัดการการเปลี่ยนแปลงของตาราง รวมถึง pagination
+const handleTableChange = async (pag: any, filters: any, sorter: any) => {
+  pagination.current = pag.current;
+  pagination.pageSize = pag.pageSize;
+
+  // คำนวณ offset จาก page และ pageSize
+  const offset = calculateOffset(pag.current, pag.pageSize);
+
+  try {
+    // เรียก API พร้อมกับส่งค่า offset และ limit
+    await getAlluser(offset, pag.pageSize);
+  } catch (error) {
+    console.error("Failed to fetch paginated users:", error);
   }
 };
 
 onMounted(async () => {
   try {
-    await getAlluser();
+    // โหลดข้อมูลครั้งแรกพร้อมกับค่า pagination
+    const offset = calculateOffset(pagination.current, pagination.pageSize);
+    await getAlluser(offset, pagination.pageSize);
+
+    // อัพเดต total count จาก response
+    pagination.total = user.total;
   } catch (error) {
     console.error("Failed to load users:", error);
-    // Add error handling here
   }
 });
 </script>
@@ -78,7 +113,10 @@ onMounted(async () => {
   <div class="relative">
     <Table
       :columns="columns"
-      :dataSource="user.data || []"
+      :dataSource="user.data"
+      :pagination="pagination"
+      :loading="isLoading"
+      @change="handleTableChange"
       class="dark:bg-gray-800 dark:text-white dark:border-gray-700"
     >
       <template #profile="{ record }">
@@ -101,6 +139,7 @@ onMounted(async () => {
       <template #created_at="{ record }">
         {{ formatDateTime(record.created_at) }}
       </template>
+
       <template #action="{ record }">
         <Dropdown
           :options="menuOptions"
