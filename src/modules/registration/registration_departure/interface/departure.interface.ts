@@ -26,6 +26,14 @@ export interface DeparturePaginatedResponse {
   passport_information: PassportInformation;
   personal_information: PersonalInformation;
   last_leaving: string;
+  verified_by_user: {
+    email: string;
+    profile: {
+      image: string;
+      first_name: string;
+      last_name: string;
+    };
+  };
 }
 
 export interface DepartureFilters {

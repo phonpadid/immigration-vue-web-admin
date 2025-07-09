@@ -113,7 +113,7 @@ watch(
 </script>
 
 <template>
-  <div class="relative p-4 mt-12">
+  <div class="relative p-2">
     <div
       v-if="arrivalStore.isDetailLoading"
       class="flex justify-center items-center h-64"
@@ -631,7 +631,97 @@ watch(
           </dl>
         </div>
       </div>
+      <!-- User Scan -->
+      <div
+        v-if="
+          arrivalStore.currentArrival.verified_by_user &&
+          (arrivalStore.currentArrival.verified_by_user.email ||
+            arrivalStore.currentArrival.verified_by_user.profile.image ||
+            arrivalStore.currentArrival.verified_by_user.profile.first_name ||
+            arrivalStore.currentArrival.verified_by_user.profile.last_name)
+        "
+        class="mb-6 border-b pb-4"
+      >
+        <h2
+          class="mb-4 text-xl font-semibold leading-none text-gray-900 md:text-2xl dark:text-white"
+        >
+          ຂໍ້ມູນບຸກຄົນທີສະແກນ
+        </h2>
 
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <img
+            v-if="arrivalStore.currentArrival.verified_by_user.profile.image"
+            :src="
+              getImageUrl(arrivalStore.currentArrival.visa_information.image)
+            "
+            alt="visa image"
+            class="w-full rounded-lg border"
+          />
+          <div
+            v-else
+            class="w-full rounded-lg border flex items-center justify-center h-48 bg-gray-100 dark:bg-gray-800"
+          >
+            <span class="text-gray-400">ບໍ່ມີຮູບພາບ</span>
+          </div>
+
+          <dl
+            class="ms-0 md:ms-4 flex flex-row md:flex-col justify-between md:justify-start"
+          >
+            <div v-if="arrivalStore.currentArrival.verified_by_user.email">
+              <dt
+                class="text-gray-900 dark:text-white leading-4 font-normal mb-2"
+              >
+                ອີເມວ
+              </dt>
+              <dd
+                class="text-gray-500 dark:text-gray-400 font-light mb-4 sm:mb-5"
+              >
+                {{ arrivalStore.currentArrival.verified_by_user.email }}
+              </dd>
+            </div>
+
+            <div
+              v-if="
+                arrivalStore.currentArrival.verified_by_user.profile.first_name
+              "
+            >
+              <dt
+                class="text-gray-900 dark:text-white leading-4 font-normal mb-2"
+              >
+                ຊື່
+              </dt>
+              <dd
+                class="text-gray-500 dark:text-gray-400 font-light mb-4 sm:mb-5"
+              >
+                {{
+                  arrivalStore.currentArrival.verified_by_user.profile
+                    .first_name
+                }}
+              </dd>
+            </div>
+
+            <div
+              v-if="
+                arrivalStore.currentArrival.verified_by_user.profile.last_name
+              "
+            >
+              <dt
+                class="text-gray-900 dark:text-white leading-4 font-normal mb-2"
+              >
+                ນາມສະກຸນ
+              </dt>
+              <dd
+                class="text-gray-500 dark:text-gray-400 font-light mb-4 sm:mb-5"
+              >
+                {{
+                  arrivalStore.currentArrival.verified_by_user.profile.last_name
+                }}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+      <!-- ທີຢູ່ -->
       <div
         v-if="
           arrivalStore.currentArrival.intended_address &&

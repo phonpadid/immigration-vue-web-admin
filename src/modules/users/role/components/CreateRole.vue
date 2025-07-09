@@ -19,6 +19,7 @@ const roleStore = useRolesStore();
 const isLoading = ref(true);
 const formRef = ref();
 const { push } = useRouter();
+const errorMessage = ref("");
 
 const formState = reactive<RoleFrom>({
   id: 0,
@@ -28,36 +29,60 @@ const formState = reactive<RoleFrom>({
 });
 
 const handleSubmit = async () => {
-  if (formRef.value) {
-    try {
-      const validationResult = await formRef.value.submitForm();
+  errorMessage.value = "";
 
-      if (!validationResult) {
-        console.log("Validation failed, please check your inputs");
-        return;
-      }
-      isLoading.value = true;
+  if (!formRef.value) {
+    errorMessage.value = "ระบบฟอร์มยังไม่พร้อมใช้งาน โปรดลองใหม่อีกครั้ง";
+    return;
+  }
 
-      if (!Array.isArray(formState.permission_ids)) {
-        console.error(
-          "permissions_ids is not an array",
-          formState.permission_ids
-        );
-        return;
-      }
+  try {
+    // เพิ่ม debug message
+    // console.log("Starting form submission");
+    formRef.value.logFormState();
 
-      const permissionIds = formState.permission_ids.map((id) => Number(id));
+    // ตั้งค่า loading
+    isLoading.value = true;
 
-      await roleStore.createRole({
-        ...formState,
-        permission_ids: permissionIds,
-      });
-      push({ name: "roles" });
-    } catch (error) {
-      console.error("Error creating role:", error);
-    } finally {
+    // ใช้ข้อมูลจาก formState โดยตรงแทนการใช้ validated values
+    // เนื่องจาก Ant Design Vue อาจมีปัญหากับ outOfDate validation
+    const roleData = {
+      id: formState.id || 0,
+      name: formState.name,
+      description: formState.description,
+      permission_ids: Array.isArray(formState.permission_ids)
+        ? formState.permission_ids.map((id) => Number(id))
+        : [],
+    };
+
+    // ทำการตรวจสอบ validation ด้วยตนเอง (manual validation)
+    if (!roleData.name || roleData.name.trim() === "") {
+      errorMessage.value = "กรุณากรอกชื่อบทบาท";
       isLoading.value = false;
+      return;
     }
+
+    if (roleData.permission_ids.length === 0) {
+      errorMessage.value = "กรุณาเลือกการอนุญาตอย่างน้อยหนึ่งรายการ";
+      isLoading.value = false;
+      return;
+    }
+
+    // console.log("Manual validation passed, sending data to API:", roleData);
+
+    // ส่งข้อมูลไปยัง API
+    await roleStore.createRole(roleData);
+
+    localStorage.removeItem("roleFormState");
+
+    // นำทางไปยังหน้ารายการบทบาท
+    console.log("Submission successful, navigating to roles page");
+    push({ name: "roles" });
+  } catch (error) {
+    console.error("Error in form submission process:", error);
+    errorMessage.value = "เกิดข้อผิดพลาดในการสร้างบทบาท กรุณาลองอีกครั้ง";
+  } finally {
+    isLoading.value = false;
   }
 };
 
@@ -81,16 +106,18 @@ const loadPermissions = async () => {
 
 onMounted(async () => {
   await loadPermissions();
-});
 
-// Save form state to localStorage whenever it changes
-watch(
-  formState,
-  (newValue) => {
-    localStorage.setItem("roleFormState", JSON.stringify(newValue));
-  },
-  { deep: true }
-);
+  // Try to load saved form state from localStorage if exists
+  const savedFormState = localStorage.getItem("roleFormState");
+  if (savedFormState) {
+    try {
+      const parsedState = JSON.parse(savedFormState);
+      Object.assign(formState, parsedState);
+    } catch (e) {
+      console.error("Failed to parse saved form state:", e);
+    }
+  }
+});
 
 // Group permissions by group_name
 const groupedPermissions = computed(() => {
@@ -114,9 +141,16 @@ const groupedPermissions = computed(() => {
 </script>
 
 <template>
-  <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white mt-10">
+  <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
     ເພີ່ມບົດບາດໃຫມ່
   </h2>
+
+  <div
+    v-if="errorMessage"
+    class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800"
+  >
+    {{ errorMessage }}
+  </div>
 
   <div class="grid gap-4 mb-4">
     <UiForm
@@ -141,7 +175,7 @@ const groupedPermissions = computed(() => {
       </UiFormItem>
       <UiFormItem label="ການອະນຸຍາດ" name="permission_ids">
         <LoadingSpinner v-if="isLoading" class="h-[50vh]" />
-        <a-form-item-rest>
+        <a-form-item-rest v-else>
           <CheckboxGroup
             :options="
               Object.entries(groupedPermissions).flatMap(
@@ -162,8 +196,9 @@ const groupedPermissions = computed(() => {
         <button
           type="submit"
           class="px-4 py-2 bg-primary-700 text-white rounded hover:bg-primary-900"
+          :disabled="isLoading"
         >
-          ເພີ່ມບົດບາດ
+          {{ isLoading ? "ກຳລັງປະມວນຜົນ..." : "ເພີ່ມບົດບາດ" }}
         </button>
       </div>
     </UiForm>

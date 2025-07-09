@@ -40,6 +40,17 @@ interface ArrivalDetail {
     place_issue: string;
     image: string;
   };
+  verified_by_user: {
+    id: number;
+    email: string;
+
+    profile: {
+      image: string;
+      first_name: string;
+      last_name: string;
+    };
+  };
+
   personal_information: {
     name: string;
     family_name: string;
