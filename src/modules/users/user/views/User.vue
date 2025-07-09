@@ -95,7 +95,7 @@ onMounted(async () => {
   />
 
   <div
-    class="flex flex-col items-start justify-between p-4 sm:flex-row sm:items-center mt-4"
+    class="flex flex-col items-start justify-between p-4 sm:flex-row sm:items-center"
   >
     <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
       ຜູ້ໃຊ້ທັງຫມົດ

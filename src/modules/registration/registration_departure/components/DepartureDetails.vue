@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 import { formatDatePicker, formatDateTime } from "@/utils/FormatDataTime";
 import { CheckCircleOutlined } from "@ant-design/icons-vue";
 import { useDepartureStore } from "../store/departure.store";
+import { Modal } from "ant-design-vue";
 import UiButton from "@/components/button/UiButton.vue";
 import QRCode from "qrcode";
 
@@ -44,7 +45,27 @@ const generateQRCode = async (codeValue: string) => {
 
 // Verification handling
 const handleVerification = async () => {
-  await departureStore.verifyDeparture(departureId);
+  Modal.confirm({
+    title: "ຢືນຢັນ",
+    content: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການຢືນຢັນຂໍ້ມູນການລົງທະບຽນນີ້?",
+    okText: "ແມ່ນແລ້ວ,ຂ້ອຍແນ່ໃຈ",
+    cancelText: "ບໍ່,ຍົກເລີກ",
+    okType: "danger",
+    async onOk() {
+      try {
+        await departureStore.verifyDeparture(departureId);
+        // Reset QR code generation flag and regenerate QR code
+        qrCodeGenerated.value = false;
+        if (departureStore.currentDeparture?.verification_code) {
+          await generateQRCode(
+            departureStore.currentDeparture.verification_code
+          );
+        }
+      } catch (error) {
+        console.error("Verification failed:", error);
+      }
+    },
+  });
 };
 
 // Image URL handling
@@ -83,7 +104,7 @@ watch(
 </script>
 
 <template>
-  <div class="relative p-4 mt-12">
+  <div class="relative p-4">
     <!-- Loading State -->
     <div
       v-if="departureStore.isLoading"
@@ -345,7 +366,7 @@ watch(
       </div>
 
       <!-- Passport Information Section -->
-      <div>
+      <div class="mb-3 border-b pb-4">
         <h2
           class="mb-4 text-xl font-semibold leading-none text-gray-900 md:text-2xl dark:text-white"
         >
@@ -426,6 +447,93 @@ watch(
                 {{
                   departureStore.currentDeparture.passport_information
                     .place_issue
+                }}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- User Scanner -->
+      <div
+        class="mb-3 border-b pb-4"
+        v-if="
+          departureStore.currentDeparture.verified_by_user &&
+          (departureStore.currentDeparture.verified_by_user.email ||
+            departureStore.currentDeparture.verified_by_user.profile.image ||
+            departureStore.currentDeparture.verified_by_user.profile
+              .first_name ||
+            departureStore.currentDeparture.verified_by_user.profile.last_name)
+        "
+      >
+        <h2
+          class="mb-4 text-xl font-semibold leading-none text-gray-900 md:text-2xl dark:text-white"
+        >
+          ຂໍ້ມູນບຸກຄົນທີສະແກນ
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <img
+            v-if="
+              departureStore.currentDeparture.verified_by_user.profile.image
+            "
+            :src="
+              getImageUrl(
+                departureStore.currentDeparture.verified_by_user.profile.image
+              )
+            "
+            alt="ບໍ່ມີຮູບພາບ"
+            class="w-full rounded-lg border"
+          />
+          <div
+            v-else
+            class="w-full rounded-lg border flex items-center justify-center h-48 bg-gray-100 dark:bg-gray-800"
+          >
+            <span class="text-gray-400">ບໍ່ມີຮູບພາບ</span>
+          </div>
+
+          <dl
+            class="ms-0 md:ms-4 flex flex-row md:flex-col justify-between md:justify-start"
+          >
+            <div>
+              <dt
+                class="text-gray-900 dark:text-white leading-4 font-normal mb-2"
+              >
+                ອີເມວ
+              </dt>
+              <dd
+                class="text-gray-500 dark:text-gray-400 font-light mb-4 sm:mb-5"
+              >
+                {{ departureStore.currentDeparture.verified_by_user.email }}
+              </dd>
+            </div>
+            <div>
+              <dt
+                class="text-gray-900 dark:text-white leading-4 font-normal mb-2"
+              >
+                ຊື່
+              </dt>
+              <dd
+                class="text-gray-500 dark:text-gray-400 font-light mb-4 sm:mb-5"
+              >
+                {{
+                  departureStore.currentDeparture.verified_by_user.profile
+                    .first_name
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt
+                class="text-gray-900 dark:text-white leading-4 font-normal mb-2"
+              >
+                ນາມສະກຸນ
+              </dt>
+              <dd
+                class="text-gray-500 dark:text-gray-400 font-light mb-4 sm:mb-5"
+              >
+                {{
+                  departureStore.currentDeparture.verified_by_user.profile
+                    .last_name
                 }}
               </dd>
             </div>
