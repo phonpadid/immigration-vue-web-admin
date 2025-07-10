@@ -123,7 +123,7 @@ onMounted(async () => {
   <div>
     <!-- Header Section -->
     <div
-      class="flex flex-col sm:flex-row justify-between border-b dark:border-gray-600 gap-2 p-4 items-start sm:items-center mt-12"
+      class="flex flex-col sm:flex-row justify-between border-b dark:border-gray-600 gap-2 p-4 items-start sm:items-center"
     >
       <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
         ລາຍການລົງທະບຽນເຂົ້າເມືອງ
