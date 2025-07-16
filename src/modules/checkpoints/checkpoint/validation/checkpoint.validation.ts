@@ -10,14 +10,12 @@ export const validationRules = {
   province_id: [
     { required: true, message: "ກະລຸນາເລືອກແຂວງ", trigger: "change" },
   ],
-  country: [
-    { required: true, message: "ກະລຸນາເລືອກປະເທດ", trigger: "change" },
-  ],
+  country: [{ required: true, message: "ກະລຸນາເລືອກປະເທດ", trigger: "change" }],
   email: [
-    { 
+    {
       pattern: emailPattern,
-      message: "ກະລຸນາປ້ອນອີເມວໃ຃ຫ້ຖືກຕ້ອງ", 
-      trigger: "blur" 
+      message: "ກະລຸນາປ້ອນອີເມວໃ຃ຫ້ຖືກຕ້ອງ",
+      trigger: "blur",
     },
   ],
   phone_number: [
@@ -31,7 +29,11 @@ export const validationRules = {
     { required: true, message: "ກະລຸນາປ້ອນຊື່ດ່ານ (ພາສາລາວ)", trigger: "blur" },
   ],
   "translates.en.name": [
-    { required: true, message: "ກະລຸນາປ້ອນຊື່ດ່ານ (ພາສາອັງກິດ)", trigger: "blur" },
+    {
+      required: true,
+      message: "ກະລຸນາປ້ອນຊື່ດ່ານ (ພາສາອັງກິດ)",
+      trigger: "blur",
+    },
   ],
   "translates.zh_cn.name": [
     { required: true, message: "ກະລຸນາປ້ອນຊື່ດ່ານ (ພາສາຈີນ)", trigger: "blur" },

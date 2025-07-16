@@ -232,8 +232,8 @@ const handleSubmit = async () => {
     formData.append("link_map", typedForm.link_map || "");
     formData.append("phone_number", typedForm.phone_number || "");
     formData.append("email", typedForm.email || "");
-    formData.append("visa", typedForm.visa ? "1" : "0");
-    formData.append("e_visa", typedForm.e_visa ? "1" : "0");
+    formData.append("visa", String(typedForm.visa));
+    formData.append("e_visa", String(typedForm.e_visa));
 
     // Append image if new file is selected
     if (uploadedFile.value) {
@@ -260,7 +260,7 @@ const handleSubmit = async () => {
 
     await checkpointStore.updateCheckpoint(checkpointId.value, formData);
 
-    router.push("/checkpoint");
+    router.push("/admin/checkpoint");
     message.success("ແກ້ໄຂຂໍ້ມູນດ່ານສຳເລັດ");
   } catch (error: any) {
     message.error(error?.message || "ເກີດຂໍ້ຜິດພາດໃນການແກ້ໄຂຂໍ້ມູນ");
@@ -386,7 +386,7 @@ watch(() => route.path, handleRouteChange);
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-8">
+  <div class="container mx-auto px-4">
     <!-- Header -->
     <div
       class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4"
@@ -409,11 +409,8 @@ watch(() => route.path, handleRouteChange);
       <!-- Tabs for Translations -->
       <Tab v-model:activeKey="activeTab" :tabs="TABS_CONFIG">
         <template v-for="tab in TABS_CONFIG" :key="tab.key" #[tab.slotName]>
-          <UiFormItem
-            :name="`translates.${tab.lang}.name`"
-            label="ຊື່ດ່ານ"
-            required
-          >
+          <!-- :name="`translates.${tab.lang}.name`" -->
+          <UiFormItem label="ຊື່ດ່ານ" required>
             <UiInput
               v-model="typedForm.translates[tab.lang as TabLanguage].name"
               placeholder="ປ້ອນຊື່ດ່ານ"
@@ -536,7 +533,7 @@ watch(() => route.path, handleRouteChange);
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex justify-between items-center mt-8">
+      <div class="flex justify-between items-center">
         <div class="flex gap-4">
           <UiButton
             type="primary"
@@ -550,6 +547,7 @@ watch(() => route.path, handleRouteChange);
         </div>
       </div>
     </UiForm>
+    <br />
   </div>
 </template>
 

@@ -224,8 +224,8 @@ const handleSubmit = async () => {
     formData.append("link_map", checkpointForm.link_map);
     formData.append("phone_number", checkpointForm.phone_number);
     formData.append("email", checkpointForm.email);
-    formData.append("visa", checkpointForm.visa ? "1" : "0");
-    formData.append("e_visa", checkpointForm.e_visa ? "1" : "0");
+    formData.append("visa", String(checkpointForm.visa));
+    formData.append("e_visa", String(checkpointForm.e_visa));
 
     // Add image if exists
     if (uploadedFile.value) {
@@ -260,7 +260,7 @@ const handleSubmit = async () => {
     const result = await checkpointStore.createCheckpoint(formData);
     if (result) {
       message.success("ບັນທຶກຂໍ້ມູນດ່ານສຳເລັດ");
-      router.push("/checkpoint");
+      router.push("/admin/checkpoint");
     }
   } catch (error: any) {
     console.error("Error creating checkpoint:", error);
