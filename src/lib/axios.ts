@@ -1,10 +1,8 @@
 import axios, { type AxiosRequestConfig } from "axios";
 import { Modal } from "ant-design-vue";
 
-// ✅ ตั้งค่า baseURL ให้ถูกต้อง
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 
-// ✅ ตั้งค่าเริ่มต้นให้ Axios
 const authAxios = axios.create({
   baseURL: BASE_API_URL,
   headers: {
@@ -13,30 +11,24 @@ const authAxios = axios.create({
   },
 });
 
-// ✅ ฟังก์ชันเพิ่ม Header ให้ Request
 function addHeaders(
   config?: AxiosRequestConfig,
   data?: any
 ): AxiosRequestConfig {
   const token = localStorage.getItem("access_token") || null;
-
   if (!config) config = {};
   if (!config.headers) config.headers = {};
-
   if (token) {
     config.headers["Authorization"] = `Bearer ${token}`;
   }
-
   if (data && typeof data === "object" && !(data instanceof FormData)) {
     config.headers["Content-Type"] = "application/json";
   } else {
     config.headers["Content-Type"] = "multipart/form-data";
   }
-
   return config;
 }
 
-// ✅ Interceptor จัดการ Response Error
 authAxios.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -46,21 +38,49 @@ authAxios.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      const { status } = error.response;
+      const { status, data, config } = error.response;
+
+      // ✅ [DEBUG] แสดง Log ของทุก Error เพื่อการตรวจสอบ
+      console.error(
+        `[AXIOS ERROR] Status: ${status} | URL: ${config.url}`,
+        data
+      );
+
+      // ✅ [เพิ่มใหม่] ตรวจสอบว่าเป็น Error จากหน้า Login หรือไม่
+      if (
+        config.url.includes("/auth/login") &&
+        (status === 400 || status === 401)
+      ) {
+        Modal.warning({
+          title: "ເຂົ້າສູ່ລະບົບບໍ່ສຳເລັດ", // "Login Failed"
+          content: "ອີເມວ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ! ກະລຸນາລອງໃໝ່ອີກຄັ້ງ.", // "Email or password incorrect! Please try again."
+          closable: true,
+          footer: null,
+        });
+        // คืนค่า reject เพื่อให้ catch block ใน login store ทำงานต่อได้ แต่ไม่ทำอย่างอื่นใน interceptor
+        return Promise.reject(error);
+      }
 
       switch (status) {
         case 400:
           Modal.warning({
             title: "ມີບາງຢ່າງຜິດພາດ!",
-            content: "ຂໍ້ມູນບໍ່ຖືກຕ້ອງ!",
+            content: "ຂໍ້ມູນທີ່ສົ່ງໄປບໍ່ຖືກຕ້ອງ!",
             closable: true,
             footer: null,
           });
           break;
         case 401:
-          console.warn("Unauthorized! Logging out...");
+          // ✅ [แก้ไข] เปลี่ยนข้อความให้สื่อความหมายมากขึ้น
+          Modal.warning({
+            title: "ເຊສຊັນໝົດອາຍຸ!", // "เซสชันหมดอายุ!"
+            content: "ກະລຸນາເຂົ້າສູ່ລະບົບໃໝ່ອີກຄັ້ງ.", // "กรุณาเข้าสู่ระบบใหม่อีกครั้ง"
+            closable: true,
+            footer: null,
+          });
+          console.warn("Unauthorized (401)! Logging out...");
           localStorage.removeItem("access_token");
-          window.location.href = "/login";
+          window.location.href = "/admin/login";
           break;
         case 403:
           Modal.error({
@@ -92,7 +112,6 @@ authAxios.interceptors.response.use(
   }
 );
 
-
 export const authApi = {
   async post(url: string, data?: any, config?: AxiosRequestConfig) {
     return await authAxios.post(
@@ -110,7 +129,6 @@ export const api = {
       addHeaders(config)
     );
   },
-
   async post(url: string, data?: any, config?: AxiosRequestConfig) {
     return await authAxios.post(
       url.startsWith("/") ? url : `/${url}`,
@@ -118,7 +136,6 @@ export const api = {
       addHeaders(config, data)
     );
   },
-
   async put(url: string, data?: any, config?: AxiosRequestConfig) {
     return await authAxios.put(
       url.startsWith("/") ? url : `/${url}`,
@@ -126,7 +143,6 @@ export const api = {
       addHeaders(config, data)
     );
   },
-
   async delete(url: string, config?: AxiosRequestConfig) {
     return await authAxios.delete(
       url.startsWith("/") ? url : `/${url}`,
