@@ -96,6 +96,9 @@ export type Arrival = {
 // types/scanner.types.ts
 export type ScannerType = "arrival" | "departure";
 
-export interface ArrivalPaginatedResponse extends IPaginated {
+// export interface ArrivalPaginatedResponse extends IPaginated {
+//   data: ListArrival[];
+// }
+export interface ArrivalPaginatedResponse extends IPaginated, ListArrival {
   data: ListArrival[];
 }

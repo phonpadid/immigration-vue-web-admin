@@ -68,10 +68,28 @@ const handleInputSearch = async (
     limit: pagination.value.pageSize,
   };
 
-  // อัพเดท filters และโหลดข้อมูล
-  await departureStore.setFilters(filters);
-  await departureStore.getAllDeparture();
-  pagination.value.total = departureStore.departure.total;
+  try {
+    await departureStore.setFilters(filters);
+    await departureStore.getAllDeparture();
+
+    if (
+      field === "verification_code" &&
+      departureStore.departure.data.length === 1
+    ) {
+      const singleResult = departureStore.departure.data[0];
+
+      if (singleResult) {
+        navigateToDetails(singleResult.id);
+      } else {
+        pagination.value.total = departureStore.departure.data.length;
+      }
+    } else {
+      pagination.value.total = departureStore.departure.data.length;
+    }
+  } catch (error) {
+    console.error("Error during search:", error);
+    pagination.value.total = departureStore.departure.total;
+  }
 };
 
 // แยกฟังก์ชันสำหรับจัดการ select
@@ -127,11 +145,11 @@ onMounted(async () => {
 
     <!-- Search Filters -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 py-3 mx-4">
-      <InputSearch
+      <!-- <InputSearch
         v-model="searchState.departure_name"
         placeholder="ຈຸດອອກ..."
         @search="(value) => handleInputSearch('departure_name', value)"
-      />
+      /> -->
       <InputSearch
         v-model="searchState.passport_number"
         placeholder="ເລກທີ່ passport..."

@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { onMounted, watch, computed, ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { formatDatePicker, formatDateTime } from "@/utils/FormatDataTime";
 import { UserOutlined, CheckCircleOutlined } from "@ant-design/icons-vue";
 import { useArrivalStore } from "../store/arrival.store";
 import { Modal } from "ant-design-vue";
+import { useNotification } from "@/utils/notificationService";
 import UiButton from "@/components/button/UiButton.vue";
 import IconArrivalDetails from "@/components/Icon/IconArrivalDetails.vue";
 import QRCode from "qrcode";
 
 const route = useRoute();
+const router = useRouter();
+const { openNotification } = useNotification();
 const arrivalStore = useArrivalStore();
 const arrivalId = route.params.id as string;
 const qrCodeGenerated = ref(false); // เพิ่มตัวแปรเพื่อติดตามการสร้าง QR code
@@ -64,6 +67,14 @@ const handleVerification = async () => {
         qrCodeGenerated.value = false;
         if (arrivalStore.currentArrival?.verification_code) {
           await generateQRCode(arrivalStore.currentArrival.verification_code);
+          openNotification(
+            "success",
+            "ສໍາເລັດ",
+            "ຂໍ້ມູນການລົງທະບຽນເຂົ້າເມືອງຖືກຢືນຢັນແລ້ວ"
+          );
+
+          await arrivalStore.resetFilters();
+          router.push({ name: "registrations_arrival" });
         }
       } catch (error) {
         console.error("Verification failed:", error);

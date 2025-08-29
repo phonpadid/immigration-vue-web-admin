@@ -66,6 +66,7 @@ interface CheckpointData {
   email: string;
   visa: boolean;
   e_visa: boolean;
+  is_open: boolean;
   translates: TranslateItem[];
   [key: string]: any;
 }
@@ -81,6 +82,7 @@ interface CheckpointFormData {
   email: string;
   visa: boolean;
   e_visa: boolean;
+  is_open: boolean; 
   translates: {
     [key in TabLanguage]: {
       id: number;
@@ -234,6 +236,7 @@ const handleSubmit = async () => {
     formData.append("email", typedForm.email || "");
     formData.append("visa", String(typedForm.visa));
     formData.append("e_visa", String(typedForm.e_visa));
+    formData.append("is_open", String(typedForm.is_open));
 
     // Append image if new file is selected
     if (uploadedFile.value) {
@@ -313,6 +316,7 @@ const loadCheckpointData = async () => {
     typedForm.email = checkpoint.email || "";
     typedForm.visa = checkpoint.visa || false;
     typedForm.e_visa = checkpoint.e_visa || false;
+    typedForm.is_open = checkpoint.is_open || false;
     typedForm.image = checkpoint.image || "";
 
     // Process translations from array to object structure
@@ -482,6 +486,9 @@ watch(() => route.path, handleRouteChange);
           </UiCheckbox>
           <UiCheckbox v-model:checked="typedForm.e_visa" class="flex-1">
             ຮັບ E-Visa
+          </UiCheckbox>
+          <UiCheckbox v-model:checked="typedForm.is_open" class="flex-1">
+            ເປີດ/ປິດ ດ່ານ
           </UiCheckbox>
         </div>
       </div>
