@@ -38,6 +38,7 @@ export interface Checkpoint {
   email: string;
   visa: boolean;
   e_visa: boolean;
+  is_open: boolean;
   created_at: string;
   updated_at: string;
   translates: Translation[];
@@ -54,6 +55,7 @@ export interface CheckpointForm {
   email: string;
   visa: boolean;
   e_visa: boolean;
+  is_open: boolean;
   translates: Record<
     SupportedLanguage,
     Omit<Translation, "lang" | "id" | "slug">

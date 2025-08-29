@@ -77,7 +77,7 @@ const handleEdit = () => {
 /*************************************************** */
 // Back to news list
 const handleBack = () => {
-  router.push("/news");
+  router.push("/admin/news");
 };
 /*************************************************** */
 onMounted(async () => {
@@ -87,7 +87,7 @@ onMounted(async () => {
 
     if (!currentNews.value) {
       message.error("ບໍ່ພົບຂໍ້ມູນຂ່າວ");
-      router.push("/news");
+      router.push("/admin/news");
     }
   } catch (error) {
     console.error("Failed to load news data:", error);

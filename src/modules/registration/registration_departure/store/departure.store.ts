@@ -16,11 +16,21 @@ export const useDepartureStore = defineStore("departure", () => {
     data: [],
     total: 0,
   });
+
+  const initialFilters: DepartureFilters = {
+    black_list: "",
+    is_verified: "",
+    verification_code: "",
+    departure_name: "",
+    passport_number: "",
+    offset: 0,
+    limit: 10,
+  };
+
   const currentDeparture = ref<DeparturePaginatedResponse | null>(null);
   let currentRequest: Promise<void> | null = null;
   const filters = reactive<DepartureFilters>({});
   const getAllDeparture = async () => {
-    // ถ้ามี request ที่กำลังทำงานอยู่ให้รอให้เสร็จก่อน
     if (currentRequest) {
       await currentRequest;
       return;
@@ -59,10 +69,12 @@ export const useDepartureStore = defineStore("departure", () => {
     }
   };
 
-  // ... other methods remain the same ...
-
   const setFilters = (newFilters: Partial<DepartureFilters>) => {
     Object.assign(filters, newFilters);
+  };
+  const resetFilters = () => {
+    Object.assign(filters, initialFilters);
+    console.log("Departure filters have been reset!");
   };
 
   const getDepartureById = async (id: number) => {
@@ -105,5 +117,6 @@ export const useDepartureStore = defineStore("departure", () => {
     getAllDeparture,
     getDepartureById,
     setFilters,
+    resetFilters,
   };
 });

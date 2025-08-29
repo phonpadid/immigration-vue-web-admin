@@ -101,6 +101,18 @@ export const useArrivalStore = defineStore("arrival", () => {
     limit: 10,
   });
 
+  const resetFilters = () => {
+    filters.entry_name = "";
+    filters.passport_number = "";
+    filters.visa_number = "";
+    filters.black_list = "";
+    filters.is_verified = "";
+    filters.verification_code = "";
+    filters.offset = 0;
+    filters.limit = 10; 
+    
+  };
+
   let currentRequest: Promise<void> | null = null;
 
   const getAllArrival = async () => {
@@ -283,6 +295,7 @@ export const useArrivalStore = defineStore("arrival", () => {
     getArrivalById,
     verifyArrival,
     setFilters,
+    resetFilters,
     getPurposeLabel,
     getTravelTypeLabel,
     getGenderLabel,

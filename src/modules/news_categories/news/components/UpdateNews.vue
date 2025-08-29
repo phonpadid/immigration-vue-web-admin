@@ -273,7 +273,7 @@ const loadNewsData = async () => {
 
     if (!currentNews.value) {
       message.error("ບໍ່ພົບຂໍ້ມູນຂ່າວ");
-      router.push("/news");
+      router.push("/admin/news");
       return;
     }
 
@@ -382,7 +382,7 @@ const handleSubmit = async () => {
     }
     await newsStore.updateNewsWithFormData(newsId.value, formData);
     message.success("ອັບເດດຂ່າວສຳເລັດ");
-    router.push("/news");
+    router.push("/admin/news");
   } catch (error: any) {
     console.error("Error updating news:", error);
     message.error(error?.message || "ເກີດຂໍ້ຜິດພາດໃນການອັບເດດຂ່າວ");

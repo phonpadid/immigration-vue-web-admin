@@ -49,6 +49,41 @@ const navigateToDetails = (id: number) => {
   router.push(`/admin/arrival/details/${id}`);
 };
 
+// const handleInputSearch = async (
+//   field: keyof typeof searchState.value,
+//   value: string
+// ) => {
+
+//   searchState.value[field] = value;
+
+//   pagination.value.current = 1;
+
+//   const filters = {
+//     entry_name: searchState.value.entry_name,
+//     passport_number: searchState.value.passport_number,
+//     visa_number: searchState.value.visa_number,
+//     verification_code: searchState.value.verification_code,
+//     is_verified: searchState.value.is_verified,
+//     black_list: searchState.value.black_list,
+//     offset: 0,
+//     limit: pagination.value.pageSize,
+//   };
+
+//   try {
+
+//     await arrivalStore.setFilters(filters);
+//     await arrivalStore.getAllArrival();
+
+//     pagination.value.total = arrivalStore.arrival.total;
+//   } catch (error) {
+//     console.error("Failed to search:", error);
+//   }
+// };
+
+// แยกฟังก์ชันสำหรับจัดการ select
+
+// วางโค้ดนี้แทนที่ฟังก์ชัน handleInputSearch เดิมของคุณ
+
 const handleInputSearch = async (
   field: keyof typeof searchState.value,
   value: string
@@ -59,7 +94,7 @@ const handleInputSearch = async (
   // รีเซ็ต pagination
   pagination.value.current = 1;
 
-  // สร้าง filters ใหม่และเรียก API เพียงครั้งเดียว
+  // สร้าง filters ใหม่
   const filters = {
     entry_name: searchState.value.entry_name,
     passport_number: searchState.value.passport_number,
@@ -72,17 +107,31 @@ const handleInputSearch = async (
   };
 
   try {
-    // เรียก API เพียงครั้งเดียว
+    // เรียก API เพื่อค้นหาข้อมูล
     await arrivalStore.setFilters(filters);
     await arrivalStore.getAllArrival();
 
-    // อัพเดท total หลังจากได้ข้อมูลใหม่
-    pagination.value.total = arrivalStore.arrival.total;
+    
+    if (
+      field === "verification_code" &&
+      arrivalStore.arrival.data.length === 1
+    ) {
+      const singleResult = arrivalStore.arrival.data[0];
+
+      if (singleResult) {
+        navigateToDetails(singleResult.id);
+      } else {
+        pagination.value.total = arrivalStore.arrival.data.length;
+      }
+    } else {
+      pagination.value.total = arrivalStore.arrival.data.length;
+    }
   } catch (error) {
     console.error("Failed to search:", error);
+    pagination.value.total = arrivalStore.arrival.total;
   }
 };
-// แยกฟังก์ชันสำหรับจัดการ select
+
 const handleInputChange = async (
   field: keyof typeof searchState.value,
   value: string
@@ -123,7 +172,7 @@ onMounted(async () => {
   <div>
     <!-- Header Section -->
     <div
-      class="flex flex-col sm:flex-row justify-between border-b dark:border-gray-600 gap-2 p-4 items-start sm:items-center mt-12"
+      class="flex flex-col sm:flex-row justify-between border-b dark:border-gray-600 gap-2 p-4 items-start sm:items-center"
     >
       <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
         ລາຍການລົງທະບຽນເຂົ້າເມືອງ
@@ -135,21 +184,21 @@ onMounted(async () => {
 
     <!-- Search Filters -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 py-3 mx-4">
-      <InputSearch
+      <!-- <InputSearch
         v-model="searchState.entry_name"
         placeholder="ຈຸດເຂົ້າ..."
         @search="(value) => handleInputSearch('entry_name', value)"
-      />
+      /> -->
       <InputSearch
         v-model="searchState.passport_number"
         placeholder="ເລກທີ່ passport..."
         @search="(value) => handleInputSearch('passport_number', value)"
       />
-      <InputSearch
+      <!-- <InputSearch
         v-model="searchState.visa_number"
         placeholder="ເລກທີ່ visa..."
         @search="(value) => handleInputSearch('visa_number', value)"
-      />
+      /> -->
       <InputSearch
         v-model="searchState.verification_code"
         placeholder="ລະຫັດຢືນຢັນ..."

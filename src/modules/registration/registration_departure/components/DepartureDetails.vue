@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { onMounted, watch, computed, ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { formatDatePicker, formatDateTime } from "@/utils/FormatDataTime";
 import { CheckCircleOutlined } from "@ant-design/icons-vue";
 import { useDepartureStore } from "../store/departure.store";
 import { Modal } from "ant-design-vue";
+import { useNotification } from "@/utils/notificationService";
 import UiButton from "@/components/button/UiButton.vue";
 import QRCode from "qrcode";
 
 const route = useRoute();
+const router = useRouter();
+const { openNotification } = useNotification();
 const departureStore = useDepartureStore();
 const departureId = route.params.id as string;
 const qrCodeGenerated = ref(false);
@@ -60,6 +63,14 @@ const handleVerification = async () => {
           await generateQRCode(
             departureStore.currentDeparture.verification_code
           );
+          openNotification(
+            "success",
+            "ສໍາເລັດ",
+            "ຂໍ້ມູນການລົງທະບຽນອອກຖືກຢືນຢັນແລ້ວ"
+          );
+          await departureStore.resetFilters();
+
+          router.push({ name: "registrations_departure" });
         }
       } catch (error) {
         console.error("Verification failed:", error);

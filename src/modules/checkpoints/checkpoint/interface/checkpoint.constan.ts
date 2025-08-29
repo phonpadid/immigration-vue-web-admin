@@ -29,6 +29,7 @@ export const DEFAULT_FORM_VALUES: CheckpointForm = {
   email: "",
   visa: false,
   e_visa: false,
+  is_open: false,
   translates: {
     lo: { name: "", time_operation: "", address: "", content: "" },
     en: { name: "", time_operation: "", address: "", content: "" },

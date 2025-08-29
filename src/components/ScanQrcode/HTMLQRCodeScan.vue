@@ -1,4 +1,14 @@
 <template>
+  <UiModal
+    v-model:visible="scannerStore.isModalVisible"
+    :title="scannerStore.modalTitle"
+    :showOkButton="false"
+    :showCancelButton="false"
+    :customButtons="scannerStore.modalButtons"
+    @customClick="handleModalButtonClick"
+  >
+    {{ scannerStore.modalMessage }}
+  </UiModal>
   <div>
     <!-- Button to Open Modal -->
     <UiButton
@@ -127,6 +137,7 @@ import { useArrivalStore } from "@/modules/registration/registration_arrival/sto
 import type { ScannerType } from "@/modules/registration/registration_arrival/interface/arrival.interface";
 import { useScannerStore } from "@/modules/registration/registration_arrival/store/scanner.store";
 import UiButton from "../button/UiButton.vue";
+import UiModal from "../Modal/UiModal.vue";
 
 // Debug Mode
 const showDebugInfo = ref(false);
@@ -138,6 +149,12 @@ const props = defineProps<{
   type: ScannerType;
 }>();
 const scannerStore = useScannerStore();
+const handleModalButtonClick = (index: number) => {
+  const button = scannerStore.modalButtons[index];
+  if (button?.onClick) {
+    button.onClick();
+  }
+};
 // Modal State
 const showModal = ref(false);
 const scanner = ref<Html5Qrcode | null>(null);
@@ -641,6 +658,12 @@ const onScanSuccess = async (decodedText: string) => {
     scanStatus.value = `ກຳລັງກວດສອບ QR Code...`;
 
     const result = await scannerStore.scanCode(decodedText);
+
+    if (!result) {
+      // scanStatus.value = "QR Code ນີ້ໄດ້ຮັບການຢືນຢັນແລ້ວ";
+      await stopScanning();
+      return;
+    }
 
     if (result?.id) {
       await stopScanning();

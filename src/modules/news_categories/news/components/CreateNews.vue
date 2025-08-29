@@ -261,7 +261,7 @@ const handleSubmit = async () => {
 
     await newsStore.createNewsWithFormData(formData);
     message.success("ບັນທຶກຂ່າວສຳເລັດ");
-    router.push("/news");
+    router.push("/admin/news");
   } catch (error: any) {
     console.error("Error submitting form:", error);
     message.error(error?.message || "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກຂ່າວ");

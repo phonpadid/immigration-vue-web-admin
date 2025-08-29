@@ -4,21 +4,12 @@ import { useRouter } from "vue-router";
 import { message } from "ant-design-vue";
 import { storeToRefs } from "pinia";
 import QuillEditorComponent from "@/components/editor/QuillEditorComponent.vue";
-import type {
-  QuillDelta,
-  QuillContent,
-} from "@/components/editor/editor.types";
-import type {
-  CheckpointForm,
-  ValidationRules,
-  SupportedLanguage,
-} from "@/types/checkpoint.type";
+import type { CheckpointForm } from "@/types/checkpoint.type";
 import {
   TABS_CONFIG,
   COUNTRIES,
   DEFAULT_FORM_VALUES,
 } from "../interface/checkpoint.constan";
-import { formatContentForSubmit } from "@/utils/formatContent";
 import { useCheckpointStore } from "../store/checkpoint.store";
 import { useCheckpointProvinceStore } from "@/modules/checkpoints/province/store/province.store";
 import { useCheckpointcategoriesStore } from "@/modules/checkpoints/category/store/checkpoint.categories.store";
@@ -130,22 +121,6 @@ const checkpointForm = reactive<CheckpointForm>({
   ...DEFAULT_FORM_VALUES,
 });
 
-// Ensure the content field is treated properly for editor
-const getFormattedContent = (content: any): string => {
-  if (!content) return "";
-
-  if (typeof content === "string") {
-    return content;
-  }
-
-  try {
-    return JSON.stringify(content);
-  } catch (e) {
-    console.error("Error formatting content for editor:", e);
-    return "";
-  }
-};
-
 // Computed properties for options
 const categoryOptions = computed(() => {
   const options = [{ value: 0, label: "ກະລຸນາເລືອກປະເພດດ່ານ" }];
@@ -224,8 +199,9 @@ const handleSubmit = async () => {
     formData.append("link_map", checkpointForm.link_map);
     formData.append("phone_number", checkpointForm.phone_number);
     formData.append("email", checkpointForm.email);
-    formData.append("visa", checkpointForm.visa ? "1" : "0");
-    formData.append("e_visa", checkpointForm.e_visa ? "1" : "0");
+    formData.append("visa", String(checkpointForm.visa));
+    formData.append("e_visa", String(checkpointForm.e_visa));
+    formData.append("is_open", String(checkpointForm.is_open));
 
     // Add image if exists
     if (uploadedFile.value) {
@@ -252,7 +228,6 @@ const handleSubmit = async () => {
     });
 
     // Log FormData for debugging
-    console.log("Form data being submitted:");
     for (const [key, value] of formData.entries()) {
       console.log(`${key}: ${value instanceof File ? value.name : value}`);
     }
@@ -260,7 +235,7 @@ const handleSubmit = async () => {
     const result = await checkpointStore.createCheckpoint(formData);
     if (result) {
       message.success("ບັນທຶກຂໍ້ມູນດ່ານສຳເລັດ");
-      router.push("/checkpoint");
+      router.push("/admin/checkpoint");
     }
   } catch (error: any) {
     console.error("Error creating checkpoint:", error);
@@ -366,6 +341,10 @@ onMounted(async () => {
           <UiCheckbox
             v-model:checked="checkpointForm.e_visa"
             label="ຮັບ E-Visa"
+          />
+          <UiCheckbox
+            v-model:checked="checkpointForm.is_open"
+            label="ເປີດ/ປິດ ດ່ານ"
           />
         </div>
       </div>
