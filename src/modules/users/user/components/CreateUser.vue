@@ -238,7 +238,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white mt-12">
+  <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white ">
     ເພີ່ມຜູ້ໃຊ້ໃໝ່
   </h2>
   <UiForm

@@ -130,7 +130,7 @@ onMounted(async () => {
     </div>
 
     <UiForm v-else ref="formRef" :model="formLaws" :rules="rulesLaws">
-      <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white mt-12">
+      <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
         ອັບເດດ
       </h2>
 

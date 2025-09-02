@@ -127,7 +127,7 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white mt-12">
+  <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
     ເພີ່ມຂ່າວສານ
   </h2>
   <div>

@@ -143,7 +143,7 @@ onMounted(async () => {
   />
 
   <div
-    class="flex flex-col items-start justify-between border-b dark:border-gray-600 p-4 sm:flex-row sm:items-center mt-12"
+    class="flex flex-col items-start justify-between border-b dark:border-gray-600 p-4 sm:flex-row sm:items-center"
   >
     <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
       ຕາຕະລາງເກັບຮັກສາປ້າຍໂຄສະນາ

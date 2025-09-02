@@ -179,7 +179,7 @@ const goBack = (): void => {
 
 <template>
   <HasPermission :permission="HOTEL_READ">
-    <div class="hotel-detail-container mt-12">
+    <div class="hotel-detail-container ">
       <div class="flex justify-between items-center mb-4">
         <!-- ปุ่มกลับ -->
         <div class="flex items-center gap-4">

@@ -37,7 +37,7 @@ onMounted(fetchProvinceData);
 </script>
 
 <template>
-  <h2 class="text-xl font-bold text-gray-900 dark:text-white mt-12">
+  <h2 class="text-xl font-bold text-gray-900 dark:text-white ">
     ລາຍລະອຽດແຂວງ
   </h2>
   <div class="relative">

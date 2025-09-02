@@ -163,7 +163,7 @@ watch(error, (newError) => {
 </script>
 
 <template>
-  <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white mt-12">
+  <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white ">
     ແກ້ໄຂຂໍ້ມູນປະເພດວີຊາ
   </h2>
 

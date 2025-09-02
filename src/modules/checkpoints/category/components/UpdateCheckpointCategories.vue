@@ -185,7 +185,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white mt-12">
+  <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white ">
     ອັບເດດປະເພດດ່ານ
   </h2>
   <UiForm :model="formData" v-if="!isLoading">

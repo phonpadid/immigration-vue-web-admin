@@ -41,7 +41,7 @@ onMounted(() => {
 <template>
   <div class="relative">
     <div
-      class="px-4 mb-4 grid gap-4 sm:mb-5 sm:grid-cols-3 sm:gap-6 md:gap-12 mt-12"
+      class="px-4 mb-4 grid gap-4 sm:mb-5 sm:grid-cols-3 sm:gap-6 md:gap-12 "
     >
       <div class="sm:col-span-2">
         <div class="flex items-center">

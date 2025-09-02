@@ -51,7 +51,7 @@ onMounted(() => {
     <div class="px-4 grid gap-4 grid-cols-1 sm:grid-cols-2 sm:gap-6">
       <dl>
         <dt
-          class="text-gray-900 dark:text-white leading-4 font-normal mb-2 mt-12"
+          class="text-gray-900 dark:text-white leading-4 font-normal mb-2"
         >
           ຊື່
         </dt>
@@ -83,7 +83,7 @@ onMounted(() => {
 
       <dl>
         <dt
-          class="text-gray-900 dark:text-white leading-4 font-normal mb-2 mt-12"
+          class="text-gray-900 dark:text-white leading-4 font-normal mb-2"
         >
           ການອະນຸຍາດ
         </dt>

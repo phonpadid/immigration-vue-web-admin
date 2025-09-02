@@ -49,7 +49,7 @@ const handleEdit = () => {
 </script>
 
 <template>
-  <div class="relative mt-12">
+  <div class="relative">
     <div
       v-if="isLoading"
       class="absolute inset-0 flex items-center justify-center bg-white/70 dark:bg-gray-900/70 z-10"
