@@ -170,7 +170,7 @@ onMounted(async () => {
   <!-- ใช้ HasPermission เพื่อแสดงเฉพาะเมื่อมีสิทธิ์อ่านข้อมูลโรงแรม -->
   <HasPermission :permission="HOTEL_READ">
     <div
-      class="flex flex-col items-start justify-between border-b dark:border-gray-600 p-4 sm:flex-row sm:items-center mt-12"
+      class="flex flex-col items-start justify-between border-b dark:border-gray-600 p-4 sm:flex-row sm:items-center "
     >
       <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
         ຕາຕະລາງຂໍ້ມູນໂຮງແຮມ
@@ -292,7 +292,7 @@ onMounted(async () => {
 
   <!-- ສະແດງຂໍ້ຄວາມເມືອບໍ່ມີສິດເຂົ້າເຖິງ -->
   <HasPermission :permission="HOTEL_READ" :not="true">
-    <div class="flex flex-col items-center justify-center p-8 mt-12">
+    <div class="flex flex-col items-center justify-center p-8">
       <div class="text-6xl text-gray-400 mb-4">
         <i class="fas fa-lock"></i>
       </div>

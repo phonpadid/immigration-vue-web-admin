@@ -91,7 +91,6 @@ const quillConfig = {
         enter: {
           key: 13,
           handler: function () {
-            // ให้ Quill จัดการ Enter ตามปกติ
             return true;
           },
         },
@@ -99,8 +98,8 @@ const quillConfig = {
     },
   },
 };
-// ปรับปรุงฟังก์ชัน onEditorReady
-let isUpdating = false; // เพิ่มตัวแปรเพื่อป้องกันการทำงานซ้ำ
+//onEditorReady
+let isUpdating = false;
 const onTextChange = () => {
   if (!quillInstance || isUpdating) return;
 
@@ -113,26 +112,56 @@ const onTextChange = () => {
   };
 
   if (content.ops) {
-    content.ops.forEach((op: any) => {
+    // ใช้ตัวแปรนี้เพื่อเก็บ paragraph ปัจจุบันที่กำลังสร้าง
+    let currentParagraphContent: any[] = [];
+
+    content.ops.forEach((op: any, index: number) => {
+      // ตรวจสอบว่าเป็นข้อความ
       if (typeof op.insert === "string") {
-        // แยกข้อความตาม new lines และสร้าง paragraph สำหรับแต่ละบรรทัด
         const lines = op.insert.split("\n");
-        lines.forEach((line: string) => {
-          // สร้าง paragraph สำหรับทุกบรรทัด รวมถึงบรรทัดว่าง
-          formattedContent.content.push({
-            type: "paragraph",
-            attrs: {
-              textAlign: "left",
-            },
-            content: [
-              {
-                type: "text",
-                text: line || " ", // ใช้ space สำหรับบรรทัดว่าง
-              },
-            ],
-          });
+        lines.forEach((line: string, lineIndex: number) => {
+          if (line) {
+            const textNode: any = {
+              type: "text",
+              text: line,
+            };
+            if (op.attributes?.link) {
+              textNode.marks = [
+                {
+                  type: "link",
+                  attrs: { href: op.attributes.link },
+                },
+              ];
+            }
+            currentParagraphContent.push(textNode);
+          }
+
+          // ถ้าไม่ใช่บรรทัดสุดท้ายของ op นี้ และมีข้อความอยู่
+          if (
+            lineIndex < lines.length - 1 &&
+            currentParagraphContent.length > 0
+          ) {
+            // สร้าง paragraph จาก content ที่สะสมไว้
+            formattedContent.content.push({
+              type: "paragraph",
+              attrs: { textAlign: "left" },
+              content: currentParagraphContent,
+            });
+            // รีเซ็ตเพื่อเริ่ม paragraph ใหม่
+            currentParagraphContent = [];
+          }
         });
       } else if (op.insert?.image) {
+        // ถ้ามี paragraph ค้างอยู่ ให้ปิดก่อน
+        if (currentParagraphContent.length > 0) {
+          formattedContent.content.push({
+            type: "paragraph",
+            attrs: { textAlign: "left" },
+            content: currentParagraphContent,
+          });
+          currentParagraphContent = [];
+        }
+        // เพิ่ม image node
         formattedContent.content.push({
           type: "image",
           attrs: {
@@ -143,6 +172,15 @@ const onTextChange = () => {
         });
       }
     });
+
+    // เพิ่ม paragraph สุดท้ายที่อาจจะค้างอยู่
+    if (currentParagraphContent.length > 0) {
+      formattedContent.content.push({
+        type: "paragraph",
+        attrs: { textAlign: "left" },
+        content: currentParagraphContent,
+      });
+    }
   }
 
   emit("update:modelValue", JSON.stringify(formattedContent));
@@ -157,12 +195,9 @@ const onTextChange = () => {
     isUpdating = false;
   });
 };
-
 const onEditorReady = (quill: any) => {
   quillInstance = quill;
-
-  // กำหนดค่า default selection
-  quillInstance.setSelection(0, 0);
+  isUpdating = true; // ป้องกันการอัปเดตซ้ำซ้อน
 
   if (props.modelValue) {
     try {
@@ -180,11 +215,23 @@ const onEditorReady = (quill: any) => {
           if (node.type === "paragraph" && node.content) {
             node.content.forEach((textNode: any) => {
               if (textNode.type === "text" && textNode.text) {
+                const attributes: any = {};
+                // ตรวจสอบ marks สำหรับ link
+                if (Array.isArray(textNode.marks)) {
+                  const linkMark = textNode.marks.find(
+                    (mark: any) => mark.type === "link"
+                  );
+                  if (linkMark && linkMark.attrs?.href) {
+                    attributes.link = linkMark.attrs.href;
+                  }
+                }
                 delta.ops.push({
                   insert: textNode.text,
+                  attributes: attributes,
                 });
               }
             });
+            // เพิ่มบรรทัดใหม่เมื่อจบ paragraph
             delta.ops.push({ insert: "\n" });
           } else if (node.type === "image" && node.attrs?.src) {
             delta.ops.push(
@@ -199,22 +246,23 @@ const onEditorReady = (quill: any) => {
         });
       }
 
-      // เก็บตำแหน่ง cursor ก่อน set contents
       const selection = quillInstance.getSelection();
-
       quillInstance.setContents(delta);
-
-      // คืนค่าตำแหน่ง cursor หลังจาก set contents
       nextTick(() => {
         if (selection) {
           quillInstance.setSelection(selection);
         }
+        isUpdating = false;
       });
     } catch (e) {
       console.error("Error setting initial content:", e);
+      isUpdating = false;
     }
+  } else {
+    isUpdating = false;
   }
 };
+
 const lastClickTime = ref(0);
 const DOUBLE_CLICK_DELAY = 300; // 300ms
 
@@ -653,11 +701,21 @@ onMounted(async () => {
   margin-bottom: 1rem;
 }
 
+:deep(.ql-editor p) {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+:deep(.ql-editor ol, :deep(.ql-editor ul)) {
+  margin: 0;
+  padding: 0;
+}
+
 :deep(.ql-editor) {
   min-height: v-bind('props.height + "px"');
 }
 
 :deep(.ql-editor img) {
+  margin: 1em 0;
   max-width: 100%;
   height: auto;
   display: block;

@@ -77,7 +77,7 @@ onMounted(() => {
 
 <template>
   <div
-    class="p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mb-4 relative mt-12"
+    class="p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mb-4 relative "
   >
     <h2 class="text-2xl font-bold mb-8 text-center dark:text-white">
       ການລົງທະບຽນເຂົ້າ

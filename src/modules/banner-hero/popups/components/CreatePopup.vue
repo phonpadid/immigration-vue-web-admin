@@ -127,7 +127,7 @@ const resetForm = () => {
 </script>
 
 <template>
-  <div class="container mx-auto p-4 mt-12">
+  <div class="container mx-auto p-4">
     <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
       ເພີ່ມຂໍ້ມູນປ໋ອບອັບ
     </h2>

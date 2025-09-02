@@ -234,7 +234,7 @@ onMounted(() => {
   <LoadingSpinner v-if="isLoading" class="h-[80vh]" />
 
   <div v-else>
-    <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white mt-12">
+    <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white ">
       ອັບເດດຂໍ້ມູນຜູ້ໃຊ້
     </h2>
 

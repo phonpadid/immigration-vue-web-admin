@@ -60,7 +60,7 @@ onMounted(() => {
 
 <template>
   <div class="relative">
-    <div class="px-4 grid gap-4 sm:grid-cols-3 sm:gap-6 md:gap-12 mt-12">
+    <div class="px-4 grid gap-4 sm:grid-cols-3 sm:gap-6 md:gap-12">
       <dl>
         <dt class="text-gray-900 dark:text-white leading-4 font-normal mb-2">
           ຊື

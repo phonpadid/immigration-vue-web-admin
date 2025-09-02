@@ -100,7 +100,7 @@ onMounted(async () => {
 
 <template>
   <LoadingSpinner v-if="isLoading" size="large" class="relative h-[80vh]" />
-  <div v-else-if="currentNews" class="relative mt-12">
+  <div v-else-if="currentNews" class="relative ">
     <Tab v-model:activeKey="activeTab" :tabs="tabsConfig">
       <template
         v-for="(tab, index) in tabsConfig"

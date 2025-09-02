@@ -46,7 +46,7 @@ const handleDelete = async () => {
 </script>
 
 <template>
-  <div class="relative mt-12">
+  <div class="relative ">
     <div v-if="checkpoint">
       <!-- Tabs for different languages -->
       <Tab v-model:activeKey="activeTab" :tabs="TABS_CONFIG">

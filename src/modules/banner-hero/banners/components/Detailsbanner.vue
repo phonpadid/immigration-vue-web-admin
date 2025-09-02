@@ -94,7 +94,7 @@ onMounted(() => {
   </div>
 
   <div v-else-if="bannerData">
-    <h2 class="text-xl font-bold text-gray-900 dark:text-white mt-12">
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white">
       ລາຍລະອຽດປ້າຍ
     </h2>
     <div class="relative">

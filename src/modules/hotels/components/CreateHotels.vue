@@ -127,7 +127,7 @@ onMounted(() => {
 <template>
   <HasPermission :permission="HOTEL_WRITE">
     <div class="hotel-form-container">
-      <div class="flex justify-between items-center mb-4 mt-12">
+      <div class="flex justify-between items-center mb-4">
         <div class="flex items-center gap-4">
           <h2 class="text-xl font-bold text-gray-900 dark:text-white">
             ເພີ່ມໂຮງແຮມໃໝ່

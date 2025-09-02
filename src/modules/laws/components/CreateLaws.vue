@@ -76,7 +76,7 @@ watch(
 <template>
   <HasPermission :permission="LAW_WRITE">
     <UiForm ref="formRef" :model="formLaws" :rules="rulesLaws">
-      <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white mt-12">
+      <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white ">
         ເພີ່ມຂໍ້ມູນ
       </h2>
       <UiFormItem label="ອັບໂຫລດໄຟລ໌" name="file">

@@ -126,7 +126,7 @@ onMounted(loadData);
 </script>
 
 <template>
-  <div class="relative mt-12">
+  <div class="relative ">
     <Tab :tabs="tabsConfig" v-model:activeKey="activeTab" class="mb-4">
       >
       <template v-for="tab in tabsConfig" :key="tab.key" #[tab.slotName]>
