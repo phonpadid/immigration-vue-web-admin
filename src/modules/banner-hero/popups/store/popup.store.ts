@@ -13,7 +13,6 @@ export const popupsStore = defineStore("popups", () => {
     total: 0,
   });
 
-  // เพิ่มตัวกรองสำหรับใช้ในการกรอง
   const filters = reactive({
     visibility: "", // ค่าว่าง = ทั้งหมด, '0' = สาธารณะ, '1' = ส่วนตัว
     status: "", // ค่าว่าง = ทั้งหมด, '0' = ใช้งานอยู่, '1' = ไม่ได้ใช้งาน
@@ -73,7 +72,6 @@ export const popupsStore = defineStore("popups", () => {
         popups.total = data.total || data.data.length;
       }
 
-      // อัปเดตค่าตัวกรองเพื่อให้ตรงกับข้อมูลที่โหลดมา
       if (is_private !== "") {
         filters.visibility = is_private;
       }
@@ -87,8 +85,6 @@ export const popupsStore = defineStore("popups", () => {
       isLoading.value = false;
     }
   };
-
-  // ฟังก์ชันโหลดข้อมูลใหม่โดยใช้ตัวกรองปัจจุบัน
   const refreshWithFilters = async (offset = 0, limit = 10) => {
     await getAllPopups(offset, limit, filters.visibility, filters.status);
   };
@@ -110,20 +106,40 @@ export const popupsStore = defineStore("popups", () => {
     }
   };
 
+  // const changeStatus = async (id: number, is_private: boolean) => {
+  //   try {
+  //     console.log("ID:", id);
+  //     console.log("Is private?:", is_private);
+  //     isLoading.value = true;
+  //     const { data } = await api.put(`/popup/${id}/change-status`, {
+  //       is_private: is_private,
+  //     });
+
+  //     if (data) {
+  //       const index = popups.data.findIndex((item) => item.id === id);
+  //       if (index !== -1) {
+  //         popups.data[index].is_private = data.is_private;
+  //       }
+  //       currentPopups.value = data;
+  //       return data;
+  //     }
+  //   } catch (error) {
+  //     console.error("❌ Failed to update status:", error);
+  //     throw error;
+  //   } finally {
+  //     isLoading.value = false;
+  //   }
+  // };
+
   const changeStatus = async (id: number, is_private: boolean) => {
     try {
       isLoading.value = true;
       const { data } = await api.put(`/popup/${id}/change-status`, {
         is_private: is_private,
       });
-
       if (data) {
-        // อัปเดตข้อมูลใน local state ด้วย เพื่อไม่ต้อง reload ทั้งหมด
-        const index = popups.data.findIndex((item) => item.id === id);
-        if (index !== -1) {
-          popups.data[index].is_private = data.is_private;
-        }
-        currentPopups.value = data;
+        // หลังจากอัปเดตสำเร็จ ให้โหลดข้อมูลทั้งหมดใหม่ทันที
+        await refreshWithFilters();
         return data;
       }
     } catch (error) {
@@ -133,6 +149,7 @@ export const popupsStore = defineStore("popups", () => {
       isLoading.value = false;
     }
   };
+
   //   const checkStatusPublic = async (id: number) => {
   //     try {
   //       isLoading.value = true;

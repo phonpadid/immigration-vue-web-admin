@@ -111,7 +111,6 @@ const handleInputSearch = async (
     await arrivalStore.setFilters(filters);
     await arrivalStore.getAllArrival();
 
-    
     if (
       field === "verification_code" &&
       arrivalStore.arrival.data.length === 1
@@ -121,10 +120,10 @@ const handleInputSearch = async (
       if (singleResult) {
         navigateToDetails(singleResult.id);
       } else {
-        pagination.value.total = arrivalStore.arrival.data.length;
+        pagination.value.total = arrivalStore.arrival.total;
       }
     } else {
-      pagination.value.total = arrivalStore.arrival.data.length;
+      pagination.value.total = arrivalStore.arrival.total;
     }
   } catch (error) {
     console.error("Failed to search:", error);

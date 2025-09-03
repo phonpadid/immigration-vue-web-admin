@@ -81,10 +81,10 @@ const handleInputSearch = async (
       if (singleResult) {
         navigateToDetails(singleResult.id);
       } else {
-        pagination.value.total = departureStore.departure.data.length;
+        pagination.value.total = departureStore.departure.total;
       }
     } else {
-      pagination.value.total = departureStore.departure.data.length;
+      pagination.value.total = departureStore.departure.total;
     }
   } catch (error) {
     console.error("Error during search:", error);
