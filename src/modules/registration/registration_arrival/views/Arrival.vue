@@ -6,6 +6,9 @@ import { formatDateTime } from "@/utils/FormatDataTime";
 import { useRouter } from "vue-router"; // Add router import
 import { Icon } from "@iconify/vue";
 import InputSelect from "@/components/Input/InputSelect.vue";
+import UiModal from "@/components/Modal/UiModal.vue";
+import UiButton from "@/components/button/UiButton.vue";
+import DatePicker from "@/components/Datepicker/DatePicker.vue";
 import InputSearch from "@/components/Input/InputSearch.vue";
 import Table from "@/components/table/Table.vue";
 import HTMLQRCodeScan from "@/components/ScanQrcode/HTMLQRCodeScan.vue";
@@ -22,6 +25,9 @@ const searchState = ref({
   is_verified: "",
   black_list: "",
 });
+
+const exportModalVisible = ref(false);
+const exportDateRange = ref<[string, string] | null>(null);
 
 // ตัวแปรสำหรับ pagination
 const pagination = ref({
@@ -48,42 +54,6 @@ const blacklistOptions = [
 const navigateToDetails = (id: number) => {
   router.push(`/admin/arrival/details/${id}`);
 };
-
-// const handleInputSearch = async (
-//   field: keyof typeof searchState.value,
-//   value: string
-// ) => {
-
-//   searchState.value[field] = value;
-
-//   pagination.value.current = 1;
-
-//   const filters = {
-//     entry_name: searchState.value.entry_name,
-//     passport_number: searchState.value.passport_number,
-//     visa_number: searchState.value.visa_number,
-//     verification_code: searchState.value.verification_code,
-//     is_verified: searchState.value.is_verified,
-//     black_list: searchState.value.black_list,
-//     offset: 0,
-//     limit: pagination.value.pageSize,
-//   };
-
-//   try {
-
-//     await arrivalStore.setFilters(filters);
-//     await arrivalStore.getAllArrival();
-
-//     pagination.value.total = arrivalStore.arrival.total;
-//   } catch (error) {
-//     console.error("Failed to search:", error);
-//   }
-// };
-
-// แยกฟังก์ชันสำหรับจัดการ select
-
-// วางโค้ดนี้แทนที่ฟังก์ชัน handleInputSearch เดิมของคุณ
-
 const handleInputSearch = async (
   field: keyof typeof searchState.value,
   value: string
@@ -155,6 +125,20 @@ const handleTableChange = async (paginationInfo: any) => {
 
   await arrivalStore.getAllArrival();
 };
+// ฟังก์ชันที่เรียกเมื่อกดปุ่ม Export เพื่อเปิด Modal
+const handleExport = () => {
+  exportModalVisible.value = true;
+};
+
+const confirmExport = async () => {
+  const filtersToExport = {
+    ...searchState.value,
+    start_date: exportDateRange.value ? exportDateRange.value[0] : "",
+    end_date: exportDateRange.value ? exportDateRange.value[1] : "",
+  };
+  await arrivalStore.exportArrivalData(filtersToExport);
+  exportModalVisible.value = false;
+};
 
 // โหลดข้อมูลครั้งแรก
 onMounted(async () => {
@@ -215,6 +199,14 @@ onMounted(async () => {
         placeholder="ບັນຊີດຳ"
         @change="(value) => handleInputChange('black_list', value)"
       />
+      <div>
+        <UiButton
+          type="submit"
+          colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
+          @click="handleExport"
+          >Export</UiButton
+        >
+      </div>
     </div>
     <!-- Table Section -->
     <Table
@@ -289,6 +281,26 @@ onMounted(async () => {
         </div>
       </template>
     </Table>
+    <UiModal
+      title="ເລືອກວັນທີເລິ່ມຕົ້ນແລະສິນສຸດສຳລັັບລົງທະບຽນເຂົ້າເມືອງ"
+      v-model:visible="exportModalVisible"
+      okText="ຢືນຢັນ"
+      cancelText="ຍົກເລີກ"
+      :confirmLoading="arrivalStore.isLoading"
+      @ok="confirmExport"
+      @cancel="exportModalVisible = false"
+    >
+      <div class="p-4">
+        <p class="text-gray-700 dark:text-gray-300 mb-4">
+          ກະລຸນາເລືອກຊ່ວງວັນທີ່ທີ່ຕ້ອງການສົ່ງອອກຂໍ້ມູນ.
+        </p>
+        <DatePicker
+          v-model:value="exportDateRange"
+          displayFormat="DD-MM-YYYY"
+          valueFormat="YYYY-MM-DD"
+        />
+      </div>
+    </UiModal>
   </div>
 </template>
 

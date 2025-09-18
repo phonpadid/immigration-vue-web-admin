@@ -5,6 +5,7 @@ import type {
   DeparturePaginatedResponse,
   DepartureFilters,
 } from "../interface/departure.interface";
+import type { ExportFilters } from "../../registration_arrival/interface/arrival.interface";
 
 export const useDepartureStore = defineStore("departure", () => {
   const isLoading = ref(false);
@@ -107,12 +108,44 @@ export const useDepartureStore = defineStore("departure", () => {
     }
   };
 
+   const exportDepartureData = async (exportFilters: ExportFilters) => {
+      try {
+        isLoading.value = true;
+        const queryParams = new URLSearchParams();
+        Object.entries(exportFilters).forEach(([key, value]) => {
+          if (value && value.toString().trim() !== "") {
+            queryParams.append(key, value.toString());
+          }
+        });
+  
+        const { data } = await api.get(
+          `/report/departure?${queryParams.toString()}`,
+          {
+            responseType: "blob",
+          }
+        );
+        const fileURL = window.URL.createObjectURL(new Blob([data]));
+        const fileLink = document.createElement("a");
+        fileLink.href = fileURL;
+        fileLink.setAttribute("download", "departure_report.xlsx");
+        document.body.appendChild(fileLink);
+        fileLink.click();
+        document.body.removeChild(fileLink);
+        window.URL.revokeObjectURL(fileURL);
+      } catch (error) {
+        console.error("❌ Failed to export departure data", error);
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
   return {
     isLoading,
     departure,
     currentDeparture,
     filters,
     isVerifying,
+    exportDepartureData,
     verifyDeparture,
     getAllDeparture,
     getDepartureById,

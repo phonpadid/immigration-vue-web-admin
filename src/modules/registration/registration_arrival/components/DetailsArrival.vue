@@ -563,7 +563,7 @@ watch(
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <img
-            v-if="arrivalStore.currentArrival.visa_information.image"
+            v-if="arrivalStore.currentArrival.visa_information?.image"
             :src="
               getImageUrl(arrivalStore.currentArrival.visa_information.image)
             "
@@ -660,12 +660,22 @@ watch(
         </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <img
-            v-if="arrivalStore.currentArrival.verified_by_user.profile.image"
+          <!-- <img
+            v-if="arrivalStore.currentArrival.verified_by_user?.profile?.image"
             :src="
               getImageUrl(arrivalStore.currentArrival.visa_information.image)
             "
             alt="visa image"
+            class="w-full rounded-lg border"
+          /> -->
+          <img
+            v-if="arrivalStore.currentArrival.verified_by_user?.profile?.image"
+            :src="
+              getImageUrl(
+                arrivalStore.currentArrival.verified_by_user.profile.image
+              )
+            "
+            alt="User profile image"
             class="w-full rounded-lg border"
           />
           <div

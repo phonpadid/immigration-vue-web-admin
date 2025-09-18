@@ -1,76 +1,12 @@
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import { api } from "@/lib/axios";
-import type { ArrivalPaginatedResponse } from "../interface/arrival.interface";
+import type {
+  ArrivalPaginatedResponse,
+  ArrivalDetail,
+  ExportFilters,
+} from "../interface/arrival.interface";
 import { notification } from "ant-design-vue";
-
-// Define a more specific type for arrival details
-interface ArrivalDetail {
-  id: number;
-  entry_name: string;
-  black_list: "available" | "unavailable";
-  verification_code: string;
-  verified_at: string | null;
-  created_at: string;
-  purpose:
-    | "business"
-    | "diplomatic"
-    | "official"
-    | "tourism"
-    | "transit"
-    | "visit";
-  is_traveling_in_tour: string;
-  traveling_by_type: "flight" | "car" | "bus";
-  traveling_by_no: string;
-  traveling_from: string;
-  passport_information: {
-    id: number;
-    number: string;
-    expiry_date: string;
-    date_issue: string;
-    place_issue: string;
-    image: string;
-    people_image: string;
-  };
-  visa_information: {
-    id: number;
-    number: string;
-    visaCategory: string;
-    date_issue: string;
-    place_issue: string;
-    image: string;
-  };
-  verified_by_user: {
-    id: number;
-    email: string;
-
-    profile: {
-      image: string;
-      first_name: string;
-      last_name: string;
-    };
-  };
-
-  personal_information: {
-    name: string;
-    family_name: string;
-    date_of_birth: string;
-    place_of_birth: string;
-    gender: "male" | "female";
-    nationality: string;
-    race: string;
-    occupation: string;
-    phone_number: string;
-  };
-  intended_address?: Array<{
-    name: string;
-    village: string;
-    district: string;
-    province: string;
-    check_in: string;
-    check_out: string;
-  }>;
-}
 
 export const useArrivalStore = defineStore("arrival", () => {
   // States
@@ -109,8 +45,7 @@ export const useArrivalStore = defineStore("arrival", () => {
     filters.is_verified = "";
     filters.verification_code = "";
     filters.offset = 0;
-    filters.limit = 10; 
-    
+    filters.limit = 10;
   };
 
   let currentRequest: Promise<void> | null = null;
@@ -284,6 +219,41 @@ export const useArrivalStore = defineStore("arrival", () => {
     }
   };
 
+  const exportArrivalData = async (exportFilters: ExportFilters) => {
+    try {
+      isLoading.value = true;
+      const queryParams = new URLSearchParams();
+      Object.entries(exportFilters).forEach(([key, value]) => {
+        if (value && value.toString().trim() !== "") {
+          queryParams.append(key, value.toString());
+        }
+      });
+
+      const { data } = await api.get(
+        `/report/arrival?${queryParams.toString()}`,
+        {
+          responseType: "blob",
+        }
+      );
+      const fileURL = window.URL.createObjectURL(new Blob([data]));
+      const fileLink = document.createElement("a");
+      fileLink.href = fileURL;
+      fileLink.setAttribute("download", "arrival_report.xlsx");
+      document.body.appendChild(fileLink);
+      fileLink.click();
+      document.body.removeChild(fileLink);
+      window.URL.revokeObjectURL(fileURL);
+    } catch (error) {
+      console.error("❌ Failed to export arrival data", error);
+      notification.error({
+        message: "ຂໍ້ຜິດພາດ",
+        description: "ບໍ່ສາມາດສົ່ງອອກຂໍ້ມູນໄດ້",
+      });
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   return {
     isLoading,
     isDetailLoading,
@@ -292,6 +262,7 @@ export const useArrivalStore = defineStore("arrival", () => {
     currentArrival,
     filters,
     getAllArrival,
+    exportArrivalData,
     getArrivalById,
     verifyArrival,
     setFilters,

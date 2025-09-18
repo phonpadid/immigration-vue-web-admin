@@ -7,37 +7,61 @@ import { Modal } from "ant-design-vue";
 import Switch from "@/components/Switch/Switch.vue";
 import InputSelect from "@/components/Input/InputSelect.vue";
 import Table from "@/components/table/Table.vue";
-import UiButton from "@/components/button/UiButton.vue";
 import UibuttonDropdown from "@/components/button/UibuttonDropdown.vue";
 import Dropdown from "@/components/Dropdown/Dropdown.vue";
 import LoadingSpinner from "@/components/loading/LoadingSpinner.vue";
 
 /********************************************************************* */
+const { getAllfeedback, feedback, deleteFeedback, changeStatusFeedback } =
+  usefeedbackStore();
 
-const {
-  getAllfeedback,
-  feedback,
-  isLoading,
-  deleteFeedback,
-  changeStatusFeedback,
-} = usefeedbackStore();
+// const isLoading = ref(false);
 /********************************************************************* */
 const { push } = useRouter();
 const menuOptions = ref([
   { key: "1", label: "ລາຍລະອຽດ" },
   { key: "2", label: "ລຶບ" },
 ]);
-const Loading = ref(false);
+
+// ลบ const Loading = ref(false); ออกไป
+
+// เพิ่มตัวแปรสำหรับ Pagination
+const currentPage = ref(1);
+const pageSize = ref(10);
+const totalItems = ref(0);
 
 /********************************************************************* */
-
 const selectedValue = ref("");
 const options = [
   { value: "", label: "ການເຜີຍແຜ່" },
   { value: "1", label: "ສາທາລະນະ" },
   { value: "0", label: "ສ່ວນຕົວ" },
 ];
+
 /********************************************************************* */
+// สร้างฟังก์ชันหลักสำหรับโหลดข้อมูล โดยรับ offset และ limit
+const fetchData = async (
+  offset: number,
+  limit: number,
+  isPublished?: string
+) => {
+  try {
+    // ไม่ต้องใช้ Loading.value = true/false; แล้ว เพราะ Pinia store จัดการให้
+    await getAllfeedback(offset, limit, isPublished);
+    // อัปเดตค่า totalItems จาก store
+    totalItems.value = feedback.total;
+  } catch (error) {
+    console.error("Failed to fetch feedback:", error);
+  }
+};
+
+/********************************************************************* */
+const handleTableChange = (pagination: any) => {
+  currentPage.value = pagination.current;
+  pageSize.value = pagination.pageSize;
+  const offset = (currentPage.value - 1) * pageSize.value;
+  fetchData(offset, pageSize.value, selectedValue.value);
+};
 
 const handleSelect = (key: string, record: any) => {
   if (key === "1") {
@@ -51,56 +75,43 @@ const handleSelect = (key: string, record: any) => {
       okType: "danger",
       onOk: async () => {
         try {
-          Loading.value = true;
           await deleteFeedback(record.id);
           alert("ລົບຂໍ້ມູນສຳເລັດ");
         } catch (err) {
           console.error("Error:", err);
-        } finally {
-          Loading.value = false;
         }
       },
     });
   }
 };
-/********************************************************************* */
 
+/********************************************************************* */
 const handlePublishChange = async (value: boolean, record: any) => {
   try {
     await changeStatusFeedback(record.id, value);
   } catch (error) {
     console.error("Failed to update publish status:", error);
-    // Revert the UI if update failed
     record.is_published = !value;
   }
 };
 
 /********************************************************************* */
-
 onMounted(async () => {
-  try {
-    await getAllfeedback();
-  } catch (error) {
-    console.error("Failed to load feedback:", error);
-  }
+  fetchData(0, pageSize.value, selectedValue.value);
 });
-/********************************************************************* */
 
-watch(selectedValue, async (newValue) => {
-  try {
-    await getAllfeedback(0, 10, newValue);
-  } catch (error) {
-    console.error("Failed to filter feedback:", error);
-  }
-});
 /********************************************************************* */
+watch(selectedValue, async (newValue) => {
+  currentPage.value = 1; // เมื่อเปลี่ยน filter ให้กลับไปหน้าแรก
+  fetchData(0, pageSize.value, newValue);
+});
 </script>
 
 <template>
-  <LoadingSpinner
+  <!-- <LoadingSpinner
     v-if="isLoading"
     class="absolute inset-0 flex items-center justify-center z-10"
-  />
+  /> -->
 
   <div
     class="flex flex-col items-start justify-between p-4 sm:flex-row sm:items-center mt-4"
@@ -121,6 +132,12 @@ watch(selectedValue, async (newValue) => {
     <Table
       :columns="columns"
       :dataSource="feedback.data || []"
+      :pagination="{
+        current: currentPage,
+        pageSize: pageSize,
+        total: totalItems,
+      }"
+      @change="handleTableChange"
       class="dark:bg-gray-800 dark:text-white dark:border-gray-700"
     >
       <template #is_published="{ record }">

@@ -12,25 +12,27 @@ export const usefeedbackStore = defineStore("feedback", () => {
   });
 
   const getAllfeedback = async (offset = 0, limit = 10, isPublished = "") => {
-    try {
-      isLoading.value = true;
-      let url = `/feedback?offset=${offset}&limit=${limit}`;
+  try {
+    isLoading.value = true;
+    let url = `/feedback?offset=${offset}&limit=${limit}`;
 
-      if (isPublished !== "") {
-        url += `&is_published=${isPublished}`;
-      }
-
-      const { data } = await api.get(url);
-
-      if (data?.data && Array.isArray(data.data)) {
-        feedback.data = data.data;
-      }
-    } catch (error) {
-      console.error("❌ Failed to fetch feedback:", error);
-    } finally {
-      isLoading.value = false;
+    if (isPublished !== "") {
+      url += `&is_published=${isPublished}`;
     }
-  };
+
+    const { data } = await api.get(url);
+
+    if (data?.data && Array.isArray(data.data)) {
+      // อัปเดตข้อมูลและจำนวนรวมทั้งหมด
+      feedback.data = data.data;
+      feedback.total = data.total; // 💡 เพิ่มบรรทัดนี้เพื่อเก็บค่า total จาก API
+    }
+  } catch (error) {
+    console.error("❌ Failed to fetch feedback:", error);
+  } finally {
+    isLoading.value = false;
+  }
+};
 
   const changeStatusFeedback = async (id: number, isPublished: boolean) => {
     try {

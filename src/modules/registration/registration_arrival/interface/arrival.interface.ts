@@ -92,6 +92,85 @@ export type Arrival = {
     check_out: string;
   }[];
 };
+/****************************************************************** */
+export interface ExportFilters {
+  entry_name?: string;
+  passport_number?: string;
+  visa_number?: string;
+  black_list?: string;
+  is_verified?: string;
+  verification_code?: string;
+  start_date?: string;
+  end_date?: string;
+}
+export interface ArrivalDetail {
+  id: number;
+  entry_name: string;
+  black_list: "available" | "unavailable";
+  verification_code: string;
+  verified_at: string | null;
+  created_at: string;
+  purpose:
+    | "business"
+    | "diplomatic"
+    | "official"
+    | "tourism"
+    | "transit"
+    | "visit";
+  is_traveling_in_tour: string;
+  traveling_by_type: "flight" | "car" | "bus";
+  traveling_by_no: string;
+  traveling_from: string;
+  passport_information: {
+    id: number;
+    number: string;
+    expiry_date: string;
+    date_issue: string;
+    place_issue: string;
+    image: string;
+    people_image: string;
+  };
+  visa_information: {
+    id: number;
+    number: string;
+    visaCategory: string;
+    date_issue: string;
+    place_issue: string;
+    image: string;
+  };
+  verified_by_user: {
+    id: number;
+    email: string;
+
+    profile: {
+      image: string;
+      first_name: string;
+      last_name: string;
+    };
+  };
+
+  personal_information: {
+    name: string;
+    family_name: string;
+    date_of_birth: string;
+    place_of_birth: string;
+    gender: "male" | "female";
+    nationality: string;
+    race: string;
+    occupation: string;
+    phone_number: string;
+  };
+  intended_address?: Array<{
+    name: string;
+    village: string;
+    district: string;
+    province: string;
+    check_in: string;
+    check_out: string;
+  }>;
+}
+
+/****************************************************************** */
 
 // types/scanner.types.ts
 export type ScannerType = "arrival" | "departure";
