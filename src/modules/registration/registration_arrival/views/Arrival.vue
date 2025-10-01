@@ -54,6 +54,10 @@ const blacklistOptions = [
 const navigateToDetails = (id: number) => {
   router.push(`/admin/arrival/details/${id}`);
 };
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9ad2263 (up code)
 const handleInputSearch = async (
   field: keyof typeof searchState.value,
   value: string
@@ -81,6 +85,10 @@ const handleInputSearch = async (
     await arrivalStore.setFilters(filters);
     await arrivalStore.getAllArrival();
 
+<<<<<<< HEAD
+=======
+    // ✅ แก้ไขตรงนี้ให้ใช้ arrivalStore.arrival.total
+>>>>>>> 9ad2263 (up code)
     if (
       field === "verification_code" &&
       arrivalStore.arrival.data.length === 1
@@ -93,7 +101,11 @@ const handleInputSearch = async (
         pagination.value.total = arrivalStore.arrival.total;
       }
     } else {
+<<<<<<< HEAD
       pagination.value.total = arrivalStore.arrival.total;
+=======
+      pagination.value.total = arrivalStore.arrival.total; // ✅ แก้ไขตรงนี้ด้วยครับ
+>>>>>>> 9ad2263 (up code)
     }
   } catch (error) {
     console.error("Failed to search:", error);
@@ -147,7 +159,7 @@ onMounted(async () => {
     limit: pagination.value.pageSize,
   });
   await arrivalStore.getAllArrival();
-  pagination.value.total = arrivalStore.arrival.total;
+  pagination.value.total = arrivalStore.arrival.total; 
 });
 </script>
 
