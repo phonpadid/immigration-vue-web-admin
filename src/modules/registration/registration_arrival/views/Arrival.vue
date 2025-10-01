@@ -49,41 +49,6 @@ const navigateToDetails = (id: number) => {
   router.push(`/admin/arrival/details/${id}`);
 };
 
-// const handleInputSearch = async (
-//   field: keyof typeof searchState.value,
-//   value: string
-// ) => {
-
-//   searchState.value[field] = value;
-
-//   pagination.value.current = 1;
-
-//   const filters = {
-//     entry_name: searchState.value.entry_name,
-//     passport_number: searchState.value.passport_number,
-//     visa_number: searchState.value.visa_number,
-//     verification_code: searchState.value.verification_code,
-//     is_verified: searchState.value.is_verified,
-//     black_list: searchState.value.black_list,
-//     offset: 0,
-//     limit: pagination.value.pageSize,
-//   };
-
-//   try {
-
-//     await arrivalStore.setFilters(filters);
-//     await arrivalStore.getAllArrival();
-
-//     pagination.value.total = arrivalStore.arrival.total;
-//   } catch (error) {
-//     console.error("Failed to search:", error);
-//   }
-// };
-
-// แยกฟังก์ชันสำหรับจัดการ select
-
-// วางโค้ดนี้แทนที่ฟังก์ชัน handleInputSearch เดิมของคุณ
-
 const handleInputSearch = async (
   field: keyof typeof searchState.value,
   value: string
@@ -111,7 +76,7 @@ const handleInputSearch = async (
     await arrivalStore.setFilters(filters);
     await arrivalStore.getAllArrival();
 
-    
+    // ✅ แก้ไขตรงนี้ให้ใช้ arrivalStore.arrival.total
     if (
       field === "verification_code" &&
       arrivalStore.arrival.data.length === 1
@@ -121,10 +86,10 @@ const handleInputSearch = async (
       if (singleResult) {
         navigateToDetails(singleResult.id);
       } else {
-        pagination.value.total = arrivalStore.arrival.data.length;
+        pagination.value.total = arrivalStore.arrival.total;
       }
     } else {
-      pagination.value.total = arrivalStore.arrival.data.length;
+      pagination.value.total = arrivalStore.arrival.total; // ✅ แก้ไขตรงนี้ด้วยครับ
     }
   } catch (error) {
     console.error("Failed to search:", error);
@@ -164,7 +129,7 @@ onMounted(async () => {
     limit: pagination.value.pageSize,
   });
   await arrivalStore.getAllArrival();
-  pagination.value.total = arrivalStore.arrival.total;
+  pagination.value.total = arrivalStore.arrival.total; 
 });
 </script>
 
