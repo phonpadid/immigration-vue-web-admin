@@ -12,7 +12,7 @@ const { login } = useAuthStore();
 
 const formState = reactive({
   email: "",
-  password: "",
+  password: "", 
   // email: "dev@gmail.com",
   // password: "DevAdm1n@2024",
 });

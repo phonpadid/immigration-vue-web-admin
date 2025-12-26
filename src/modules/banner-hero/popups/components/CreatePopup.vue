@@ -14,7 +14,7 @@ import Switch from "@/components/Switch/Switch.vue";
 import UploadDragger from "@/components/Upload/UploadDragger.vue";
 import DatePicker from "@/components/Datepicker/DatePicker.vue";
 
-// Configure dayjs to use custom parsing
+// Configure dayjs to use n  parsing
 dayjs.extend(customParseFormat);
 
 const { createPopup } = popupsStore();
