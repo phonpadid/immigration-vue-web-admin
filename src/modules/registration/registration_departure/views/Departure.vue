@@ -6,6 +6,7 @@ import { formatDateTime } from "@/utils/FormatDataTime";
 import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import DatePicker from "@/components/Datepicker/DatePicker.vue";
+import DatePickerSingle from "@/components/Datepicker/DatePickerSingle.vue";
 import UiModal from "@/components/Modal/UiModal.vue";
 import InputSelect from "@/components/Input/InputSelect.vue";
 import InputSearch from "@/components/Input/InputSearch.vue";
@@ -18,13 +19,14 @@ const departureStore = useDepartureStore();
 const exportModalVisible = ref(false);
 const exportDateRange = ref<[string, string] | null>(null);
 
-// Search state
+// สถานะสำหรับการค้นหาแบบรวม
+const globalSearch = ref("");
+
+// สถานะสำหรับการค้นหาแยก (filters)
 const searchState = ref({
-  departure_name: "",
-  passport_number: "",
-  verification_code: "",
   is_verified: "",
   black_list: "",
+  check_in_date: "",
 });
 
 // Pagination
@@ -52,23 +54,57 @@ const blacklistOptions = [
 const navigateToDetails = (id: number) => {
   router.push(`/admin/departure/details/${id}`);
 };
-const handleInputSearch = async (
-  field: keyof typeof searchState.value,
-  value: string
-) => {
-  // อัพเดทค่าใน searchState
-  searchState.value[field] = value;
 
-  // รีเซ็ต pagination
+// ฟังก์ชันค้นหาแบบ global
+const handleGlobalSearch = async (value: string) => {
+  globalSearch.value = value;
   pagination.value.current = 1;
 
-  // สร้าง filters ใหม่
-  const filters = {
-    departure_name: searchState.value.departure_name,
-    passport_number: searchState.value.passport_number,
-    verification_code: searchState.value.verification_code,
+  const filters: any = {
+    search: value.trim(),
     is_verified: searchState.value.is_verified,
     black_list: searchState.value.black_list,
+    check_in_date: searchState.value.check_in_date,
+    offset: 0,
+    limit: pagination.value.pageSize,
+  };
+
+  console.log('Search value:', value);
+  console.log('Filters:', filters);
+
+  try {
+    await departureStore.setFilters(filters);
+    await departureStore.getAllDeparture();
+
+    // ถ้าค้นหาและพบผลลัพธ์เพียง 1 รายการ ให้ไปหน้ารายละเอียด
+    if (
+      value &&
+      departureStore.departure.data.length === 1
+    ) {
+      const singleResult = departureStore.departure.data[0];
+      if (singleResult) {
+        navigateToDetails(singleResult.id);
+        return;
+      }
+    }
+
+    pagination.value.total = departureStore.departure.total;
+  } catch (error) {
+    console.error("Failed to search:", error);
+    pagination.value.total = departureStore.departure.total;
+  }
+};
+
+// ฟังก์ชันจัดการ filters (select dropdowns)
+const handleFilterChange = async (field: keyof typeof searchState.value, value: string) => {
+  searchState.value[field] = value;
+  pagination.value.current = 1;
+
+  const filters: any = {
+    search: globalSearch.value.trim(),
+    is_verified: searchState.value.is_verified,
+    black_list: searchState.value.black_list,
+    check_in_date: searchState.value.check_in_date,
     offset: 0,
     limit: pagination.value.pageSize,
   };
@@ -76,35 +112,37 @@ const handleInputSearch = async (
   try {
     await departureStore.setFilters(filters);
     await departureStore.getAllDeparture();
-
-    if (
-      field === "verification_code" &&
-      departureStore.departure.data.length === 1
-    ) {
-      const singleResult = departureStore.departure.data[0];
-
-      if (singleResult) {
-        navigateToDetails(singleResult.id);
-      } else {
-        pagination.value.total = departureStore.departure.total;
-      }
-    } else {
-      pagination.value.total = departureStore.departure.total;
-    }
+    pagination.value.total = departureStore.departure.total;
   } catch (error) {
-    console.error("Error during search:", error);
+    console.error("Failed to filter:", error);
     pagination.value.total = departureStore.departure.total;
   }
 };
 
-// แยกฟังก์ชันสำหรับจัดการ select
-const handleInputChange = async (
-  field: keyof typeof searchState.value,
-  value: string
-) => {
-  searchState.value[field] = value;
-  if (field === "is_verified" || field === "black_list") {
-    await handleInputSearch(field, value);
+// ฟังก์ชันจัดการ date filter
+const handleDateChange = async (date: string) => {
+  searchState.value.check_in_date = date;
+  pagination.value.current = 1;
+
+  const filters: any = {
+    search: globalSearch.value.trim(),
+    is_verified: searchState.value.is_verified,
+    black_list: searchState.value.black_list,
+    check_in_date: date,
+    offset: 0,
+    limit: pagination.value.pageSize,
+  };
+
+  console.log('Date filter:', date);
+  console.log('Filters:', filters);
+
+  try {
+    await departureStore.setFilters(filters);
+    await departureStore.getAllDeparture();
+    pagination.value.total = departureStore.departure.total;
+  } catch (error) {
+    console.error("Failed to filter by date:", error);
+    pagination.value.total = departureStore.departure.total;
   }
 };
 
@@ -130,7 +168,10 @@ const handleExport = () => {
 
 const confirmExport = async () => {
   const filtersToExport = {
-    ...searchState.value,
+    search: globalSearch.value.trim(),
+    black_list: searchState.value.black_list,
+    is_verified: searchState.value.is_verified,
+    check_in_date: searchState.value.check_in_date,
     start_date: exportDateRange.value ? exportDateRange.value[0] : "",
     end_date: exportDateRange.value ? exportDateRange.value[1] : "",
   };
@@ -141,6 +182,10 @@ const confirmExport = async () => {
 // Initial data load
 onMounted(async () => {
   await departureStore.setFilters({
+    search: "",
+    check_in_date: "",
+    is_verified: "",
+    black_list: "",
     offset: 0,
     limit: pagination.value.pageSize,
   });
@@ -164,33 +209,34 @@ onMounted(async () => {
     </div>
 
     <!-- Search Filters -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 py-3 mx-4">
-      <!-- <InputSearch
-        v-model="searchState.departure_name"
-        placeholder="ຈຸດອອກ..."
-        @search="(value) => handleInputSearch('departure_name', value)"
-      /> -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 py-3 mx-4">
+      <!-- Global Search Input -->
       <InputSearch
-        v-model="searchState.passport_number"
-        placeholder="ເລກທີ່ passport..."
-        @search="(value) => handleInputSearch('passport_number', value)"
+        v-model="globalSearch"
+        placeholder="ຄົ້ນຫາ: ຊື່ຈຸດອອກ, ເລກທີ່ passport, ລະຫັດຢືນຢັນ..."
+        @search="handleGlobalSearch"
+        class="md:col-span-2"
       />
-      <InputSearch
-        v-model="searchState.verification_code"
-        placeholder="ລະຫັດຢືນຢັນ..."
-        @search="(value) => handleInputSearch('verification_code', value)"
+
+      <!-- Date Picker Filter -->
+      <DatePickerSingle
+        v-model="searchState.check_in_date"
+        placeholder="ວັນທີເດີນທາງ"
+        @change="handleDateChange"
       />
+
+      <!-- Dropdown Filters -->
       <InputSelect
         v-model="searchState.is_verified"
         :options="verificationOptions"
         placeholder="ການກວດສອບ"
-        @change="(value) => handleInputChange('is_verified', value)"
+        @change="(value) => handleFilterChange('is_verified', value)"
       />
       <InputSelect
         v-model="searchState.black_list"
         :options="blacklistOptions"
         placeholder="ບັນຊີດຳ"
-        @change="(value) => handleInputChange('black_list', value)"
+        @change="(value) => handleFilterChange('black_list', value)"
       />
       <div>
         <UiButton

@@ -61,7 +61,18 @@ interface ArrivalDetail {
     date_of_birth: string;
     place_of_birth: string;
     gender: "male" | "female";
-    nationality: string;
+    nationality: {
+      id: number;
+      created_at: string;
+      updated_at: string;
+      translates: {
+        id: number;
+        nationality_id: number;
+        name: string;
+        short_name: string | null;
+        lang: string;
+      }[];
+    };
     race: string;
     occupation: string;
     phone_number: string;
@@ -95,24 +106,18 @@ export const useArrivalStore = defineStore("arrival", () => {
   const currentArrival = ref<ArrivalDetail | null>(null);
 
   const filters = reactive({
-    entry_name: "",
-    passport_number: "",
-    visa_number: "",
+    search: "",
     black_list: "",
     is_verified: "",
-    verification_code: "",
     check_in_date: "",
     offset: 0,
     limit: 10,
   });
 
   const resetFilters = () => {
-    filters.entry_name = "";
-    filters.passport_number = "";
-    filters.visa_number = "";
+    filters.search = "";
     filters.black_list = "";
     filters.is_verified = "";
-    filters.verification_code = "";
     filters.check_in_date = "";
     filters.offset = 0;
     filters.limit = 10;

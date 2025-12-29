@@ -19,11 +19,10 @@ export const useDepartureStore = defineStore("departure", () => {
   });
 
   const initialFilters: DepartureFilters = {
+    search: "",
     black_list: "",
     is_verified: "",
-    verification_code: "",
-    departure_name: "",
-    passport_number: "",
+    check_in_date: "",
     offset: 0,
     limit: 10,
   };

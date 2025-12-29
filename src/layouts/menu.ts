@@ -18,6 +18,7 @@ import {
   COUNTRY_READ,
   SERVICE_READ,
   NATIONALITY_READ,
+  REPORT_READ,
   validateUserPermissions,
 } from "@/common/utils/PermissionGroup";
 
@@ -102,11 +103,11 @@ export const menuItems = computed(() => {
               label: "ລົງທະບຽນອອກເມືອງ",
               permission: REGISTRATION_READ,
             },
-            {
-              key: "registration_number",
-              label: "ຈຳນວນການລົງທະບຽນ",
-              permission: REGISTRATION_READ,
-            },
+            // {
+            //   key: "registration_number",
+            //   label: "ຈຳນວນການລົງທະບຽນ",
+            //   permission: REGISTRATION_READ,
+            // },
           ],
           permission: REGISTRATION_READ,
         },
@@ -255,6 +256,30 @@ export const menuItems = computed(() => {
           }),
         ]),
       permission: NATIONALITY_READ,
+    },
+    {
+      key: "13",
+      label: "ລາຍງານ",
+      icon: () =>
+        h("div", {}, [
+          h(Icon, {
+            icon: "material-symbols:bar-chart",
+            class: "text-base",
+          }),
+        ]),
+      children: [
+        {
+          key: "arrival_tourism_report",
+          label: "ລາຍງານການເຂົ້າເມືອງ",
+          permission: REPORT_READ,
+        },
+        {
+          key: "departure_tourism_report",
+          label: "ລາຍງານການອອກຈາກປະເທດ",
+          permission: REPORT_READ,
+        },
+      ],
+      permission: REPORT_READ,
     },
     {
       label: "",

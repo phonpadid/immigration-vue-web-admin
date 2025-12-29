@@ -4,12 +4,10 @@ import type {
 } from "@/common/interface/pagination.interface";
 
 export type ArrivalTableState = IOffsetBasePaginate & {
-  entry_name?: string;
-  passport_number?: string;
-  visa_number?: string;
+  search?: string;
   is_verified?: "verified" | "no_verified";
   black_list?: "available" | "unavailable";
-  verification_code?: string;
+  check_in_date?: string;
 };
 
 export type ListArrival = {
@@ -78,7 +76,18 @@ export type Arrival = {
     gender: "male" | "female";
     date_of_birth: string;
     place_of_birth: string;
-    nationality: string;
+    nationality: {
+      id: number;
+      created_at: string;
+      updated_at: string;
+      translates: {
+        id: number;
+        nationality_id: number;
+        name: string;
+        short_name: string | null;
+        lang: string;
+      }[];
+    };
     occupation: string;
     phone_number: string;
     race: string;
@@ -95,12 +104,10 @@ export type Arrival = {
 };
 /****************************************************************** */
 export interface ExportFilters {
-  entry_name?: string;
-  passport_number?: string;
-  visa_number?: string;
+  search?: string;
   black_list?: string;
   is_verified?: string;
-  verification_code?: string;
+  check_in_date?: string;
   start_date?: string;
   end_date?: string;
 }
@@ -156,7 +163,18 @@ export interface ArrivalDetail {
     date_of_birth: string;
     place_of_birth: string;
     gender: "male" | "female";
-    nationality: string;
+    nationality: {
+      id: number;
+      created_at: string;
+      updated_at: string;
+      translates: {
+        id: number;
+        nationality_id: number;
+        name: string;
+        short_name: string | null;
+        lang: string;
+      }[];
+    };
     race: string;
     occupation: string;
     phone_number: string;

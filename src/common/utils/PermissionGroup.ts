@@ -66,6 +66,9 @@ export const NATIONALITY_READ = "nationality:read";
 export const NATIONALITY_WRITE = "nationality:write";
 export const NATIONALITY_REMOVE = "nationality:remove";
 
+// Report permissions
+export const REPORT_READ = "report:read";
+
 // กลุ่มของ permissions ตามประเภทการใช้งาน
 export const ALL_READ_PERMISSIONS = [
   USER_READ,
@@ -81,6 +84,7 @@ export const ALL_READ_PERMISSIONS = [
   COUNTRY_READ,
   SERVICE_READ,
   NATIONALITY_READ,
+  REPORT_READ,
 ];
 
 export const ALL_WRITE_PERMISSIONS = [
@@ -199,6 +203,8 @@ export const NATIONALITY_PERMISSIONS = [
   NATIONALITY_REMOVE,
 ];
 
+export const REPORT_PERMISSIONS = [REPORT_READ];
+
 // รวมทุก permissions
 export const ALL_PERMISSIONS = [
   ...USER_PERMISSIONS,
@@ -214,4 +220,5 @@ export const ALL_PERMISSIONS = [
   ...COUNTRY_PERMISSIONS,
   ...SERVICE_PERMISSIONS,
   ...NATIONALITY_PERMISSIONS,
+  ...REPORT_PERMISSIONS,
 ];

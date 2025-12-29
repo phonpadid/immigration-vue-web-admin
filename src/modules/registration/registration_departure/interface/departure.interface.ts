@@ -38,11 +38,10 @@ export interface DeparturePaginatedResponse {
 }
 
 export interface DepartureFilters {
-  departure_name?: string;
-  passport_number?: string;
+  search?: string;
   is_verified?: string;
   black_list?: string;
-  verification_code?: string;
+  check_in_date?: string;
   limit?: number;
   offset?: number;
 }

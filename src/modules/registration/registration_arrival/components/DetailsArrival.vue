@@ -30,18 +30,35 @@ const printPDF = async () => {
       return;
     }
 
+    // เพิ่ม class สำหรับการพิมพ์ชั่วคราว
+    element.classList.add("printing");
+
     const opt = {
-      margin: [10, 10, 10, 10] as [number, number, number, number],
+      margin: [5, 5, 5, 5] as [number, number, number, number],
       filename: `arrival-${arrivalId}-${Date.now()}.pdf`,
       image: { type: "jpeg" as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        letterRendering: true,
+        allowTaint: false
+      },
       jsPDF: { unit: "mm" as const, format: "a4" as const, orientation: "portrait" as const },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] as any },
     };
 
     await html2pdf().set(opt).from(element).save();
+
+    // ลบ class หลังจากพิมพ์เสร็จ
+    element.classList.remove("printing");
+
     openNotification("success", "ສຳເລັດ", "ບັນທຶກ PDF ສຳເລັດແລ້ວ");
   } catch (error) {
     console.error("Print error:", error);
+    // ลบ class กรณีเกิด error
+    const element = document.getElementById("arrival-detail-content");
+    if (element) element.classList.remove("printing");
     openNotification("error", "ຜິດພາດ", "ບໍ່ສາມາດບັນທຶກ PDF ໄດ້");
   } finally {
     isPrinting.value = false;
@@ -491,7 +508,10 @@ watch(
             <dd
               class="text-gray-500 dark:text-gray-400 font-light mb-4 sm:mb-5"
             >
-              {{ arrivalStore.currentArrival.personal_information.nationality }}
+              {{
+                arrivalStore.currentArrival.personal_information.nationality
+                  ?.translates?.[0]?.name || arrivalStore.currentArrival.personal_information.nationality
+              }}
             </dd>
 
             <dt
@@ -787,7 +807,6 @@ watch(
                 }}
               </dd>
             </div>
-
             <div
               v-if="
                 arrivalStore.currentArrival.verified_by_user.profile.last_name
@@ -871,5 +890,69 @@ watch(
 
 .-start-3 {
   left: -0.75rem;
+}
+
+/* CSS สำหรับการพิมพ์ PDF - ใช้ :deep() เพื่อเข้าถึง elements */
+/* ป้องกันการแตกเมื่อพิมพ์ */
+:deep(.printing .mb-3),
+:deep(.printing .mb-6) {
+  margin-bottom: 1rem !important;
+  page-break-inside: avoid;
+}
+
+:deep(.printing .border-b) {
+  page-break-after: avoid;
+  page-break-inside: avoid;
+}
+
+/* รักษา grid layout ไว้ 2 คอลัมน์เหมือนหน้า HTML */
+:deep(.printing .grid) {
+  display: grid !important;
+}
+
+/* ป้องกันรูปภาพถูกตัด */
+:deep(.printing img) {
+  max-width: 100% !important;
+  height: auto !important;
+  page-break-inside: avoid;
+  display: block;
+  object-fit: contain;
+}
+
+/* ป้องกันการตัดข้อความ */
+:deep(.printing dl),
+:deep(.printing dt),
+:deep(.printing dd) {
+  page-break-inside: avoid;
+}
+
+/* ป้องกันการแตกของ sections */
+:deep(.printing > div) {
+  page-break-inside: avoid;
+}
+</style>
+
+<style>
+/* Global styles สำหรับ printing - ใช้กับทุก elements */
+/* รักษา grid layout 2 คอลัมน์เหมือนหน้า HTML */
+.printing .grid-cols-1 {
+  display: grid !important;
+}
+
+.printing .md\:grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  display: grid !important;
+  gap: 1rem !important;
+}
+
+.printing .sm\:grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  display: grid !important;
+  gap: 1rem !important;
+}
+
+/* ป้องกัน elements หลักไม่ถูกแตก */
+.printing {
+  font-family: 'Noto Serif Lao', serif !important;
 }
 </style>

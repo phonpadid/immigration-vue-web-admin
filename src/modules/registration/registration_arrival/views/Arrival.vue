@@ -8,6 +8,7 @@ import { Icon } from "@iconify/vue";
 import InputSelect from "@/components/Input/InputSelect.vue";
 import UiModal from "@/components/Modal/UiModal.vue";
 import UiButton from "@/components/button/UiButton.vue";
+import DatePickerSingle from "@/components/Datepicker/DatePickerSingle.vue";
 import DatePicker from "@/components/Datepicker/DatePicker.vue";
 import InputSearch from "@/components/Input/InputSearch.vue";
 import Table from "@/components/table/Table.vue";
@@ -23,6 +24,7 @@ const globalSearch = ref("");
 const searchState = ref({
   is_verified: "",
   black_list: "",
+  check_in_date: "", // เพิ่ม date filter
 });
 
 const exportModalVisible = ref(false);
@@ -54,74 +56,21 @@ const navigateToDetails = (id: number) => {
   router.push(`/admin/arrival/details/${id}`);
 };
 
-// ฟังก์ชันตรวจจำแนกชนิดข้อมูล
-const detectDataType = (value: string): 'entry_name' | 'passport_number' | 'visa_number' | 'verification_code' | 'check_in_date' | null => {
-  if (!value || value.trim() === '') return null;
-
-  const trimmedValue = value.trim();
-
-  // ตรวจสอบรูปแบบวันที่ (YYYY-MM-DD หรือ DD/MM/YYYY หรือ DD-MM-YYYY)
-  const datePattern1 = /^\d{4}-\d{2}-\d{2}$/; // 2025-09-25
-  const datePattern2 = /^\d{2}\/\d{2}\/\d{4}$/; // 25/09/2025
-  const datePattern3 = /^\d{2}-\d{2}-\d{4}$/; // 25-09-2025
-
-  if (datePattern1.test(trimmedValue) || datePattern2.test(trimmedValue) || datePattern3.test(trimmedValue)) {
-    return 'check_in_date';
-  }
-
-  // ตรวจสอบรูปแบบรหัสยืนยัน (ตัวอักษรภาษาอังกฤษตัวใหญ่ + ตัวเลข, 8-12 ตัวอักษร)
-  // เช่น: A22VBHFRBP
-  const verificationCodePattern = /^[A-Z0-9]{8,12}$/;
-  if (verificationCodePattern.test(trimmedValue)) {
-    return 'verification_code';
-  }
-
-  // ตรวจสอบรูปแบบเลข passport หรือ visa (ตัวเลข 6-15 ตัว)
-  // เลข passport/visa มักเป็นตัวเลข 6-15 หลัก
-  const numberPattern = /^\d{6,15}$/;
-  if (numberPattern.test(trimmedValue)) {
-    // ถ้าเป็นตัวเลข 6-15 หลัก ให้ไปค้นทั้ง passport_number และ visa_number
-    // แต่ถ้าต้องการให้ระบุชัดเจน สามารถเพิ่มเงื่อนไขได้
-    return 'passport_number'; // หรืออาจจะส่งทั้ง passport_number และ visa_number
-  }
-
-  // ถ้าไม่ตรงกับรูปแบบข้างต้น ให้ถือว่าเป็นชื่อ (entry_name)
-  return 'entry_name';
-};
-
-// ฟังก์ชันค้นหาแบบฉลาด (ตรวจจำแนกแล้วส่งไปเฉพาะฟิลด์ที่เกี่ยวข้อง)
+// ฟังก์ชันค้นหาแบบ global
 const handleGlobalSearch = async (value: string) => {
   globalSearch.value = value;
   pagination.value.current = 1;
 
-  const dataType = detectDataType(value);
-
-  // สร้าง filters เริ่มต้นด้วยค่าว่างทั้งหมด
   const filters: any = {
-    entry_name: "",
-    passport_number: "",
-    visa_number: "",
-    verification_code: "",
-    check_in_date: "",
+    search: value.trim(),
     is_verified: searchState.value.is_verified,
     black_list: searchState.value.black_list,
+    check_in_date: searchState.value.check_in_date,
     offset: 0,
     limit: pagination.value.pageSize,
   };
 
-  // กำหนดค่าเฉพาะฟิลด์ที่ตรวจจำแนกได้
-  if (dataType && value.trim()) {
-    if (dataType === 'passport_number') {
-      // ถ้าเป็นตัวเลข ให้ค้นทั้ง passport_number และ visa_number
-      filters.passport_number = value.trim();
-      filters.visa_number = value.trim();
-    } else {
-      filters[dataType] = value.trim();
-    }
-  }
-
   console.log('Search value:', value);
-  console.log('Detected type:', dataType);
   console.log('Filters:', filters);
 
   try {
@@ -152,30 +101,14 @@ const handleFilterChange = async (field: keyof typeof searchState.value, value: 
   searchState.value[field] = value;
   pagination.value.current = 1;
 
-  const dataType = detectDataType(globalSearch.value);
-
-  // สร้าง filters เริ่มต้นด้วยค่าว่างทั้งหมด
   const filters: any = {
-    entry_name: "",
-    passport_number: "",
-    visa_number: "",
-    verification_code: "",
-    check_in_date: "",
+    search: globalSearch.value.trim(),
     is_verified: searchState.value.is_verified,
     black_list: searchState.value.black_list,
+    check_in_date: searchState.value.check_in_date,
     offset: 0,
     limit: pagination.value.pageSize,
   };
-
-  // กำหนดค่าเฉพาะฟิลด์ที่ตรวจจำแนกได้จาก globalSearch
-  if (dataType && globalSearch.value.trim()) {
-    if (dataType === 'passport_number') {
-      filters.passport_number = globalSearch.value.trim();
-      filters.visa_number = globalSearch.value.trim();
-    } else {
-      filters[dataType] = globalSearch.value.trim();
-    }
-  }
 
   try {
     await arrivalStore.setFilters(filters);
@@ -183,6 +116,33 @@ const handleFilterChange = async (field: keyof typeof searchState.value, value: 
     pagination.value.total = arrivalStore.arrival.total;
   } catch (error) {
     console.error("Failed to filter:", error);
+    pagination.value.total = arrivalStore.arrival.total;
+  }
+};
+
+// ฟังก์ชันจัดการ date filter
+const handleDateChange = async (date: string) => {
+  searchState.value.check_in_date = date;
+  pagination.value.current = 1;
+
+  const filters: any = {
+    search: globalSearch.value.trim(),
+    is_verified: searchState.value.is_verified,
+    black_list: searchState.value.black_list,
+    check_in_date: date,
+    offset: 0,
+    limit: pagination.value.pageSize,
+  };
+
+  console.log('Date filter:', date);
+  console.log('Filters:', filters);
+
+  try {
+    await arrivalStore.setFilters(filters);
+    await arrivalStore.getAllArrival();
+    pagination.value.total = arrivalStore.arrival.total;
+  } catch (error) {
+    console.error("Failed to filter by date:", error);
     pagination.value.total = arrivalStore.arrival.total;
   }
 };
@@ -208,7 +168,10 @@ const handleExport = () => {
 
 const confirmExport = async () => {
   const filtersToExport = {
-    ...searchState.value,
+    search: globalSearch.value.trim(),
+    black_list: searchState.value.black_list,
+    is_verified: searchState.value.is_verified,
+    check_in_date: searchState.value.check_in_date,
     start_date: exportDateRange.value ? exportDateRange.value[0] : "",
     end_date: exportDateRange.value ? exportDateRange.value[1] : "",
   };
@@ -219,10 +182,7 @@ const confirmExport = async () => {
 // โหลดข้อมูลครั้งแรก
 onMounted(async () => {
   arrivalStore.setFilters({
-    entry_name: "",
-    passport_number: "",
-    visa_number: "",
-    verification_code: "",
+    search: "",
     check_in_date: "",
     is_verified: "",
     black_list: "",
@@ -230,7 +190,7 @@ onMounted(async () => {
     limit: pagination.value.pageSize,
   });
   await arrivalStore.getAllArrival();
-  pagination.value.total = arrivalStore.arrival.total; 
+  pagination.value.total = arrivalStore.arrival.total;
 });
 </script>
 
@@ -253,9 +213,16 @@ onMounted(async () => {
       <!-- Global Search Input -->
       <InputSearch
         v-model="globalSearch"
-        placeholder="ຄົ້ນຫາ: ຊື່ຈຸດເຂົ້າ, ເລກທີ່ passport, ເລກທີ່ visa, ລະຫັດຢືນຢັນ, ວັນທີເດີນທາງ (YYYY-MM-DD)..."
+        placeholder="ຄົ້ນຫາ: ຊື່ຈຸດເຂົ້າ, ເລກທີ່ passport, ລະຫັດຢືນຢັນ..."
         @search="handleGlobalSearch"
         class="md:col-span-2"
+      />
+
+      <!-- Date Picker Filter -->
+      <DatePickerSingle
+        v-model="searchState.check_in_date"
+        placeholder="ວັນທີເດີນທາງ"
+        @change="handleDateChange"
       />
 
       <!-- Dropdown Filters -->
