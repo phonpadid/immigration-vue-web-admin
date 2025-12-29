@@ -61,6 +61,11 @@ export const SERVICE_READ = "service:read";
 export const SERVICE_WRITE = "service:write";
 export const SERVICE_REMOVE = "service:remove";
 
+// Nationality permissions
+export const NATIONALITY_READ = "nationality:read";
+export const NATIONALITY_WRITE = "nationality:write";
+export const NATIONALITY_REMOVE = "nationality:remove";
+
 // กลุ่มของ permissions ตามประเภทการใช้งาน
 export const ALL_READ_PERMISSIONS = [
   USER_READ,
@@ -75,6 +80,7 @@ export const ALL_READ_PERMISSIONS = [
   CONTACT_READ,
   COUNTRY_READ,
   SERVICE_READ,
+  NATIONALITY_READ,
 ];
 
 export const ALL_WRITE_PERMISSIONS = [
@@ -89,6 +95,7 @@ export const ALL_WRITE_PERMISSIONS = [
   CHECKPOINT_WRITE,
   COUNTRY_WRITE,
   SERVICE_WRITE,
+  NATIONALITY_WRITE,
 ];
 
 export const ALL_REMOVE_PERMISSIONS = [
@@ -103,6 +110,7 @@ export const ALL_REMOVE_PERMISSIONS = [
   CONTACT_REMOVE,
   COUNTRY_REMOVE,
   SERVICE_REMOVE,
+  NATIONALITY_REMOVE,
 ];
 
 // เพิ่มต่อท้ายไฟล์ PermissionGroup.ts
@@ -185,6 +193,11 @@ export const SERVICE_PERMISSIONS = [
   SERVICE_WRITE,
   SERVICE_REMOVE,
 ];
+export const NATIONALITY_PERMISSIONS = [
+  NATIONALITY_READ,
+  NATIONALITY_WRITE,
+  NATIONALITY_REMOVE,
+];
 
 // รวมทุก permissions
 export const ALL_PERMISSIONS = [
@@ -200,4 +213,5 @@ export const ALL_PERMISSIONS = [
   ...CONTACT_PERMISSIONS,
   ...COUNTRY_PERMISSIONS,
   ...SERVICE_PERMISSIONS,
+  ...NATIONALITY_PERMISSIONS,
 ];

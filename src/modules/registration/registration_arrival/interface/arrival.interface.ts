@@ -46,6 +46,7 @@ export type Arrival = {
   verification_code?: string;
   verified_at?: string;
   black_list: "available" | "unavailable";
+  check_in_date: string;
   created_at: string;
   updated_at: string;
   passport_information: {

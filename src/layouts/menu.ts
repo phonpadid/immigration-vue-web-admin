@@ -17,6 +17,7 @@ import {
   CONTACT_READ,
   COUNTRY_READ,
   SERVICE_READ,
+  NATIONALITY_READ,
   validateUserPermissions,
 } from "@/common/utils/PermissionGroup";
 
@@ -242,6 +243,18 @@ export const menuItems = computed(() => {
           }),
         ]),
       permission: COUNTRY_READ,
+    },
+    {
+      key: "nationalities",
+      label: "ສັນຊາດ",
+      icon: () =>
+        h("div", {}, [
+          h(Icon, {
+            icon: "mdi:flag-outline",
+            class: "text-base",
+          }),
+        ]),
+      permission: NATIONALITY_READ,
     },
     {
       label: "",

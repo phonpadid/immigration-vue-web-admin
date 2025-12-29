@@ -25,6 +25,7 @@ import { hotelsRoute } from "@/modules/hotels/router";
 import { arrivalRoute } from "@/modules/registration/registration_arrival/router";
 import { departureRoute } from "@/modules/registration/registration_departure/router";
 import { checkpointRoute } from "@/modules/checkpoints/checkpoint/router";
+import { nationalitiesRoute } from "@/modules/nationalities/router";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -54,6 +55,7 @@ const router = createRouter({
         ...arrivalRoute,
         ...departureRoute,
         ...checkpointRoute,
+        ...nationalitiesRoute,
       ],
     },
     ...authRoute,

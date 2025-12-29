@@ -22,6 +22,7 @@ export interface DeparturePaginatedResponse {
   black_list: "available" | "unavailable";
   verification_code: string;
   verified_at: string | null;
+  check_in_date: string;
   created_at: string;
   passport_information: PassportInformation;
   personal_information: PersonalInformation;

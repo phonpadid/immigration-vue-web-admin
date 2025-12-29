@@ -8,6 +8,7 @@ import { Modal } from "ant-design-vue";
 import { useNotification } from "@/utils/notificationService";
 import UiButton from "@/components/button/UiButton.vue";
 import QRCode from "qrcode";
+import html2pdf from "html2pdf.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -15,6 +16,36 @@ const { openNotification } = useNotification();
 const departureStore = useDepartureStore();
 const departureId = route.params.id as string;
 const qrCodeGenerated = ref(false);
+const isPrinting = ref(false);
+
+// Print PDF function
+const printPDF = async () => {
+  try {
+    isPrinting.value = true;
+    const element = document.getElementById("departure-detail-content");
+
+    if (!element) {
+      openNotification("error", "ຜິດພາດ", "ບໍ່ພົບຂໍ້ມູນທີ່ຈະພິມ");
+      return;
+    }
+
+    const opt = {
+      margin: [10, 10, 10, 10] as [number, number, number, number],
+      filename: `departure-${departureId}-${Date.now()}.pdf`,
+      image: { type: "jpeg" as const, quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "mm" as const, format: "a4" as const, orientation: "portrait" as const },
+    };
+
+    await html2pdf().set(opt).from(element).save();
+    openNotification("success", "ສຳເລັດ", "ບັນທຶກ PDF ສຳເລັດແລ້ວ");
+  } catch (error) {
+    console.error("Print error:", error);
+    openNotification("error", "ຜິດພາດ", "ບໍ່ສາມາດບັນທຶກ PDF ໄດ້");
+  } finally {
+    isPrinting.value = false;
+  }
+};
 
 // Environment variables
 const imgUrl = computed(() => import.meta.env.VITE_IMG_URL || "");
@@ -116,6 +147,29 @@ watch(
 
 <template>
   <div class="relative p-4">
+    <!-- Header with Print Button -->
+    <div class="flex justify-between items-center mb-4">
+      <h2
+        class="text-xl font-bold text-gray-900 md:text-2xl dark:text-white"
+      >
+        ລາຍລະອຽດການອອກເມືອງ
+      </h2>
+      <UiButton
+        @click="printPDF"
+        :disabled="isPrinting"
+        class="bg-primary-700 hover:bg-primary-900 text-white font-bold py-2 px-4 rounded flex items-center"
+        icon="material-symbols:print"
+        size="large"
+      >
+        <span v-if="isPrinting" class="mr-2">
+          <span
+            class="animate-spin h-4 w-4 border-t-2 border-b-2 border-white rounded-full inline-block"
+          ></span>
+        </span>
+        {{ isPrinting ? "ກຳລັງພິມ..." : "ພິມ PDF" }}
+      </UiButton>
+    </div>
+
     <!-- Loading State -->
     <div
       v-if="departureStore.isLoading"
@@ -127,7 +181,7 @@ watch(
     </div>
 
     <!-- Data Display -->
-    <div v-else-if="departureStore.currentDeparture">
+    <div v-else-if="departureStore.currentDeparture" id="departure-detail-content">
       <!-- Departure Information Section -->
       <div class="mb-3 border-b pb-4">
         <h2
@@ -197,6 +251,17 @@ watch(
               class="text-gray-500 dark:text-gray-400 font-light mb-4 sm:mb-5"
             >
               {{ formatDateTime(departureStore.currentDeparture.created_at) }}
+            </dd>
+
+            <dt
+              class="text-gray-900 dark:text-white leading-4 font-normal mb-2"
+            >
+              ວັນທີເດີນທາງ
+            </dt>
+            <dd
+              class="text-gray-500 dark:text-gray-400 font-light mb-4 sm:mb-5"
+            >
+              {{ formatDatePicker(departureStore.currentDeparture.check_in_date) }}
             </dd>
           </dl>
 

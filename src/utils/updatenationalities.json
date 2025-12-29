@@ -1,0 +1,17 @@
+{
+    "lo": {
+        "id": 1,
+        "name": "laos 7",
+        "short_name": "la"
+    },
+    "en": {
+        "id": 2,
+        "name": "laos1 5",
+        "short_name": "en"  
+    },
+    "zh_cn": {
+        "id": 3,
+        "name": "laos2 6",
+        "short_name": "zh"
+    }
+}

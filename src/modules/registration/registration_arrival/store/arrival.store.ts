@@ -11,6 +11,7 @@ interface ArrivalDetail {
   black_list: "available" | "unavailable";
   verification_code: string;
   verified_at: string | null;
+  check_in_date: string;
   created_at: string;
   purpose:
     | "business"
@@ -97,6 +98,7 @@ export const useArrivalStore = defineStore("arrival", () => {
     black_list: "",
     is_verified: "",
     verification_code: "",
+    check_in_date: "",
     offset: 0,
     limit: 10,
   });
@@ -108,9 +110,10 @@ export const useArrivalStore = defineStore("arrival", () => {
     filters.black_list = "";
     filters.is_verified = "";
     filters.verification_code = "";
+    filters.check_in_date = "";
     filters.offset = 0;
-    filters.limit = 10; 
-    
+    filters.limit = 10;
+
   };
 
   let currentRequest: Promise<void> | null = null;

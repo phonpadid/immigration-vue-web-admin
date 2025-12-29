@@ -1,0 +1,60 @@
+{
+    "id": 78,
+    "passport_information_id": 173,
+    "visa_information_id": null,
+    "personal_information_id": 173,
+    "country_id": 13,
+    "entry_name": "Marshall Waters78998",
+    "purpose": "visit",
+    "traveling_by_type": "car",
+    "traveling_by_no": "99383",
+    "is_traveling_in_tour": "",
+    "verification_code": "A22VBHFRBP",
+    "verified_at": null,
+    "verified_by": null,
+    "arrival_registration_type": "exemption_visa",
+    "black_list": "available",
+    "check_in_date": "2025-09-25",
+    "created_at": "2025-09-24 03:44:07",
+    "updated_at": "2025-09-24 03:44:07",
+    "passport_information": {
+        "id": 173,
+        "number": "11121222234",
+        "expiry_date": "2029-02-02",
+        "date_issue": "2025-09-01",
+        "place_issue": "Center",
+        "image": "client/document/passport/20250924034407085000-k6r87a.jpg",
+        "people_image": "client/document/passport/20250924034407140000-8ogz6r.png",
+        "created_at": "2025-09-24 03:44:07.000000",
+        "updated_at": "2025-09-24 03:44:07.000000"
+    },
+    "visa_information": null,
+    "personal_information": {
+        "id": 173,
+        "family_name": "Aling",
+        "name": "Wang",
+        "gender": "male",
+        "date_of_birth": "1993-02-02",
+        "place_of_birth": "Nong",
+        "nationality": null,
+        "nationality_id": null,
+        "occupation": "IT",
+        "race": "Laos",
+        "phone_number": "209333009"
+    },
+    "intended_address": [
+        {
+            "id": 78,
+            "arrival_registration_id": 78,
+            "hotel_id": null,
+            "name": "alex",
+            "province": "",
+            "district": "",
+            "village": "",
+            "room_no": null,
+            "check_in": null,
+            "check_out": null
+        }
+    ],
+    "verified_by_user": null
+}

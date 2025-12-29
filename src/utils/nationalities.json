@@ -1,0 +1,14 @@
+{
+    "lo": {
+        "name": "ລາວ",
+        "short_name": "ລ"
+    },
+    "en": {
+        "name": "laos",
+        "short_name": "la"
+    },
+    "zh_cn": {
+        "name": "老挝",
+        "short_name": "la"
+    }
+}
