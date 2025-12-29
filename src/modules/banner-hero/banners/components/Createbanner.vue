@@ -12,7 +12,7 @@ import Textarea from "@/components/Input/Textarea.vue";
 import Tab from "@/components/Tab/Tab.vue";
 import Switch from "@/components/Switch/Switch.vue";
 import UploadDragger from "@/components/Upload/UploadDragger.vue";
-import DatePicker from "@/components/Datepicker/DatePicker.vue";
+import DatePickerAll from "@/components/Datepicker/DatePickerAll.vue";
 
 const bannerStore = usebannerStore();
 const { openNotification } = useNotification();
@@ -263,7 +263,7 @@ const resetForm = () => {
         <div class="grid gap-4 my-4 md:grid-cols-2 md:gap-6">
           <div class="col-span-2">
             <UiFormItem label="ເວລາເລີມຕົ້ນ ແລະ ເວລາສິນສຸດ" required
-              ><DatePicker
+              ><DatePickerAll
                 v-model:modelValueStart="startDate"
                 v-model:modelValueEnd="endDate"
                 @change="handleDateChange"
