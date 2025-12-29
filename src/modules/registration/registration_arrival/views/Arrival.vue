@@ -79,6 +79,7 @@ const handleInputSearch = async (
     await arrivalStore.setFilters(filters);
     await arrivalStore.getAllArrival();
 
+    // ✅ แก้ไขตรงนี้ให้ใช้ arrivalStore.arrival.total
     if (
       field === "verification_code" &&
       arrivalStore.arrival.data.length === 1
@@ -91,7 +92,7 @@ const handleInputSearch = async (
         pagination.value.total = arrivalStore.arrival.total;
       }
     } else {
-      pagination.value.total = arrivalStore.arrival.total;
+      pagination.value.total = arrivalStore.arrival.total; // ✅ แก้ไขตรงนี้ด้วยครับ
     }
   } catch (error) {
     console.error("Failed to search:", error);
@@ -145,7 +146,7 @@ onMounted(async () => {
     limit: pagination.value.pageSize,
   });
   await arrivalStore.getAllArrival();
-  pagination.value.total = arrivalStore.arrival.total;
+  pagination.value.total = arrivalStore.arrival.total; 
 });
 </script>
 
