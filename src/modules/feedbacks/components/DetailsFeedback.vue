@@ -2,7 +2,7 @@
 import { usefeedbackStore } from "../store/feedback.store";
 import type { FeedbackResponse } from "../interface/feedbacks.interface";
 import { useRoute } from "vue-router";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { Modal } from "ant-design-vue";
 import UiButton from "@/components/button/UiButton.vue";
 
@@ -52,6 +52,32 @@ const confirmDeleteFeedback = () => {
 };
 
 /*************************************************************** */
+const fullMediaUrl = computed(() => {
+  if (dataFeedbacks.value?.media) {
+    return `${import.meta.env.VITE_IMG_URL}/${dataFeedbacks.value.media}`;
+  }
+  return undefined;
+});
+
+const getFileExtension = (url: string) => {
+  return url.split(".").pop()?.toLowerCase();
+};
+
+const isImage = computed(() => {
+  const url = fullMediaUrl.value || "";
+  const extension = getFileExtension(url);
+  const imageExtensions = ["jpg", "jpeg", "png", "gif", "svg", "webp"];
+  return extension && imageExtensions.includes(extension);
+});
+
+const isVideo = computed(() => {
+  const url = fullMediaUrl.value || "";
+  const extension = getFileExtension(url);
+  const videoExtensions = ["mp4", "mov", "webm", "ogg"];
+  return extension && videoExtensions.includes(extension);
+});
+
+/*************************************************************** */
 
 onMounted(() => {
   getFeedbackDeatails();
@@ -92,7 +118,23 @@ onMounted(() => {
           URLຂອງຮູບຫຼືວິດີໂອທີ່ຕິດຄັດມາກັບຄຳຕິຊົມ
         </dt>
         <dd class="text-gray-500 dark:text-gray-400 font-light mb-4 sm:mb-5">
-          {{ dataFeedbacks?.media || "ບໍ່ມີຂໍ້ມູນ" }}
+          <div v-if="isImage">
+            <img
+              :src="fullMediaUrl"
+              alt="ບໍ່ມີຮູບ"
+              class="max-h-96 w-auto"
+            />
+          </div>
+          <div v-else-if="isVideo">
+            <video
+              controls
+              :src="fullMediaUrl"
+              class="w-full max-h-96"
+            ></video>
+          </div>
+          <div v-else>
+            {{ dataFeedbacks?.media || "ບໍ່ມີຂໍ້ມູນ" }}
+          </div>
         </dd>
       </dl>
     </div>

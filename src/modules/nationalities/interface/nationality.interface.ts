@@ -25,7 +25,7 @@ export type NationalityDetailResponse = {
   }[];
 };
 
-export type NationalityResponse = {
+export type NationalityItem = {
   lang_id: number;
   name: string;
   id: number;
@@ -75,5 +75,5 @@ export interface TabConfig {
 /*************************To Table ************************* */
 
 export interface NationalityResponse extends IPaginated {
-  data: NationalityResponse[];
+  data: NationalityItem[];
 }

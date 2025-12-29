@@ -5,13 +5,18 @@ import { useDepartureStore } from "../store/departure.store";
 import { formatDateTime } from "@/utils/FormatDataTime";
 import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
+import DatePicker from "@/components/Datepicker/DatePicker.vue";
+import UiModal from "@/components/Modal/UiModal.vue";
 import InputSelect from "@/components/Input/InputSelect.vue";
 import InputSearch from "@/components/Input/InputSearch.vue";
 import Table from "@/components/table/Table.vue";
 import HTMLQRCodeScan from "@/components/ScanQrcode/HTMLQRCodeScan.vue";
+import UiButton from "@/components/button/UiButton.vue";
 
 const router = useRouter();
 const departureStore = useDepartureStore();
+const exportModalVisible = ref(false);
+const exportDateRange = ref<[string, string] | null>(null);
 
 // Search state
 const searchState = ref({
@@ -81,10 +86,10 @@ const handleInputSearch = async (
       if (singleResult) {
         navigateToDetails(singleResult.id);
       } else {
-        pagination.value.total = departureStore.departure.data.length;
+        pagination.value.total = departureStore.departure.total;
       }
     } else {
-      pagination.value.total = departureStore.departure.data.length;
+      pagination.value.total = departureStore.departure.total;
     }
   } catch (error) {
     console.error("Error during search:", error);
@@ -116,6 +121,21 @@ const handleTableChange = async (paginationInfo: any) => {
   });
 
   await departureStore.getAllDeparture();
+};
+
+// export
+const handleExport = () => {
+  exportModalVisible.value = true;
+};
+
+const confirmExport = async () => {
+  const filtersToExport = {
+    ...searchState.value,
+    start_date: exportDateRange.value ? exportDateRange.value[0] : "",
+    end_date: exportDateRange.value ? exportDateRange.value[1] : "",
+  };
+  await departureStore.exportDepartureData(filtersToExport);
+  exportModalVisible.value = false;
 };
 
 // Initial data load
@@ -172,6 +192,14 @@ onMounted(async () => {
         placeholder="ບັນຊີດຳ"
         @change="(value) => handleInputChange('black_list', value)"
       />
+      <div>
+        <UiButton
+          type="submit"
+          colorClass="!bg-primary-700 hover:!bg-primary-900 text-white flex items-center"
+          @click="handleExport"
+          >Export</UiButton
+        >
+      </div>
     </div>
 
     <!-- Table Section -->
@@ -244,6 +272,27 @@ onMounted(async () => {
         </div>
       </template>
     </Table>
+
+    <UiModal
+      title="ເລືອກວັນທີເລີ່ມຕົ້ນແລະວັນທີສິນສຸດລົງທະບຽນອອກເມືອງ"
+      v-model:visible="exportModalVisible"
+      okText="ຢືນຢັນ"
+      cancelText="ຍົກເລີກ"
+      :confirmLoading="departureStore.isLoading"
+      @ok="confirmExport"
+      @cancel="exportModalVisible = false"
+    >
+      <div class="p-4">
+        <p class="text-gray-700 dark:text-gray-300 mb-4">
+          ກະລຸນາເລືອກຊ່ວງວັນທີເລີມແລະສິນສຸດລົງທະບຽນອອກເມືອງ.
+        </p>
+        <DatePicker
+          v-model:value="exportDateRange"
+          displayFormat="DD-MM-YYYY"
+          valueFormat="YYYY-MM-DD"
+        />
+      </div>
+    </UiModal>
   </div>
 </template>
 

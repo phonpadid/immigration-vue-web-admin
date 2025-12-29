@@ -19,7 +19,7 @@ const { push } = useRouter();
 const menuOptions = ref([
   { key: "1", label: "ລາຍລະອຽດ" },
   { key: "2", label: "ແກ້ໄຂ" },
-  { key: "3", label: "ລຶບ" },
+  // { key: "3", label: "ລຶບ" },
 ]);
 const Loading = ref(false);
 const addCountry = () => {
@@ -149,8 +149,8 @@ onMounted(() => {
       :columns="columns"
       :dataSource="country.data || []"
       class="dark:bg-gray-800 dark:text-white dark:border-gray-700"
-      v-model:pagination="pagination"
-      @update:pagination="handleTableChange"
+      :pagination="pagination"
+      @change="handleTableChange"
     >
       <template #name="{ record }">
         {{ getLaoName(record) }}

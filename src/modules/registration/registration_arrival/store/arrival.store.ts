@@ -1,7 +1,10 @@
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import { api } from "@/lib/axios";
-import type { ArrivalPaginatedResponse } from "../interface/arrival.interface";
+import type {
+  ArrivalPaginatedResponse,
+  ExportFilters,
+} from "../interface/arrival.interface";
 import { notification } from "ant-design-vue";
 
 // Define a more specific type for arrival details
@@ -113,7 +116,6 @@ export const useArrivalStore = defineStore("arrival", () => {
     filters.check_in_date = "";
     filters.offset = 0;
     filters.limit = 10;
-
   };
 
   let currentRequest: Promise<void> | null = null;
@@ -287,6 +289,41 @@ export const useArrivalStore = defineStore("arrival", () => {
     }
   };
 
+  const exportArrivalData = async (exportFilters: ExportFilters) => {
+    try {
+      isLoading.value = true;
+      const queryParams = new URLSearchParams();
+      Object.entries(exportFilters).forEach(([key, value]) => {
+        if (value && value.toString().trim() !== "") {
+          queryParams.append(key, value.toString());
+        }
+      });
+
+      const { data } = await api.get(
+        `/report/arrival?${queryParams.toString()}`,
+        {
+          responseType: "blob",
+        }
+      );
+      const fileURL = window.URL.createObjectURL(new Blob([data]));
+      const fileLink = document.createElement("a");
+      fileLink.href = fileURL;
+      fileLink.setAttribute("download", "arrival_report.xlsx");
+      document.body.appendChild(fileLink);
+      fileLink.click();
+      document.body.removeChild(fileLink);
+      window.URL.revokeObjectURL(fileURL);
+    } catch (error) {
+      console.error("❌ Failed to export arrival data", error);
+      notification.error({
+        message: "ຂໍ້ຜິດພາດ",
+        description: "ບໍ່ສາມາດສົ່ງອອກຂໍ້ມູນໄດ້",
+      });
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   return {
     isLoading,
     isDetailLoading,
@@ -295,6 +332,7 @@ export const useArrivalStore = defineStore("arrival", () => {
     currentArrival,
     filters,
     getAllArrival,
+    exportArrivalData,
     getArrivalById,
     verifyArrival,
     setFilters,

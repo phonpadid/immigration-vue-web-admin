@@ -66,9 +66,12 @@ watch(statusFilter, (newValue) => {
 
 /********************************************************************* */
 const toggleStatus = async (record: any, value: boolean) => {
+  console.log("Current record:", record.is_private);
+  console.log("New value from switch:", value);
+  console.log("Value to be sent to API:", !value);
   try {
     Loading.value = true;
-    await changeStatus(record.id, !value);
+    await changeStatus(record.id, value);
   } catch (error) {
     console.error("❌ Failed to update status:", error);
   } finally {
@@ -130,7 +133,7 @@ onMounted(async () => {
   />
 
   <div
-    class="flex flex-col items-start justify-between border-b dark:border-gray-600 p-4 sm:flex-row sm:items-center "
+    class="flex flex-col items-start justify-between border-b dark:border-gray-600 p-4 sm:flex-row sm:items-center"
   >
     <h2 class="text-lg font-semibold mb-2 sm:mb-0 dark:text-white">
       ຕາຕະລາງເກັບຮັກສາຂໍ້ມູນກ່ຽວກັບປ໊ອບອັບ
@@ -201,7 +204,7 @@ onMounted(async () => {
       </template>
       <template #is_private="{ record }">
         <Switch
-          :model-value="!record.is_private"
+          :model-value="record.is_private ?? false"
           @update:model-value="(value) => toggleStatus(record, value)"
           :loading="Loading"
         />

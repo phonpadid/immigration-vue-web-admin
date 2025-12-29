@@ -17,7 +17,6 @@ export const useCountryStore = defineStore("country", () => {
   const currentCountry = ref<CountryForm | null>(null);
 
   /****************************************************************** */
-
   const getAllCountry = async (
     offset = 0,
     limit = 10,
@@ -27,14 +26,17 @@ export const useCountryStore = defineStore("country", () => {
       isLoading.value = true;
       let url = `/country?offset=${offset}&limit=${limit}`;
 
-      // เพิ่ม filter สำหรับ is_except_visa ถ้ามีค่า
       if (is_except_visa !== undefined && is_except_visa !== "") {
         url += `&is_except_visa=${is_except_visa}`;
       }
+
+      // แก้ไขการรับค่าจาก API response
       const { data } = await api.get(url);
 
+      // ตรวจสอบโครงสร้าง response และกำหนดค่าให้กับ store
       if (data?.data && Array.isArray(data.data)) {
         country.data = data.data;
+        country.total = data.total || 0; // <--- แก้ไขตรงนี้
       }
     } catch (error) {
       console.error("❌ Failed to fetch :", error);

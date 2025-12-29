@@ -44,7 +44,7 @@ const submitHandler = async () => {
           src="/public/logo.webp"
           alt="logo"
         />
-        <span>ກົມກວດຄົນເຂົ້າເມືອງ ແຫ່ງ ສປປ ລາວ</span>
+        <span>ກົມຕຳຫຼວດກວດຄົນເຂົ້າ-ອອກເມືອງ</span>
       </a>
       <div class="w-full bg-white rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">
         <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
