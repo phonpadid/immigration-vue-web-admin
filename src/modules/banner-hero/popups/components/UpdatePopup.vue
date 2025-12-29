@@ -11,7 +11,7 @@ import UiFormItem from "@/components/Form/UiFormItem.vue";
 import UiInput from "@/components/Input/UiInput.vue";
 import Switch from "@/components/Switch/Switch.vue";
 import UploadDragger from "@/components/Upload/UploadDragger.vue";
-import DatePicker from "@/components/Datepicker/DatePicker.vue";
+import DatePickerAll from "@/components/Datepicker/DatePickerAll.vue";
 import dayjs from "dayjs";
 
 // Configure dayjs to use custom parsing
@@ -240,7 +240,7 @@ onMounted(() => {
         </div>
         <div class="grid gap-4 my-4 md:grid-cols-2 md:gap-6">
           <div class="col-span-2">
-            <DatePicker
+            <DatePickerAll
               v-model:modelValueStart="startDate"
               v-model:modelValueEnd="endDate"
               display-format="DD/MM/YYYY"

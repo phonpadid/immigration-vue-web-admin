@@ -15,8 +15,6 @@ import HTMLQRCodeScan from "@/components/ScanQrcode/HTMLQRCodeScan.vue";
 
 const router = useRouter(); // Initialize router
 const arrivalStore = useArrivalStore();
-
-// สถานะสำหรับการค้นหา
 const searchState = ref({
   entry_name: "",
   passport_number: "",
