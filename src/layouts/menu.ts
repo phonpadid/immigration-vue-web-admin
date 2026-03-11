@@ -271,15 +271,15 @@ export const menuItems = computed(() => {
         {
           key: "arrival_tourism_report",
           label: "ລາຍງານການເຂົ້າເມືອງ",
-          permission: REPORT_READ,
+          permission: REGISTRATION_READ,
         },
         {
           key: "departure_tourism_report",
           label: "ລາຍງານການອອກຈາກປະເທດ",
-          permission: REPORT_READ,
+          permission: REGISTRATION_READ,
         },
       ],
-      permission: REPORT_READ,
+      permission: REGISTRATION_READ,
     },
     {
       label: "",

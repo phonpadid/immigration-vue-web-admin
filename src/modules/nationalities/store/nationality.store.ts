@@ -43,11 +43,13 @@ export const useNationalityStore = defineStore("nationalities", () => {
   const getAllNationalities = async (
     lang: string = "lo",
     limit = 20,
+    page = 1,
     cursor?: string
   ) => {
     try {
       isLoading.value = true;
-      let url = `/nationalities?limit=${limit}&lang=${lang}`;
+      const offset = (page - 1) * limit;
+      let url = `/nationalities?limit=${limit}&offset=${offset}&lang=${lang}`;
       if (cursor) {
         url += `&cursor=${cursor}`;
       }

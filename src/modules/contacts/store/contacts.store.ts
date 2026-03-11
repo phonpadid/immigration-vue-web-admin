@@ -21,6 +21,9 @@ export const usecontactStore = defineStore("contact", () => {
       if (data?.data && Array.isArray(data.data)) {
         contacts.data = data.data;
       }
+      if (data?.total !== undefined) {
+        contacts.total = data.total;
+      }
     } catch (error) {
       console.error("❌ Failed to fetch contacts:", error);
     } finally {

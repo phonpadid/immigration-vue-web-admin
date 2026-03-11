@@ -12,7 +12,18 @@ export interface PersonalInformation {
   date_of_birth: string;
   place_of_birth: string;
   gender: "male" | "female";
-  nationality: string;
+  nationality: {
+      id: number;
+      created_at: string;
+      updated_at: string;
+      translates: {
+        id: number;
+        nationality_id: number;
+        name: string;
+        short_name: string | null;
+        lang: string;
+      }[];
+    };
   occupation: string;
 }
 

@@ -23,6 +23,8 @@ const menuOptions = ref([
   { key: "2", label: "ລຶບ" },
 ]);
 const Loading = ref(false);
+const currentPage = ref(1);
+const pageSize = ref(10);
 
 /********************************************************************* */
 /********************************************************************* */
@@ -50,6 +52,13 @@ const handleSelect = (key: string, record: any) => {
       },
     });
   }
+};
+
+const handleTableChange = async (pagination: any) => {
+  currentPage.value = pagination.current;
+  pageSize.value = pagination.pageSize;
+  const offset = (currentPage.value - 1) * pageSize.value;
+  await getAllContacts(offset, pageSize.value);
 };
 /********************************************************************* */
 
@@ -88,8 +97,9 @@ onMounted(async () => {
         :columns="columns"
         :dataSource="contacts.data"
         class="dark:bg-gray-800 dark:text-white dark:border-gray-700"
-        :pagination="{ pageSize: 10 }"
+        :pagination="{ current: currentPage, pageSize: pageSize, total: contacts.total }"
         rowKey="id"
+        @change="handleTableChange"
       >
         <template #action="{ record }">
           <Dropdown

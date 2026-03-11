@@ -421,7 +421,7 @@ watch(
               class="text-gray-500 dark:text-gray-400 font-light mb-4 sm:mb-5"
             >
               {{
-                departureStore.currentDeparture.personal_information.nationality
+                departureStore.currentDeparture.personal_information.nationality  ?.translates?.[0]?.name || departureStore.currentDeparture.personal_information.nationality
               }}
             </dd>
 

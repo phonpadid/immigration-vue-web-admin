@@ -76,7 +76,11 @@ const totalItems = computed(() => {
 const loadData = async () => {
   const apiLang = getApiLangKey(activeTab.value);
   try {
-    await nationalityStore.getAllNationalities(apiLang, pagination.pageSize);
+    await nationalityStore.getAllNationalities(
+      apiLang,
+      pagination.pageSize,
+      pagination.current
+    );
     pagination.total = totalItems.value;
   } catch (error) {
     console.error("Failed to load data", error);
@@ -157,7 +161,7 @@ onMounted(loadData);
             total: totalItems,
             showSizeChanger: pagination.showSizeChanger,
           }"
-          @update:pagination="handlePaginationChange"
+          @change="handlePaginationChange"
         >
           <!-- Action column slot -->
           <template #action="{ record }">

@@ -37,9 +37,9 @@ export const rulesUser: Record<string, Rule[]> = {
           ? (passwordInput as HTMLInputElement).value
           : "";
 
-        if (value && value !== password) {
-          return Promise.reject("ລະຫັດຢືນຢັນບໍ່ກົງກັນ");
-        }
+        // if (value && value !== password) {
+        //   return Promise.reject("ລະຫັດຢືນຢັນບໍ່ກົງກັນ");
+        // }
         return Promise.resolve();
       },
       trigger: "blur",
